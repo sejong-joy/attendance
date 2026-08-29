@@ -157,36 +157,29 @@
       <!-- TAB 1: ATTENDANCE CHECK VIEW -->
       <div id="tabContent-check" class="space-y-4">
         
-        <!-- Controls Card -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div class="flex flex-wrap items-center gap-3">
-            <div>
-              <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">연도 및 분기</label>
-              <div class="flex items-center space-x-1.5">
-                <select id="yearSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                  <option value="2025">2025년</option>
-                  <option value="2026" selected>2026년</option>
-                  <option value="2027">2027년</option>
-                </select>
-                <select id="quarterSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                  <option value="1기">1기 (1~3월)</option>
-                  <option value="2기">2기 (4~6월)</option>
-                  <option value="3기">3기 (7~9월)</option>
-                  <option value="4기">4기 (10~12월)</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">📖 안식일(교과) 선택</label>
-              <select id="sabbathSelect" onchange="window.appInstance.onSabbathSelectChange()" class="px-3 py-2 bg-emerald-50 border border-emerald-300 rounded-lg text-sm font-bold text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-sm">
-                <!-- '제1과 7월 4일 (토)' 형태로 동적 생성 -->
+        <!-- Controls Card (1줄에 연도/분기/안식일 컴팩트 배치) -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-3.5 sm:p-4 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2 sm:gap-2.5">
+            <!-- 1줄 셀렉터 그룹 -->
+            <div class="flex items-center space-x-1.5">
+              <select id="yearSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                <option value="2025">2025년</option>
+                <option value="2026" selected>2026년</option>
+                <option value="2027">2027년</option>
+              </select>
+              <select id="quarterSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                <option value="1기">1기</option>
+                <option value="2기">2기</option>
+                <option value="3기">3기</option>
+                <option value="4기">4기</option>
+              </select>
+              <select id="sabbathSelect" onchange="window.appInstance.onSabbathSelectChange()" class="px-3 py-2 bg-emerald-50 border border-emerald-300 rounded-xl text-xs sm:text-sm font-black text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-sm">
+                <!-- '제1과 7월 4일' 형태로 동적 생성 -->
               </select>
             </div>
 
             <div id="adminClassFilterWrap" class="hidden">
-              <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">조회 반 선택 (관리자)</label>
-              <select id="adminClassFilter" onchange="window.appInstance.renderAttendanceList()" class="px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-sm font-semibold text-amber-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+              <select id="adminClassFilter" onchange="window.appInstance.renderAttendanceList()" class="px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl text-xs sm:text-sm font-bold text-amber-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
                 <option value="ALL">전체 반 보기</option>
               </select>
             </div>
@@ -194,10 +187,10 @@
 
           <!-- Quick Action Buttons -->
           <div class="flex items-center space-x-2 self-end md:self-auto">
-            <button onclick="window.appInstance.markAllPresent()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-xs font-bold rounded-lg transition border border-slate-200 flex items-center space-x-1.5">
+            <button onclick="window.appInstance.markAllPresent()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-xs font-bold rounded-xl transition border border-slate-200 flex items-center space-x-1.5">
               <span>✨ 전원 출석</span>
             </button>
-            <button onclick="window.appInstance.syncToSheets()" id="syncBtn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-bold rounded-lg shadow-md shadow-emerald-200 transition flex items-center space-x-1.5" title="구글 시트 영구 보관용 백업">
+            <button onclick="window.appInstance.syncToSheets()" id="syncBtn" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md shadow-emerald-200 transition flex items-center space-x-1.5" title="구글 시트 영구 보관용 백업">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
               <span>시트 동기화</span>
             </button>
@@ -205,21 +198,24 @@
         </div>
 
         <!-- Attendance Member List Card -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
+          <div class="pb-3 mb-4 border-b border-slate-100 flex items-center justify-between">
             <div class="flex items-center space-x-2">
               <span class="text-sm font-bold text-slate-800">출석 명단</span>
-              <span id="memberCountBadge" class="text-xs bg-slate-200 text-slate-700 font-semibold px-2 py-0.5 rounded-full">0명</span>
+              <span id="memberCountBadge" class="text-xs bg-slate-100 text-slate-700 font-semibold px-2 py-0.5 rounded-full border border-slate-200">0명</span>
             </div>
             <!-- Summary Stats for today -->
-            <div class="flex items-center space-x-3 text-xs font-semibold">
-              <span class="text-emerald-600 font-bold">출석: <span id="summaryPresent">0</span></span>
-              <span class="text-amber-600 font-bold">지각: <span id="summaryLate">0</span></span>
-              <span class="text-red-500 font-bold">결석: <span id="summaryAbsent">0</span></span>
+            <div class="flex items-center space-x-2.5 text-xs font-semibold bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200/70">
+              <span class="text-emerald-700 font-bold">출석 <span id="summaryPresent" class="font-extrabold text-emerald-600">0</span></span>
+              <span class="text-slate-300">|</span>
+              <span class="text-amber-700 font-bold">지각 <span id="summaryLate" class="font-extrabold text-amber-600">0</span></span>
+              <span class="text-slate-300">|</span>
+              <span class="text-red-600 font-bold">결석 <span id="summaryAbsent" class="font-extrabold text-red-500">0</span></span>
             </div>
           </div>
 
-          <div id="attendanceList" class="divide-y divide-slate-100">
+          <!-- 가독성 향상된 개별 카드 목록 -->
+          <div id="attendanceList" class="grid grid-cols-1 gap-3">
             <!-- Populated dynamically -->
           </div>
         </div>
@@ -246,32 +242,25 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-            <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center justify-between">
-              <span>📈 주차별 출석 인원 추이</span>
-              <span class="text-xs font-normal text-slate-400">실시간 데이터</span>
-            </h3>
-            <div class="h-64 relative">
-              <canvas id="weeklyChart"></canvas>
-            </div>
-          </div>
-
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-            <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center justify-between">
-              <span>🍩 출석 상태 비율</span>
-              <span class="text-xs font-normal text-slate-400">누적 점유율</span>
-            </h3>
-            <div class="h-64 relative flex items-center justify-center">
-              <canvas id="ratioChart"></canvas>
-            </div>
+        <!-- 주차별 출석 추이 단독 확장 -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center justify-between">
+            <span>📈 주차별 출석 인원 추이</span>
+            <span class="text-xs font-normal text-slate-400">실시간 데이터</span>
+          </h3>
+          <div class="h-64 sm:h-72 relative">
+            <canvas id="weeklyChart"></canvas>
           </div>
         </div>
 
+        <!-- 개인별 출석 -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-            <h3 class="text-sm font-bold text-slate-800">개인별 출석 성실도 및 개근 현황</h3>
-            <span class="text-xs text-slate-400">가중치: 출석 1.0 / 지각 0.5 / 결석 0</span>
+            <div>
+              <h3 class="text-sm font-bold text-slate-800">개인별 출석</h3>
+              <p class="text-xs text-slate-400 mt-0.5">성명을 터치하면 과별 세부 출석(O / △ / X) 팝업이 표시됩니다.</p>
+            </div>
+            <span class="text-xs text-slate-400 font-medium">가중치: 출석 1.0 / 지각 0.5 / 결석 0</span>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs sm:text-sm">
@@ -292,36 +281,45 @@
       </div>
 
       <!-- TAB 3: MEMBER DIRECTORY VIEW -->
-      <div id="tabContent-members" class="hidden space-y-4">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <!-- Member Attendance Detail Modal (개인별 과별 출석 팝업창) -->
+    <div id="memberDetailModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-opacity duration-200 opacity-0 pointer-events-none">
+      <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-200" id="memberModalBox">
+        <div class="px-5 py-4 bg-slate-50 border-b border-slate-200/80 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="text-lg">📋</span>
             <div>
-              <h3 class="text-sm font-bold text-slate-800">교인 명부 및 연락처</h3>
-              <p class="text-xs text-slate-500">터치 시 전화 걸기 및 문자 발송이 가능합니다.</p>
+              <h3 id="modalMemberName" class="text-base font-bold text-slate-900 leading-tight">홍길동 성도</h3>
+              <p id="modalMemberSub" class="text-xs text-slate-500 font-medium">청년 1반 · 2026년 3기 출석 현황</p>
             </div>
-            <input type="text" id="memberSearchInput" oninput="window.appInstance.filterMemberList()" placeholder="🔍 이름 또는 연락처 검색" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none w-full sm:w-64">
+          </div>
+          <button onclick="window.appInstance.closeMemberDetailModal()" class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100 flex items-center justify-center text-sm font-bold transition">
+            ✕
+          </button>
+        </div>
+
+        <div class="p-5 max-h-[70vh] overflow-y-auto custom-scrollbar space-y-4">
+          <!-- 기호 안내 뱃지 -->
+          <div class="flex items-center justify-center space-x-4 bg-slate-100/80 py-2 rounded-xl text-xs font-semibold">
+            <span class="text-emerald-700 flex items-center space-x-1"><strong class="text-sm">⭕</strong> <span>출석</span></span>
+            <span class="text-amber-700 flex items-center space-x-1"><strong class="text-sm">△</strong> <span>지각</span></span>
+            <span class="text-red-600 flex items-center space-x-1"><strong class="text-sm">❌</strong> <span>결석</span></span>
+            <span class="text-slate-400 flex items-center space-x-1"><strong class="text-sm">-</strong> <span>미기록</span></span>
           </div>
 
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs sm:text-sm">
-              <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
-                <tr>
-                  <th class="py-3 px-4">교인ID</th>
-                  <th class="py-3 px-4">성명</th>
-                  <th class="py-3 px-4">직분</th>
-                  <th class="py-3 px-4">연락처</th>
-                  <th class="py-3 px-4">생년월일</th>
-                  <th class="py-3 px-4">상태</th>
-                  <th class="py-3 px-4">비고</th>
-                </tr>
-              </thead>
-              <tbody id="memberDirectoryBody" class="divide-y divide-slate-100"></tbody>
-            </table>
+          <!-- 과별 안식일 출석 그리드 -->
+          <div id="modalLessonsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            <!-- Dynamically populated (1과~13과) -->
           </div>
         </div>
-      </div>
 
-    </section>
+        <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs">
+          <span id="modalSummaryText" class="font-bold text-slate-700">출석 0회 · 지각 0회 · 결석 0회</span>
+          <button onclick="window.appInstance.closeMemberDetailModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl transition">
+            닫기
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center transition-opacity duration-300 opacity-0 pointer-events-none">
@@ -726,39 +724,40 @@
         filtered.forEach(member => {
           const state = this.currentAttendance[member.memberId] || { status: '출석', reason: '' };
           const row = document.createElement('div');
-          row.className = 'p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/70 transition';
+          // 가독성이 높고 경계선이 명확한 카드 디자인
+          row.className = 'p-3.5 sm:p-4 rounded-xl border border-slate-200/90 bg-white hover:border-emerald-400 hover:shadow-md transition shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3';
 
           const isNewFamily = member.status === '새가족';
 
           row.innerHTML = `
             <div class="flex items-start sm:items-center space-x-3">
-              <div class="w-9 h-9 rounded-full ${isNewFamily ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700'} flex items-center justify-center font-bold text-xs flex-shrink-0">
+              <div class="w-10 h-10 rounded-xl ${isNewFamily ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200/70'} flex items-center justify-center font-black text-sm flex-shrink-0 shadow-2xs">
                 ${isNewFamily ? '🌱' : member.name.slice(0, 1)}
               </div>
               <div>
                 <div class="flex items-center space-x-2">
                   <span class="font-bold text-slate-900 text-sm sm:text-base">${member.name}</span>
-                  <span class="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">${member.role || '성도'}</span>
-                  ${isNewFamily ? '<span class="text-[10px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">새가족</span>' : ''}
+                  <span class="text-[11px] font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">${member.role || '성도'}</span>
+                  ${isNewFamily ? '<span class="text-[10px] font-bold text-amber-800 bg-amber-100 border border-amber-200 px-1.5 py-0.5 rounded-md">새가족</span>' : ''}
                 </div>
-                <p class="text-xs text-slate-400 mt-0.5">${member.phone || '연락처 미기재'}</p>
+                <p class="text-xs text-slate-400 mt-0.5 font-medium">${member.phone || '연락처 미기재'}</p>
               </div>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2">
-              <div class="inline-flex rounded-lg shadow-sm border border-slate-200 bg-slate-100 p-0.5" role="group">
-                <button onclick="window.appInstance.setStatus('${member.memberId}', '출석')" class="status-btn-${member.memberId}-출석 px-3 py-1.5 text-xs font-bold rounded-md transition ${state.status === '출석' ? 'bg-emerald-600 text-white shadow' : 'text-slate-600 hover:text-slate-900'}">
+            <div class="flex flex-wrap items-center gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+              <div class="inline-flex rounded-xl shadow-2xs border border-slate-200 bg-slate-100 p-1" role="group">
+                <button onclick="window.appInstance.setStatus('${member.memberId}', '출석')" class="status-btn-${member.memberId}-출석 px-3.5 py-1.5 text-xs font-black rounded-lg transition ${state.status === '출석' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
                   출석
                 </button>
-                <button onclick="window.appInstance.setStatus('${member.memberId}', '지각')" class="status-btn-${member.memberId}-지각 px-3 py-1.5 text-xs font-bold rounded-md transition ${state.status === '지각' ? 'bg-amber-500 text-white shadow' : 'text-slate-600 hover:text-slate-900'}">
+                <button onclick="window.appInstance.setStatus('${member.memberId}', '지각')" class="status-btn-${member.memberId}-지각 px-3.5 py-1.5 text-xs font-black rounded-lg transition ${state.status === '지각' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
                   지각
                 </button>
-                <button onclick="window.appInstance.setStatus('${member.memberId}', '결석')" class="status-btn-${member.memberId}-결석 px-3 py-1.5 text-xs font-bold rounded-md transition ${state.status === '결석' ? 'bg-red-500 text-white shadow' : 'text-slate-600 hover:text-slate-900'}">
+                <button onclick="window.appInstance.setStatus('${member.memberId}', '결석')" class="status-btn-${member.memberId}-결석 px-3.5 py-1.5 text-xs font-black rounded-lg transition ${state.status === '결석' ? 'bg-red-500 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
                   결석
                 </button>
               </div>
 
-              <input type="text" value="${state.reason || ''}" onchange="window.appInstance.setReason('${member.memberId}', this.value)" placeholder="사유 입력 (선택)" class="text-xs px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg w-32 sm:w-40 focus:ring-1 focus:ring-emerald-500 focus:outline-none">
+              <input type="text" value="${state.reason || ''}" onchange="window.appInstance.setReason('${member.memberId}', this.value)" placeholder="사유 입력 (선택)" class="text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl w-32 sm:w-40 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">
             </div>
           `;
           container.appendChild(row);
@@ -915,11 +914,11 @@
 
         let totalScore = 0;
         let totalPossible = uniqueDates.length * totalMembers;
-        let presentCount = 0, lateCount = 0, absentCount = 0;
 
         const memberStatsMap = {};
         this.rawMembers.forEach(m => {
           memberStatsMap[m.memberId] = {
+            memberId: m.memberId,
             name: m.name,
             classId: m.classId,
             present: 0,
@@ -934,16 +933,13 @@
             if (r.status === '출석') {
               memberStatsMap[r.memberId].present++;
               memberStatsMap[r.memberId].score += 1.0;
-              presentCount++;
               totalScore += 1.0;
             } else if (r.status === '지각') {
               memberStatsMap[r.memberId].late++;
               memberStatsMap[r.memberId].score += 0.5;
-              lateCount++;
               totalScore += 0.5;
             } else {
               memberStatsMap[r.memberId].absent++;
-              absentCount++;
             }
           }
         });
@@ -960,7 +956,6 @@
 
         this.renderMemberStatsTable(memberStatsMap, uniqueDates.length);
         this.renderWeeklyTrendChart(uniqueDates);
-        this.renderRatioDoughnutChart(presentCount, lateCount, absentCount);
       }
 
       renderMemberStatsTable(statsMap, totalWeeks) {
@@ -975,21 +970,27 @@
           const isPerfect = totalWeeks > 0 && parseFloat(rate) === 100.0;
 
           const tr = document.createElement('tr');
-          tr.className = 'hover:bg-slate-50 transition';
+          tr.className = 'hover:bg-slate-50 transition cursor-pointer group';
+          tr.onclick = () => this.openMemberDetailModal(item.memberId);
+          tr.title = "터치하여 과별 안식일 출석 현황 보기";
+
           tr.innerHTML = `
-            <td class="py-3 px-4 font-bold text-slate-900 flex items-center space-x-1.5">
-              <span>${item.name}</span>
-              ${isPerfect ? '<span class="text-xs" title="분기 개근">👑</span>' : ''}
+            <td class="py-3 px-4 font-bold text-slate-900">
+              <div class="flex items-center space-x-1.5 group-hover:text-emerald-700 transition">
+                <span>${item.name}</span>
+                ${isPerfect ? '<span class="text-xs" title="분기 개근">👑</span>' : ''}
+                <span class="text-[10px] text-slate-400 group-hover:text-emerald-600">🔍</span>
+              </div>
             </td>
             <td class="py-3 px-4 text-slate-500">${item.classId}</td>
-            <td class="py-3 px-4 text-center font-semibold text-emerald-600">${item.present}</td>
-            <td class="py-3 px-4 text-center font-semibold text-amber-600">${item.late}</td>
-            <td class="py-3 px-4 text-center font-semibold text-red-500">${item.absent}</td>
+            <td class="py-3 px-4 text-center font-bold text-emerald-600">${item.present}</td>
+            <td class="py-3 px-4 text-center font-bold text-amber-600">${item.late}</td>
+            <td class="py-3 px-4 text-center font-bold text-red-500">${item.absent}</td>
             <td class="py-3 px-4 text-right">
-              <span class="inline-block px-2.5 py-1 rounded-full text-xs font-extrabold ${
-                rate >= 90 ? 'bg-emerald-100 text-emerald-800' :
-                rate >= 70 ? 'bg-blue-100 text-blue-800' :
-                rate >= 50 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'
+              <span class="inline-block px-2.5 py-1 rounded-full text-xs font-black ${
+                rate >= 90 ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
+                rate >= 70 ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+                rate >= 50 ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-red-100 text-red-800 border border-red-200'
               }">
                 ${rate}%
               </span>
@@ -997,6 +998,101 @@
           `;
           tbody.appendChild(tr);
         });
+      }
+
+      // 개인별 과별 출석 팝업 모달 열기
+      openMemberDetailModal(memberId) {
+        const member = this.rawMembers.find(m => m.memberId === memberId);
+        if (!member) return;
+
+        const year = parseInt(document.getElementById('yearSelect').value, 10);
+        const quarter = document.getElementById('quarterSelect').value;
+
+        document.getElementById('modalMemberName').textContent = `${member.name} (${member.role || '성도'})`;
+        document.getElementById('modalMemberSub').textContent = `${member.classId} · ${year}년 ${quarter} 안식일 출석 현황`;
+
+        // 해당 분기의 모든 안식일(토요일) 목록 계산
+        let startMonth = 1, endMonth = 3;
+        if (quarter === '2기') { startMonth = 4; endMonth = 6; }
+        else if (quarter === '3기') { startMonth = 7; endMonth = 9; }
+        else if (quarter === '4기') { startMonth = 10; endMonth = 12; }
+
+        const sabbaths = [];
+        const cur = new Date(year, startMonth - 1, 1);
+        const endDate = new Date(year, endMonth, 0);
+
+        while (cur <= endDate) {
+          if (cur.getDay() === 6) {
+            const y = cur.getFullYear();
+            const m = String(cur.getMonth() + 1).padStart(2, '0');
+            const d = String(cur.getDate()).padStart(2, '0');
+            sabbaths.push({
+              dateStr: `${y}-${m}-${d}`,
+              label: `${cur.getMonth() + 1}월 ${cur.getDate()}일`
+            });
+          }
+          cur.setDate(cur.getDate() + 1);
+        }
+
+        const grid = document.getElementById('modalLessonsGrid');
+        grid.innerHTML = '';
+
+        let present = 0, late = 0, absent = 0;
+
+        sabbaths.forEach((item, idx) => {
+          const lessonNo = idx + 1;
+          const rec = this.rawRecords.find(r => r.memberId === memberId && r.date === item.dateStr);
+          
+          let iconHtml = '<span class="text-slate-300 font-bold text-base">-</span>';
+          let borderClass = 'border-slate-200 bg-white';
+
+          if (rec) {
+            if (rec.status === '출석') {
+              iconHtml = '<span class="text-emerald-600 font-black text-lg">⭕</span>';
+              borderClass = 'border-emerald-200 bg-emerald-50/50';
+              present++;
+            } else if (rec.status === '지각') {
+              iconHtml = '<span class="text-amber-500 font-black text-lg">△</span>';
+              borderClass = 'border-amber-200 bg-amber-50/50';
+              late++;
+            } else if (rec.status === '결석') {
+              iconHtml = '<span class="text-red-500 font-black text-lg">❌</span>';
+              borderClass = 'border-red-200 bg-red-50/50';
+              absent++;
+            }
+          }
+
+          const card = document.createElement('div');
+          card.className = `p-2.5 rounded-xl border ${borderClass} flex items-center justify-between shadow-2xs`;
+          card.innerHTML = `
+            <div>
+              <div class="text-xs font-black text-slate-800">제${lessonNo}과</div>
+              <div class="text-[10px] text-slate-400 font-medium">${item.label}</div>
+            </div>
+            <div class="flex items-center justify-center w-8 h-8">
+              ${iconHtml}
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+
+        document.getElementById('modalSummaryText').innerHTML = `
+          총 ${sabbaths.length}주 중 <span class="text-emerald-700">출석 ${present}</span> · <span class="text-amber-700">지각 ${late}</span> · <span class="text-red-600">결석 ${absent}</span>
+        `;
+
+        const modal = document.getElementById('memberDetailModal');
+        const box = document.getElementById('memberModalBox');
+        modal.classList.remove('pointer-events-none', 'opacity-0');
+        box.classList.remove('scale-95');
+        box.classList.add('scale-100');
+      }
+
+      closeMemberDetailModal() {
+        const modal = document.getElementById('memberDetailModal');
+        const box = document.getElementById('memberModalBox');
+        box.classList.remove('scale-100');
+        box.classList.add('scale-95');
+        modal.classList.add('pointer-events-none', 'opacity-0');
       }
 
       renderWeeklyTrendChart(uniqueDates) {

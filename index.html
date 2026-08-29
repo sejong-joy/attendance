@@ -691,9 +691,10 @@
               this.rawMembers = cached.members || [];
               this.rawRecords = cached.records || [];
               this.updateAbsentAlertMap(cached.absentAlerts || []);
+              this.calculateConsecutiveAbsentees();
 
               localStorage.setItem('church_auth', JSON.stringify({ classId, pinCode }));
-              this.setupLoggedInUI(cached.absentAlerts || []);
+              this.setupLoggedInUI();
               this.subscribeRealtimeRecords();
               this.subscribeCareNotes();
               hasLoadedFromCache = true;
@@ -718,25 +719,24 @@
             this.rawMembers = json.members || [];
             this.rawRecords = json.records || [];
             this.updateAbsentAlertMap(json.absentAlerts || []);
+            this.calculateConsecutiveAbsentees();
 
             localStorage.setItem(cacheKey, JSON.stringify(json));
             localStorage.setItem('church_auth', JSON.stringify({ classId, pinCode }));
 
             if (!hasLoadedFromCache) {
-              this.setupLoggedInUI(json.absentAlerts || []);
+              this.setupLoggedInUI();
               this.subscribeRealtimeRecords();
               this.subscribeCareNotes();
               this.showToast(`반갑습니다, ${this.currentUser.leaderName} 리더님!`, 'success');
 
-              // 1. 3주 이상 결석자 존재 시 로그인 직후 🚨 모달 자동 팝업
-              if (json.absentAlerts && json.absentAlerts.length > 0) {
-                setTimeout(() => this.openUrgentModal(), 350);
-              }
+              // 3주 이상 결석자 존재 시 로그인 직후 🚨 모달 자동 팝업
+              this.checkAndAutoOpenUrgentModal();
             } else {
-              // 화면 갱신
               this.renderAttendanceList();
               this.renderMemberDirectory();
               this.updateAbsentBanner();
+              this.checkAndAutoOpenUrgentModal();
             }
           } else {
             if (!hasLoadedFromCache) {
@@ -747,15 +747,13 @@
         } catch (err) {
           if (!hasLoadedFromCache) {
             this.hideLoading();
-            // 오프라인 fallback mock
             const found = this.classList.find(c => c.classId === classId);
             if (found) {
               this.currentUser = found;
               this.rawMembers = this.getMockMembers(classId);
               this.rawRecords = [];
-              const mockAlerts = [{ memberId: 'M0004', name: '박준호', phone: '010-4567-8901', consecutiveWeeks: 3 }];
-              this.updateAbsentAlertMap(mockAlerts);
-              this.setupLoggedInUI(mockAlerts);
+              this.calculateConsecutiveAbsentees();
+              this.setupLoggedInUI();
               this.subscribeRealtimeRecords();
               this.subscribeCareNotes();
               this.showToast(`반갑습니다, ${this.currentUser.leaderName} 리더님!`, 'success');
@@ -812,6 +810,53 @@
         }
       }
 
+      // 🔍 실시간 3주 연속 결석자 자동 감지 및 계산 엔진
+      calculateConsecutiveAbsentees() {
+        if (!this.rawMembers || !this.rawRecords) return;
+
+        this.rawMembers.forEach(member => {
+          // 해당 성도의 모든 출석 기록을 날짜 최신순(내림차순)으로 정렬
+          const memberRecs = this.rawRecords
+            .filter(r => r.memberId === member.memberId && r.date)
+            .sort((a, b) => b.date.localeCompare(a.date));
+
+          // 최근 기록부터 연속 결석 횟수 카운트
+          let consecutiveCount = 0;
+          for (let i = 0; i < memberRecs.length; i++) {
+            if (memberRecs[i].status === '결석') {
+              consecutiveCount++;
+            } else {
+              // 출석 또는 지각을 만나면 연속 결석 중단
+              break;
+            }
+          }
+
+          if (consecutiveCount >= 3) {
+            this.absentAlertMap[member.memberId] = {
+              memberId: member.memberId,
+              name: member.name,
+              phone: member.phone || '',
+              classId: member.classId,
+              consecutiveWeeks: consecutiveCount
+            };
+          } else {
+            // 3회 미만이면 결석 알림 맵에서 제거 (단, 심방완료 상태가 아닐 때)
+            if (!this.careNotesMap[member.memberId]) {
+              delete this.absentAlertMap[member.memberId];
+            }
+          }
+        });
+      }
+
+      checkAndAutoOpenUrgentModal() {
+        const unhandled = Object.values(this.absentAlertMap).filter(a => !this.careNotesMap[a.memberId]);
+        if (unhandled.length > 0) {
+          setTimeout(() => {
+            this.openUrgentModal();
+          }, 400);
+        }
+      }
+
       // Realtime Firestore 구독
       subscribeRealtimeRecords() {
         if (!isFirebaseReady || !db) return;
@@ -835,6 +880,10 @@
                 this.rawRecords.splice(idx, 1);
               }
             });
+
+            // 실시간 결석 연속 횟수 재계산
+            this.calculateConsecutiveAbsentees();
+            this.updateAbsentBanner();
 
             const curDate = document.getElementById('sabbathSelect')?.value;
             if (curDate) this.loadAttendanceForSelectedDate(curDate);
@@ -899,6 +948,7 @@
           else filterWrap.classList.add('hidden');
         }
 
+        this.calculateConsecutiveAbsentees();
         this.updateAbsentBanner();
         const selDate = document.getElementById('sabbathSelect')?.value;
         if (selDate) this.loadAttendanceForSelectedDate(selDate);
@@ -1159,31 +1209,6 @@
         }
         this.currentAttendance[memberId].status = status;
 
-        // 4. State 0: 출석 또는 지각 시 3주 연속 결석 및 심방 상태 자동 해제 (Hybrid Logic A)
-        if (status === '출석' || status === '지각') {
-          delete this.absentAlertMap[memberId];
-          delete this.careNotesMap[memberId];
-          if (isFirebaseReady && db) {
-            try {
-              setDoc(doc(db, 'care_notes', memberId), { active: false, resetAt: new Date().toISOString() }, { merge: true });
-            } catch(e) {}
-          }
-          this.updateAbsentBanner();
-        }
-
-        // 버튼 UI 즉시 반영
-        ['출석', '지각', '결석'].forEach(st => {
-          const btn = document.querySelector(`.status-btn-${memberId}-${st}`);
-          if (btn) {
-            btn.className = (st === status)
-              ? `status-btn-${memberId}-${st} px-3.5 py-2 text-xs sm:text-sm font-black rounded-lg transition ${st === '출석' ? 'bg-emerald-600 text-white shadow-sm' : st === '지각' ? 'bg-amber-500 text-white shadow-sm' : 'bg-red-500 text-white shadow-sm'}`
-              : `status-btn-${memberId}-${st} px-3.5 py-2 text-xs sm:text-sm font-black rounded-lg transition text-slate-600 hover:text-slate-900`;
-          }
-        });
-
-        this.updateAttendanceSummary();
-        this.renderAttendanceList();
-
         const targetDate = document.getElementById('sabbathSelect')?.value;
         const quarter = document.getElementById('quarterSelect')?.value;
         const member = this.rawMembers.find(m => m.memberId === memberId);
@@ -1208,6 +1233,34 @@
         if (idx >= 0) this.rawRecords[idx] = recordData;
         else this.rawRecords.push(recordData);
 
+        // 출석/지각 시 연속 결석 해제, 결석 시 연속 결석 즉시 재계산
+        if (status === '출석' || status === '지각') {
+          delete this.absentAlertMap[memberId];
+          delete this.careNotesMap[memberId];
+          if (isFirebaseReady && db) {
+            try {
+              setDoc(doc(db, 'care_notes', memberId), { active: false, resetAt: new Date().toISOString() }, { merge: true });
+            } catch(e) {}
+          }
+        }
+
+        // 실시간 연속 결석 판별 실행
+        this.calculateConsecutiveAbsentees();
+        this.updateAbsentBanner();
+
+        // 버튼 UI 즉시 반영
+        ['출석', '지각', '결석'].forEach(st => {
+          const btn = document.querySelector(`.status-btn-${memberId}-${st}`);
+          if (btn) {
+            btn.className = (st === status)
+              ? `status-btn-${memberId}-${st} px-3.5 py-2 text-xs sm:text-sm font-black rounded-lg transition ${st === '출석' ? 'bg-emerald-600 text-white shadow-sm' : st === '지각' ? 'bg-amber-500 text-white shadow-sm' : 'bg-red-500 text-white shadow-sm'}`
+              : `status-btn-${memberId}-${st} px-3.5 py-2 text-xs sm:text-sm font-black rounded-lg transition text-slate-600 hover:text-slate-900`;
+          }
+        });
+
+        this.updateAttendanceSummary();
+        this.renderAttendanceList();
+
         // Firebase 0.05초 초고속 기록
         if (isFirebaseReady && db) {
           try {
@@ -1218,7 +1271,7 @@
           }
         }
 
-        // 6. 1.5초 후 구글 시트 백그라운드 자동 안전 백업 (Auto-Sync)
+        // 1.5초 후 구글 시트 백그라운드 자동 백업
         this.triggerAutoSheetSync();
       }
 

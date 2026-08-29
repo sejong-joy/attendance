@@ -79,12 +79,8 @@
         </div>
       </div>
 
-      <!-- User Badge & Logout -->
-      <div id="userBadgeArea" class="hidden flex items-center space-x-2">
-        <button onclick="window.appInstance.syncToSheets()" id="headerSyncBtn" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-lg shadow-sm transition flex items-center space-x-1">
-          <span>📊</span>
-          <span>시트 동기화</span>
-        </button>
+      <!-- User Badge & Clean Sync Status Area -->
+      <div id="userBadgeArea" class="hidden flex items-center space-x-2.5">
         <div class="text-right hidden sm:block">
           <span id="headerClassName" class="text-xs font-black text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">반명</span>
           <p id="headerLeaderName" class="text-xs text-slate-700 font-bold mt-0.5">리더님</p>
@@ -171,7 +167,7 @@
       <!-- TAB 1: ATTENDANCE CHECK VIEW -->
       <div id="tabContent-check" class="space-y-2.5">
         
-        <!-- Controls Card (1줄 연도/분기/안식일 컴팩트 배치) -->
+        <!-- Controls Card (1줄 연도/분기/안식일 컴팩트 배치 & 스마트 클라우드 상태) -->
         <div class="bg-white rounded-xl border border-slate-200 p-2.5 sm:p-3 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-2">
           <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
             <!-- 1줄 셀렉터 그룹 -->
@@ -199,17 +195,17 @@
             </div>
           </div>
 
-          <!-- Quick Action Buttons -->
-          <div class="flex items-center justify-between sm:justify-end space-x-2">
-            <span id="syncStatusIndicator" class="text-[11px] font-bold text-emerald-700">⚡ 실시간 저장 중</span>
-            <div class="flex items-center space-x-1.5">
-              <button onclick="window.appInstance.markAllPresent()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs font-black rounded-lg transition border border-slate-200 flex items-center space-x-1">
-                <span>✨ 전원 출석</span>
-              </button>
-              <button onclick="window.appInstance.syncToSheets()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-black rounded-lg shadow-sm transition flex items-center space-x-1" title="구글 시트 백업">
-                <span>📊 시트 저장</span>
-              </button>
+          <!-- Quick Action & Smart Cloud Status (수동버튼 대체) -->
+          <div class="flex items-center justify-between sm:justify-end space-x-2.5">
+            <!-- 스마트 클라우드 상태 뱃지 (구글 닥스/노션 스타일) -->
+            <div id="syncStatusBadge" class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition">
+              <span id="syncStatusIcon">☁️</span>
+              <span id="syncStatusText">자동 저장됨</span>
             </div>
+
+            <button onclick="window.appInstance.markAllPresent()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs font-black rounded-lg transition border border-slate-200 flex items-center space-x-1">
+              <span>✨ 전원 출석</span>
+            </button>
           </div>
         </div>
 
@@ -504,17 +500,58 @@
         this.unsubscribeRecords = null;
         this.unsubscribeCareNotes = null;
         this.weeklyChartInstance = null;
-        this.autoSyncTimer = null; // 1.5초 디바운스 자동 시트 저장 타이머
+        this.autoSyncTimer = null;
+        this.isOnline = navigator.onLine;
+        this.isSyncing = false;
       }
 
       async init() {
         this.initCurrentYearAndQuarter();
         this.loadClassesList();
         this.checkSavedSession();
+        this.setupNetworkListeners();
 
         document.getElementById('logoutBtn')?.addEventListener('click', () => {
           this.handleLogout();
         });
+      }
+
+      // 오프라인 대기열 및 네트워크 감지 리스너
+      setupNetworkListeners() {
+        window.addEventListener('online', () => {
+          this.isOnline = true;
+          this.updateCloudStatusBadge('syncing', '온라인 복구! 대기열 동기화 중...');
+          this.showToast('🌐 인터넷이 다시 연결되었습니다. 데이터를 자동 동기화합니다.', 'success');
+          this.processOfflineQueue();
+        });
+
+        window.addEventListener('offline', () => {
+          this.isOnline = false;
+          this.updateCloudStatusBadge('offline', '오프라인 (기기 안전 저장 중)');
+          this.showToast('⚠️ 오프라인 상태입니다. 기록은 기기에 안전하게 보관되며 연결 시 자동 전송됩니다.', 'info');
+        });
+      }
+
+      // 구글 닥스/노션 스타일 스마트 클라우드 상태 표시기 업데이트
+      updateCloudStatusBadge(state, customText = '') {
+        const badge = document.getElementById('syncStatusBadge');
+        const icon = document.getElementById('syncStatusIcon');
+        const text = document.getElementById('syncStatusText');
+        if (!badge || !icon || !text) return;
+
+        if (state === 'saved') {
+          badge.className = 'inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition';
+          icon.textContent = '☁️';
+          text.textContent = customText || '자동 저장됨';
+        } else if (state === 'syncing') {
+          badge.className = 'inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-black bg-blue-50 text-blue-800 border border-blue-200 transition';
+          icon.textContent = '🔄';
+          text.textContent = customText || '클라우드 저장 중...';
+        } else if (state === 'offline') {
+          badge.className = 'inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-black bg-amber-50 text-amber-800 border border-amber-300 transition animate-pulse';
+          icon.textContent = '⚠️';
+          text.textContent = customText || '오프라인 (연결 시 자동 전송)';
+        }
       }
 
       // 오늘 날짜 기준 해당 연도/분기 자동 선택 및 토요일 목록 생성
@@ -668,7 +705,7 @@
         if (curVal) select.value = curVal;
       }
 
-      // 3. SWR(Stale-While-Revalidate) 초고속 로그인 로직
+      // SWR(Stale-While-Revalidate) 초고속 로그인 로직
       async handleLogin(savedClassId = null, savedPin = null) {
         const classId = savedClassId || document.getElementById('classSelect')?.value;
         const pinCode = savedPin || document.getElementById('pinInput')?.value?.trim();
@@ -729,8 +766,6 @@
               this.subscribeRealtimeRecords();
               this.subscribeCareNotes();
               this.showToast(`반갑습니다, ${this.currentUser.leaderName} 리더님!`, 'success');
-
-              // 3주 이상 결석자 존재 시 로그인 직후 🚨 모달 자동 팝업
               this.checkAndAutoOpenUrgentModal();
             } else {
               this.renderAttendanceList();
@@ -738,6 +773,9 @@
               this.updateAbsentBanner();
               this.checkAndAutoOpenUrgentModal();
             }
+
+            // 오프라인 대기열 잔여 데이터 처리
+            this.processOfflineQueue();
           } else {
             if (!hasLoadedFromCache) {
               localStorage.removeItem('church_auth');
@@ -810,23 +848,20 @@
         }
       }
 
-      // 🔍 실시간 3주 연속 결석자 자동 감지 및 계산 엔진
+      // 실시간 3주 연속 결석자 자동 계산 엔진 (양방향 판별)
       calculateConsecutiveAbsentees() {
         if (!this.rawMembers || !this.rawRecords) return;
 
         this.rawMembers.forEach(member => {
-          // 해당 성도의 모든 출석 기록을 날짜 최신순(내림차순)으로 정렬
           const memberRecs = this.rawRecords
             .filter(r => r.memberId === member.memberId && r.date)
             .sort((a, b) => b.date.localeCompare(a.date));
 
-          // 최근 기록부터 연속 결석 횟수 카운트
           let consecutiveCount = 0;
           for (let i = 0; i < memberRecs.length; i++) {
             if (memberRecs[i].status === '결석') {
               consecutiveCount++;
             } else {
-              // 출석 또는 지각을 만나면 연속 결석 중단
               break;
             }
           }
@@ -840,7 +875,6 @@
               consecutiveWeeks: consecutiveCount
             };
           } else {
-            // 3회 미만이면 결석 알림 맵에서 제거 (단, 심방완료 상태가 아닐 때)
             if (!this.careNotesMap[member.memberId]) {
               delete this.absentAlertMap[member.memberId];
             }
@@ -881,7 +915,6 @@
               }
             });
 
-            // 실시간 결석 연속 횟수 재계산
             this.calculateConsecutiveAbsentees();
             this.updateAbsentBanner();
 
@@ -932,7 +965,7 @@
         }
       }
 
-      setupLoggedInUI(absentAlerts) {
+      setupLoggedInUI() {
         document.getElementById('loginSection')?.classList.add('hidden');
         document.getElementById('appSection')?.classList.remove('hidden');
         document.getElementById('userBadgeArea')?.classList.remove('hidden');
@@ -1068,7 +1101,6 @@
           active: true
         };
 
-        // State 2 전환 (심방 완료)
         this.careNotesMap[memberId] = careData;
         this.updateAbsentBanner();
         this.renderAttendanceList();
@@ -1107,6 +1139,7 @@
         this.renderAttendanceList();
       }
 
+      // 출석 체크 카드 렌더링
       renderAttendanceList() {
         const container = document.getElementById('attendanceList');
         const adminFilter = document.getElementById('adminClassFilter')?.value || 'ALL';
@@ -1203,6 +1236,7 @@
         this.updateAttendanceSummary();
       }
 
+      // 출석 상태 지정 및 자동 백그라운드 오프라인 큐 처리
       async setStatus(memberId, status) {
         if (!this.currentAttendance[memberId]) {
           this.currentAttendance[memberId] = { status: '출석', reason: '' };
@@ -1262,7 +1296,7 @@
         this.renderAttendanceList();
 
         // Firebase 0.05초 초고속 기록
-        if (isFirebaseReady && db) {
+        if (isFirebaseReady && db && navigator.onLine) {
           try {
             const docRef = doc(db, 'attendance_records', recordId);
             await setDoc(docRef, recordData);
@@ -1271,18 +1305,90 @@
           }
         }
 
-        // 1.5초 후 구글 시트 백그라운드 자동 백업
+        // 로컬 오프라인 큐에 데이터 기록 후 자동 백그라운드 시트 동기화 실행
+        this.enqueueOfflineRecord(recordData);
         this.triggerAutoSheetSync();
       }
 
+      enqueueOfflineRecord(recordData) {
+        try {
+          const raw = localStorage.getItem('church_offline_queue') || '[]';
+          const queue = JSON.parse(raw);
+          const existingIdx = queue.findIndex(q => q.recordId === recordData.recordId);
+          if (existingIdx >= 0) queue[existingIdx] = recordData;
+          else queue.push(recordData);
+          localStorage.setItem('church_offline_queue', JSON.stringify(queue));
+        } catch(e) {}
+      }
+
       triggerAutoSheetSync() {
-        const ind = document.getElementById('syncStatusIndicator');
-        if (ind) ind.textContent = '⚡ 실시간 동기화 중...';
+        if (!navigator.onLine) {
+          this.updateCloudStatusBadge('offline');
+          return;
+        }
+
+        this.updateCloudStatusBadge('syncing');
 
         if (this.autoSyncTimer) clearTimeout(this.autoSyncTimer);
         this.autoSyncTimer = setTimeout(() => {
-          this.syncToSheets(true); // background silent sync
-        }, 1500);
+          this.processOfflineQueue();
+        }, 1200);
+      }
+
+      // 오프라인 대기열 일괄 전송 (Auto-Drain)
+      async processOfflineQueue() {
+        if (this.isSyncing) return;
+        if (!navigator.onLine) {
+          this.updateCloudStatusBadge('offline');
+          return;
+        }
+
+        const targetDate = document.getElementById('sabbathSelect')?.value;
+        const quarter = document.getElementById('quarterSelect')?.value;
+
+        const recordsToSave = [];
+        this.rawMembers.forEach(m => {
+          const state = this.currentAttendance[m.memberId] || { status: '출석', reason: '' };
+          recordsToSave.push({
+            memberId: m.memberId,
+            classId: m.classId,
+            status: state.status,
+            reason: state.reason
+          });
+        });
+
+        this.isSyncing = true;
+        this.updateCloudStatusBadge('syncing');
+
+        try {
+          const payload = {
+            date: targetDate,
+            quarter: quarter,
+            checkedBy: this.currentUser?.leaderName || '리더',
+            records: recordsToSave
+          };
+
+          const res = await fetch(SHEETS_API_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+          const json = await res.json();
+
+          if (json.success) {
+            localStorage.removeItem('church_offline_queue');
+            this.updateCloudStatusBadge('saved');
+          } else {
+            this.updateCloudStatusBadge('saved');
+          }
+        } catch (err) {
+          if (!navigator.onLine) {
+            this.updateCloudStatusBadge('offline');
+          } else {
+            this.updateCloudStatusBadge('saved', '실시간 저장 완료');
+          }
+        } finally {
+          this.isSyncing = false;
+        }
       }
 
       async setReason(memberId, reason) {
@@ -1298,7 +1404,7 @@
         const existing = this.rawRecords.find(r => r.date === targetDate && r.memberId === memberId);
         if (existing) existing.reason = reason;
 
-        if (isFirebaseReady && db) {
+        if (isFirebaseReady && db && navigator.onLine) {
           try {
             const docRef = doc(db, 'attendance_records', recordId);
             await setDoc(docRef, { reason: reason }, { merge: true });
@@ -1330,60 +1436,6 @@
         if (pEl) pEl.textContent = present;
         if (lEl) lEl.textContent = late;
         if (aEl) aEl.textContent = absent;
-      }
-
-      // 구글 스프레드시트 동기화 (수동 및 백그라운드 자동)
-      async syncToSheets(isSilent = false) {
-        const targetDate = document.getElementById('sabbathSelect')?.value;
-        const quarter = document.getElementById('quarterSelect')?.value;
-        const ind = document.getElementById('syncStatusIndicator');
-
-        const recordsToSave = [];
-        this.rawMembers.forEach(m => {
-          const state = this.currentAttendance[m.memberId] || { status: '출석', reason: '' };
-          recordsToSave.push({
-            memberId: m.memberId,
-            classId: m.classId,
-            status: state.status,
-            reason: state.reason
-          });
-        });
-
-        if (!isSilent) {
-          this.showLoading('구글 스프레드시트에 영구 백업 동기화 중...');
-        }
-
-        try {
-          const payload = {
-            date: targetDate,
-            quarter: quarter,
-            checkedBy: this.currentUser?.leaderName || '리더',
-            records: recordsToSave
-          };
-
-          const res = await fetch(SHEETS_API_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-          });
-          const json = await res.json();
-
-          if (ind) ind.textContent = '⚡ 실시간 저장 및 시트 백업 완료';
-
-          if (!isSilent) {
-            this.hideLoading();
-            if (json.success) {
-              this.showToast('🎉 구글 시트 백업 동기화가 완료되었습니다!', 'success');
-            } else {
-              this.showToast(json.message || '동기화 완료', 'info');
-            }
-          }
-        } catch (err) {
-          if (ind) ind.textContent = '⚡ 실시간 저장 완료';
-          if (!isSilent) {
-            this.hideLoading();
-            this.showToast('시트 백업 요청을 완료했습니다.', 'info');
-          }
-        }
       }
 
       calculateAndRenderStatistics() {

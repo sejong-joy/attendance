@@ -1139,8 +1139,9 @@
               reason: found.reason || ''
             };
           } else {
+            // 기록이 없는 미래 또는 미체크 주차: 기본값을 null로 설정하여 미체크 대기 상태 유지
             this.currentAttendance[m.memberId] = {
-              status: '출석',
+              status: null,
               reason: ''
             };
           }
@@ -1171,7 +1172,7 @@
         }
 
         filtered.forEach(member => {
-          const state = this.currentAttendance[member.memberId] || { status: '출석', reason: '' };
+          const state = this.currentAttendance[member.memberId] || { status: null, reason: '' };
           const is3WeekAbsent = !!this.absentAlertMap[member.memberId];
           const careNote = this.careNotesMap[member.memberId];
           const isCareHandled = is3WeekAbsent && !!careNote; // State 2
@@ -1239,7 +1240,7 @@
       // 출석 상태 지정 및 자동 백그라운드 오프라인 큐 처리
       async setStatus(memberId, status) {
         if (!this.currentAttendance[memberId]) {
-          this.currentAttendance[memberId] = { status: '출석', reason: '' };
+          this.currentAttendance[memberId] = { status: null, reason: '' };
         }
         this.currentAttendance[memberId].status = status;
 
@@ -1355,14 +1356,21 @@
 
         const recordsToSave = [];
         this.rawMembers.forEach(m => {
-          const state = this.currentAttendance[m.memberId] || { status: '출석', reason: '' };
-          recordsToSave.push({
-            memberId: m.memberId,
-            classId: m.classId,
-            status: state.status,
-            reason: state.reason
-          });
+          const state = this.currentAttendance[m.memberId] || { status: null, reason: '' };
+          if (state.status !== null && state.status !== undefined) {
+            recordsToSave.push({
+              memberId: m.memberId,
+              classId: m.classId,
+              status: state.status,
+              reason: state.reason
+            });
+          }
         });
+
+        if (recordsToSave.length === 0) {
+          this.updateCloudStatusBadge('saved');
+          return;
+        }
 
         this.isSyncing = true;
         this.updateCloudStatusBadge('syncing');
@@ -1400,7 +1408,7 @@
 
       async setReason(memberId, reason) {
         if (!this.currentAttendance[memberId]) {
-          this.currentAttendance[memberId] = { status: '출석', reason: '' };
+          this.currentAttendance[memberId] = { status: null, reason: '' };
         }
         this.currentAttendance[memberId].reason = reason;
 
@@ -1480,7 +1488,7 @@
               memberStatsMap[r.memberId].late++;
               memberStatsMap[r.memberId].score += 0.5;
               totalScore += 0.5;
-            } else {
+            } else if (r.status === '결석') {
               memberStatsMap[r.memberId].absent++;
             }
           }
@@ -1680,7 +1688,7 @@
             } else if (r.status === '지각') {
               memberStatsMap[r.memberId].late++;
               memberStatsMap[r.memberId].score += 0.5;
-            } else {
+            } else if (r.status === '결석') {
               memberStatsMap[r.memberId].absent++;
             }
           }
@@ -1799,7 +1807,7 @@
                     '<div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">' +
                       '<div>' +
                         '<span class="font-black text-slate-900 text-xs sm:text-sm">제' + (idx + 1) + '회차 예배 (' + dateStr + ')</span>' +
-                        '<p class="text-[11px] text-slate-500 font-bold mt-0.5">총 ${dayRecords.length}명 기록 완료</p>' +
+                        '<p class="text-[11px] text-slate-500 font-bold mt-0.5">총 ' + dayRecords.length + '명 기록 완료</p>' +
                       '</div>' +
                       '<div class="flex items-center space-x-1.5 text-xs font-black">' +
                         '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">출석 ' + pCount + '</span>' +
@@ -1852,8 +1860,8 @@
                       '</div>' +
                       (cleanPhone ? 
                         '<div class="flex items-center space-x-1">' +
-                          '<a href="tel:' + cleanPhone + '" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-black tracking-tight whitespace-nowrap shadow-xs transition">📞 전화</a>' +
-                          '<a href="sms:' + cleanPhone + '" class="px-2 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-black tracking-tight whitespace-nowrap transition">💬 문자</a>' +
+                          '<a href="tel:' + cleanPhone + '" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-black tracking-tight whitespace-nowrap shadow-xs transition">📞 전화</a>' +
+                          '<a href="sms:' + cleanPhone + '" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-black tracking-tight whitespace-nowrap transition">💬 문자</a>' +
                         '</div>' : '') +
                     '</div>'
                   );

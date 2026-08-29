@@ -74,8 +74,8 @@
       <!-- User Badge / Logout -->
       <div id="userBadgeArea" class="hidden flex items-center space-x-2 sm:space-x-3">
         <div class="text-right hidden sm:block">
-          <span id="headerClassName" class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">청년 1반</span>
-          <p id="headerLeaderName" class="text-xs text-slate-600 font-medium mt-0.5">김철수 리더님</p>
+          <span id="headerClassName" class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">반명</span>
+          <p id="headerLeaderName" class="text-xs text-slate-600 font-medium mt-0.5">리더님</p>
         </div>
         <button id="logoutBtn" class="px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg border border-slate-200 transition">
           로그아웃
@@ -174,7 +174,7 @@
                 <option value="4기">4기</option>
               </select>
               <select id="sabbathSelect" onchange="window.appInstance.onSabbathSelectChange()" class="px-3 py-2 bg-emerald-50 border border-emerald-300 rounded-xl text-xs sm:text-sm font-black text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-sm">
-                <!-- '제1과 7월 4일' 형태로 동적 생성 -->
+                <!-- 동적 안식일 과 목록 -->
               </select>
             </div>
 
@@ -214,10 +214,8 @@
             </div>
           </div>
 
-          <!-- 가독성 향상된 개별 카드 목록 -->
-          <div id="attendanceList" class="grid grid-cols-1 gap-3">
-            <!-- Populated dynamically -->
-          </div>
+          <!-- 개별 카드 목록 -->
+          <div id="attendanceList" class="grid grid-cols-1 gap-3"></div>
         </div>
       </div>
 
@@ -242,7 +240,7 @@
           </div>
         </div>
 
-        <!-- 주차별 출석 추이 단독 확장 -->
+        <!-- 주차별 출석 추이 -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
           <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center justify-between">
             <span>📈 주차별 출석 인원 추이</span>
@@ -258,7 +256,7 @@
           <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
             <div>
               <h3 class="text-sm font-bold text-slate-800">개인별 출석</h3>
-              <p class="text-xs text-slate-400 mt-0.5">성명을 터치하면 과별 세부 출석(O / △ / X) 팝업이 표시됩니다.</p>
+              <p class="text-xs text-slate-400 mt-0.5">성명을 터치하면 과별 세부 출석(⭕ / △ / ❌) 팝업이 표시됩니다.</p>
             </div>
             <span class="text-xs text-slate-400 font-medium">가중치: 출석 1.0 / 지각 0.5 / 결석 0</span>
           </div>
@@ -281,6 +279,37 @@
       </div>
 
       <!-- TAB 3: MEMBER DIRECTORY VIEW -->
+      <div id="tabContent-members" class="hidden space-y-4">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-slate-100">
+            <div>
+              <h3 class="text-base font-bold text-slate-900">교인 명부 관리</h3>
+              <p class="text-xs text-slate-500 mt-0.5">구글 스프레드시트와 실시간 연동되는 교인 데이터베이스입니다.</p>
+            </div>
+            <input type="text" id="memberSearchInput" oninput="window.appInstance.filterMemberList()" placeholder="이름 또는 직분 검색..." class="px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition w-full sm:w-60">
+          </div>
+
+          <div class="overflow-x-auto mt-4">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
+                <tr>
+                  <th class="py-3 px-4">교인ID</th>
+                  <th class="py-3 px-4">이름</th>
+                  <th class="py-3 px-4">직분</th>
+                  <th class="py-3 px-4">연락처</th>
+                  <th class="py-3 px-4">생년월일</th>
+                  <th class="py-3 px-4">상태</th>
+                  <th class="py-3 px-4">특이사항</th>
+                </tr>
+              </thead>
+              <tbody id="memberDirectoryBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
     <!-- Member Attendance Detail Modal (개인별 과별 출석 팝업창) -->
     <div id="memberDetailModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-200" id="memberModalBox">
@@ -288,8 +317,8 @@
           <div class="flex items-center space-x-2">
             <span class="text-lg">📋</span>
             <div>
-              <h3 id="modalMemberName" class="text-base font-bold text-slate-900 leading-tight">홍길동 성도</h3>
-              <p id="modalMemberSub" class="text-xs text-slate-500 font-medium">청년 1반 · 2026년 3기 출석 현황</p>
+              <h3 id="modalMemberName" class="text-base font-bold text-slate-900 leading-tight">성도명</h3>
+              <p id="modalMemberSub" class="text-xs text-slate-500 font-medium">소속반 및 출석 현황</p>
             </div>
           </div>
           <button onclick="window.appInstance.closeMemberDetailModal()" class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100 flex items-center justify-center text-sm font-bold transition">
@@ -307,9 +336,7 @@
           </div>
 
           <!-- 과별 안식일 출석 그리드 -->
-          <div id="modalLessonsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-            <!-- Dynamically populated (1과~13과) -->
-          </div>
+          <div id="modalLessonsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5"></div>
         </div>
 
         <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs">
@@ -375,7 +402,6 @@
         this.currentAttendance = {};
         this.unsubscribeRecords = null;
         this.weeklyChartInstance = null;
-        this.ratioChartInstance = null;
       }
 
       async init() {
@@ -383,7 +409,7 @@
         await this.loadClassesList();
         this.checkSavedSession();
 
-        document.getElementById('logoutBtn').addEventListener('click', () => {
+        document.getElementById('logoutBtn')?.addEventListener('click', () => {
           this.handleLogout();
         });
       }
@@ -420,11 +446,11 @@
 
         const sabbaths = [];
         const startDate = new Date(year, startMonth - 1, 1);
-        const endDate = new Date(year, endMonth, 0); // 해당 분기 말일
+        const endDate = new Date(year, endMonth, 0);
 
         const cur = new Date(startDate);
         while (cur <= endDate) {
-          if (cur.getDay() === 6) { // 6 = 토요일 (안식일)
+          if (cur.getDay() === 6) {
             const y = cur.getFullYear();
             const m = String(cur.getMonth() + 1).padStart(2, '0');
             const d = String(cur.getDate()).padStart(2, '0');
@@ -439,6 +465,7 @@
         }
 
         const select = document.getElementById('sabbathSelect');
+        if (!select) return;
         select.innerHTML = '';
 
         const today = new Date();
@@ -448,13 +475,12 @@
         let minDiff = Infinity;
 
         sabbaths.forEach((item, idx) => {
-          const lessonNo = idx + 1; // 1과, 2과...
+          const lessonNo = idx + 1;
           const opt = document.createElement('option');
           opt.value = item.dateStr;
           opt.textContent = `제${lessonNo}과 ${item.monthNum}월 ${item.dayNum}일`;
           select.appendChild(opt);
 
-          // 오늘 날짜와 가장 가까운 안식일 자동 선택
           const diff = Math.abs(item.fullDate.getTime() - today.getTime());
           if (diff < minDiff) {
             minDiff = diff;
@@ -468,15 +494,15 @@
       }
 
       onQuarterOrYearChange() {
-        const year = parseInt(document.getElementById('yearSelect').value, 10);
-        const quarter = document.getElementById('quarterSelect').value;
+        const year = parseInt(document.getElementById('yearSelect')?.value || '2026', 10);
+        const quarter = document.getElementById('quarterSelect')?.value || '1기';
         this.generateSabbathOptions(year, quarter);
         this.onSabbathSelectChange();
       }
 
       onSabbathSelectChange() {
-        const selectedDate = document.getElementById('sabbathSelect').value;
-        if (this.currentUser) {
+        const selectedDate = document.getElementById('sabbathSelect')?.value;
+        if (this.currentUser && selectedDate) {
           this.loadAttendanceForSelectedDate(selectedDate);
         }
       }
@@ -497,8 +523,10 @@
       populateClassSelect() {
         const select = document.getElementById('classSelect');
         const adminFilter = document.getElementById('adminClassFilter');
+        if (!select) return;
+
         select.innerHTML = '<option value="">-- 출석할 반을 선택하세요 --</option>';
-        adminFilter.innerHTML = '<option value="ALL">전체 반 보기</option>';
+        if (adminFilter) adminFilter.innerHTML = '<option value="ALL">전체 반 보기</option>';
 
         this.classList.forEach(c => {
           const opt = document.createElement('option');
@@ -506,16 +534,18 @@
           opt.textContent = `${c.className} (${c.leaderName} 리더)`;
           select.appendChild(opt);
 
-          const filterOpt = document.createElement('option');
-          filterOpt.value = c.classId;
-          filterOpt.textContent = c.className;
-          adminFilter.appendChild(filterOpt);
+          if (adminFilter) {
+            const filterOpt = document.createElement('option');
+            filterOpt.value = c.classId;
+            filterOpt.textContent = c.className;
+            adminFilter.appendChild(filterOpt);
+          }
         });
       }
 
       async handleLogin(savedClassId = null, savedPin = null) {
-        const classId = savedClassId || document.getElementById('classSelect').value;
-        const pinCode = savedPin || document.getElementById('pinInput').value.trim();
+        const classId = savedClassId || document.getElementById('classSelect')?.value;
+        const pinCode = savedPin || document.getElementById('pinInput')?.value?.trim();
 
         if (!classId) {
           this.showToast('반을 선택해 주세요.', 'error');
@@ -543,7 +573,7 @@
             localStorage.setItem('church_auth', JSON.stringify({ classId, pinCode }));
             this.setupLoggedInUI(json.absentAlerts || []);
             
-            // Firebase Firestore 실시간 구독 시작 (0.05초 실시간 동기화)
+            // Firebase Firestore 실시간 구독 시작
             this.subscribeRealtimeRecords();
             this.showToast(`반갑습니다, ${this.currentUser.leaderName} 님! (실시간 연결됨)`, 'success');
           } else {
@@ -575,10 +605,11 @@
         }
         localStorage.removeItem('church_auth');
         this.currentUser = null;
-        document.getElementById('appSection').classList.add('hidden');
-        document.getElementById('userBadgeArea').classList.add('hidden');
-        document.getElementById('loginSection').classList.remove('hidden');
-        document.getElementById('pinInput').value = '';
+        document.getElementById('appSection')?.classList.add('hidden');
+        document.getElementById('userBadgeArea')?.classList.add('hidden');
+        document.getElementById('loginSection')?.classList.remove('hidden');
+        const pinInp = document.getElementById('pinInput');
+        if (pinInp) pinInp.value = '';
         this.showToast('로그아웃 되었습니다.', 'info');
       }
 
@@ -605,11 +636,11 @@
               }
             });
 
-            // 현재 선택된 안식일 화면 실시간 갱신
-            const curDate = document.getElementById('sabbathSelect').value;
-            this.loadAttendanceForSelectedDate(curDate);
+            const curDate = document.getElementById('sabbathSelect')?.value;
+            if (curDate) this.loadAttendanceForSelectedDate(curDate);
             
-            if (!document.getElementById('tabContent-stats').classList.contains('hidden')) {
+            const statsContent = document.getElementById('tabContent-stats');
+            if (statsContent && !statsContent.classList.contains('hidden')) {
               this.calculateAndRenderStatistics();
             }
           }, (error) => {
@@ -621,21 +652,24 @@
       }
 
       setupLoggedInUI(absentAlerts) {
-        document.getElementById('loginSection').classList.add('hidden');
-        document.getElementById('appSection').classList.remove('hidden');
-        document.getElementById('userBadgeArea').classList.remove('hidden');
+        document.getElementById('loginSection')?.classList.add('hidden');
+        document.getElementById('appSection')?.classList.remove('hidden');
+        document.getElementById('userBadgeArea')?.classList.remove('hidden');
 
-        document.getElementById('headerClassName').textContent = this.currentUser.className;
-        document.getElementById('headerLeaderName').textContent = `${this.currentUser.leaderName} 님`;
+        const hdrClass = document.getElementById('headerClassName');
+        const hdrLeader = document.getElementById('headerLeaderName');
+        if (hdrClass) hdrClass.textContent = this.currentUser.className;
+        if (hdrLeader) hdrLeader.textContent = `${this.currentUser.leaderName} 님`;
 
-        if (this.currentUser.isAdmin) {
-          document.getElementById('adminClassFilterWrap').classList.remove('hidden');
-        } else {
-          document.getElementById('adminClassFilterWrap').classList.add('hidden');
+        const filterWrap = document.getElementById('adminClassFilterWrap');
+        if (filterWrap) {
+          if (this.currentUser.isAdmin) filterWrap.classList.remove('hidden');
+          else filterWrap.classList.add('hidden');
         }
 
         this.renderAbsentAlerts(absentAlerts);
-        this.loadAttendanceForSelectedDate(document.getElementById('sabbathSelect').value);
+        const selDate = document.getElementById('sabbathSelect')?.value;
+        if (selDate) this.loadAttendanceForSelectedDate(selDate);
         this.renderMemberDirectory();
       }
 
@@ -643,6 +677,7 @@
         const banner = document.getElementById('absentAlertBanner');
         const list = document.getElementById('absentAlertList');
         const countSpan = document.getElementById('alertCount');
+        if (!banner || !list) return;
 
         if (!alerts || alerts.length === 0) {
           banner.classList.add('hidden');
@@ -650,7 +685,7 @@
         }
 
         banner.classList.remove('hidden');
-        countSpan.textContent = alerts.length;
+        if (countSpan) countSpan.textContent = alerts.length;
         list.innerHTML = '';
 
         alerts.forEach(item => {
@@ -705,14 +740,16 @@
 
       renderAttendanceList() {
         const container = document.getElementById('attendanceList');
-        const adminFilter = document.getElementById('adminClassFilter').value;
+        const adminFilter = document.getElementById('adminClassFilter')?.value || 'ALL';
+        if (!container) return;
 
         let filtered = this.rawMembers;
         if (this.currentUser && this.currentUser.isAdmin && adminFilter !== 'ALL') {
           filtered = this.rawMembers.filter(m => m.classId === adminFilter);
         }
 
-        document.getElementById('memberCountBadge').textContent = `${filtered.length}명`;
+        const countBadge = document.getElementById('memberCountBadge');
+        if (countBadge) countBadge.textContent = `${filtered.length}명`;
         container.innerHTML = '';
 
         if (filtered.length === 0) {
@@ -724,7 +761,6 @@
         filtered.forEach(member => {
           const state = this.currentAttendance[member.memberId] || { status: '출석', reason: '' };
           const row = document.createElement('div');
-          // 가독성이 높고 경계선이 명확한 카드 디자인
           row.className = 'p-3.5 sm:p-4 rounded-xl border border-slate-200/90 bg-white hover:border-emerald-400 hover:shadow-md transition shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3';
 
           const isNewFamily = member.status === '새가족';
@@ -783,33 +819,30 @@
 
         this.updateAttendanceSummary();
 
-        // ⚡ 0.05초 초고속 Firestore 실시간 브로드캐스트
-        const targetDate = document.getElementById('sabbathSelect').value;
-        const quarter = document.getElementById('quarterSelect').value;
+        const targetDate = document.getElementById('sabbathSelect')?.value;
+        const quarter = document.getElementById('quarterSelect')?.value;
         const member = this.rawMembers.find(m => m.memberId === memberId);
-        if (!member) return;
+        if (!member || !targetDate) return;
 
         const recordId = `${targetDate}_${memberId}`;
         const score = status === '출석' ? 1.0 : (status === '지각' ? 0.5 : 0.0);
         const recordData = {
           recordId: recordId,
           date: targetDate,
-          quarter: quarter,
+          quarter: quarter || '1기',
           memberId: memberId,
           classId: member.classId,
           status: status,
           score: score,
           reason: this.currentAttendance[memberId].reason || '',
-          checkedBy: this.currentUser.leaderName,
+          checkedBy: this.currentUser?.leaderName || '리더',
           updatedAt: new Date().toISOString()
         };
 
-        // 로컬 배열 즉각 반영
         const idx = this.rawRecords.findIndex(r => r.date === targetDate && r.memberId === memberId);
         if (idx >= 0) this.rawRecords[idx] = recordData;
         else this.rawRecords.push(recordData);
 
-        // Firestore 실시간 전송
         if (isFirebaseReady && db) {
           try {
             const docRef = doc(db, 'attendance_records', recordId);
@@ -826,7 +859,9 @@
         }
         this.currentAttendance[memberId].reason = reason;
 
-        const targetDate = document.getElementById('sabbathSelect').value;
+        const targetDate = document.getElementById('sabbathSelect')?.value;
+        if (!targetDate) return;
+
         const recordId = `${targetDate}_${memberId}`;
         const existing = this.rawRecords.find(r => r.date === targetDate && r.memberId === memberId);
         if (existing) existing.reason = reason;
@@ -856,14 +891,17 @@
           else if (v.status === '결석') absent++;
         });
 
-        document.getElementById('summaryPresent').textContent = present;
-        document.getElementById('summaryLate').textContent = late;
-        document.getElementById('summaryAbsent').textContent = absent;
+        const pEl = document.getElementById('summaryPresent');
+        const lEl = document.getElementById('summaryLate');
+        const aEl = document.getElementById('summaryAbsent');
+        if (pEl) pEl.textContent = present;
+        if (lEl) lEl.textContent = late;
+        if (aEl) aEl.textContent = absent;
       }
 
       async syncToSheets() {
-        const targetDate = document.getElementById('sabbathSelect').value;
-        const quarter = document.getElementById('quarterSelect').value;
+        const targetDate = document.getElementById('sabbathSelect')?.value;
+        const quarter = document.getElementById('quarterSelect')?.value;
 
         const recordsToSave = [];
         this.rawMembers.forEach(m => {
@@ -882,7 +920,7 @@
           const payload = {
             date: targetDate,
             quarter: quarter,
-            checkedBy: this.currentUser.leaderName,
+            checkedBy: this.currentUser?.leaderName || '리더',
             records: recordsToSave
           };
 
@@ -907,10 +945,12 @@
 
       calculateAndRenderStatistics() {
         const totalMembers = this.rawMembers.length;
-        document.getElementById('statTotalMembers').textContent = `${totalMembers}명`;
+        const totMemEl = document.getElementById('statTotalMembers');
+        if (totMemEl) totMemEl.textContent = `${totalMembers}명`;
 
         const uniqueDates = [...new Set(this.rawRecords.map(r => r.date))].sort();
-        document.getElementById('statTotalSabbaths').textContent = `${uniqueDates.length}회`;
+        const totSabEl = document.getElementById('statTotalSabbaths');
+        if (totSabEl) totSabEl.textContent = `${uniqueDates.length}회`;
 
         let totalScore = 0;
         let totalPossible = uniqueDates.length * totalMembers;
@@ -945,14 +985,16 @@
         });
 
         const avgRate = totalPossible > 0 ? ((totalScore / totalPossible) * 100).toFixed(1) : 0;
-        document.getElementById('statAvgRate').textContent = `${avgRate}%`;
+        const avgRateEl = document.getElementById('statAvgRate');
+        if (avgRateEl) avgRateEl.textContent = `${avgRate}%`;
 
         let careCount = 0;
         Object.values(memberStatsMap).forEach(ms => {
           const mRate = uniqueDates.length > 0 ? (ms.score / uniqueDates.length) * 100 : 100;
           if (mRate < 60) careCount++;
         });
-        document.getElementById('statCareCount').textContent = `${careCount}명`;
+        const careEl = document.getElementById('statCareCount');
+        if (careEl) careEl.textContent = `${careCount}명`;
 
         this.renderMemberStatsTable(memberStatsMap, uniqueDates.length);
         this.renderWeeklyTrendChart(uniqueDates);
@@ -960,6 +1002,7 @@
 
       renderMemberStatsTable(statsMap, totalWeeks) {
         const tbody = document.getElementById('memberStatsTableBody');
+        if (!tbody) return;
         tbody.innerHTML = '';
 
         const list = Object.values(statsMap);
@@ -1005,13 +1048,14 @@
         const member = this.rawMembers.find(m => m.memberId === memberId);
         if (!member) return;
 
-        const year = parseInt(document.getElementById('yearSelect').value, 10);
-        const quarter = document.getElementById('quarterSelect').value;
+        const year = parseInt(document.getElementById('yearSelect')?.value || '2026', 10);
+        const quarter = document.getElementById('quarterSelect')?.value || '1기';
 
-        document.getElementById('modalMemberName').textContent = `${member.name} (${member.role || '성도'})`;
-        document.getElementById('modalMemberSub').textContent = `${member.classId} · ${year}년 ${quarter} 안식일 출석 현황`;
+        const nameEl = document.getElementById('modalMemberName');
+        const subEl = document.getElementById('modalMemberSub');
+        if (nameEl) nameEl.textContent = `${member.name} (${member.role || '성도'})`;
+        if (subEl) subEl.textContent = `${member.classId} · ${year}년 ${quarter} 안식일 출석 현황`;
 
-        // 해당 분기의 모든 안식일(토요일) 목록 계산
         let startMonth = 1, endMonth = 3;
         if (quarter === '2기') { startMonth = 4; endMonth = 6; }
         else if (quarter === '3기') { startMonth = 7; endMonth = 9; }
@@ -1035,6 +1079,7 @@
         }
 
         const grid = document.getElementById('modalLessonsGrid');
+        if (!grid) return;
         grid.innerHTML = '';
 
         let present = 0, late = 0, absent = 0;
@@ -1076,27 +1121,38 @@
           grid.appendChild(card);
         });
 
-        document.getElementById('modalSummaryText').innerHTML = `
-          총 ${sabbaths.length}주 중 <span class="text-emerald-700">출석 ${present}</span> · <span class="text-amber-700">지각 ${late}</span> · <span class="text-red-600">결석 ${absent}</span>
-        `;
+        const sumEl = document.getElementById('modalSummaryText');
+        if (sumEl) {
+          sumEl.innerHTML = `
+            총 ${sabbaths.length}주 중 <span class="text-emerald-700">출석 ${present}</span> · <span class="text-amber-700">지각 ${late}</span> · <span class="text-red-600">결석 ${absent}</span>
+          `;
+        }
 
         const modal = document.getElementById('memberDetailModal');
         const box = document.getElementById('memberModalBox');
-        modal.classList.remove('pointer-events-none', 'opacity-0');
-        box.classList.remove('scale-95');
-        box.classList.add('scale-100');
+        if (modal && box) {
+          modal.classList.remove('pointer-events-none', 'opacity-0');
+          box.classList.remove('scale-95');
+          box.classList.add('scale-100');
+        }
       }
 
       closeMemberDetailModal() {
         const modal = document.getElementById('memberDetailModal');
         const box = document.getElementById('memberModalBox');
-        box.classList.remove('scale-100');
-        box.classList.add('scale-95');
-        modal.classList.add('pointer-events-none', 'opacity-0');
+        if (box) {
+          box.classList.remove('scale-100');
+          box.classList.add('scale-95');
+        }
+        if (modal) {
+          modal.classList.add('pointer-events-none', 'opacity-0');
+        }
       }
 
       renderWeeklyTrendChart(uniqueDates) {
-        const ctx = document.getElementById('weeklyChart').getContext('2d');
+        const chartEl = document.getElementById('weeklyChart');
+        if (!chartEl) return;
+        const ctx = chartEl.getContext('2d');
         if (this.weeklyChartInstance) this.weeklyChartInstance.destroy();
 
         const labels = uniqueDates.map(d => d.slice(5));
@@ -1131,39 +1187,9 @@
         });
       }
 
-      renderRatioDoughnutChart(present, late, absent) {
-        const ctx = document.getElementById('ratioChart').getContext('2d');
-        if (this.ratioChartInstance) this.ratioChartInstance.destroy();
-
-        const total = present + late + absent;
-        const data = total === 0 ? [1] : [present, late, absent];
-        const bgColors = total === 0 ? ['#e2e8f0'] : ['#059669', '#f59e0b', '#ef4444'];
-        const labels = total === 0 ? ['데이터 없음'] : ['정상 출석', '지각', '결석'];
-
-        this.ratioChartInstance = new Chart(ctx, {
-          type: 'doughnut',
-          data: {
-            labels: labels,
-            datasets: [{
-              data: data,
-              backgroundColor: bgColors,
-              borderWidth: 2,
-              borderColor: '#ffffff'
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
-            },
-            cutout: '70%'
-          }
-        });
-      }
-
       renderMemberDirectory() {
         const tbody = document.getElementById('memberDirectoryBody');
+        if (!tbody) return;
         tbody.innerHTML = '';
 
         this.rawMembers.forEach(m => {
@@ -1195,7 +1221,7 @@
       }
 
       filterMemberList() {
-        const q = document.getElementById('memberSearchInput').value.toLowerCase();
+        const q = document.getElementById('memberSearchInput')?.value?.toLowerCase() || '';
         const rows = document.querySelectorAll('#memberDirectoryBody tr');
         rows.forEach(r => {
           const text = r.textContent.toLowerCase();
@@ -1208,14 +1234,17 @@
           btn.classList.remove('bg-white', 'text-emerald-700', 'shadow-sm');
           btn.classList.add('text-slate-600');
         });
-        document.getElementById(`tabBtn-${tabId}`).classList.add('bg-white', 'text-emerald-700', 'shadow-sm');
-        document.getElementById(`tabBtn-${tabId}`).classList.remove('text-slate-600');
+        const activeBtn = document.getElementById(`tabBtn-${tabId}`);
+        if (activeBtn) {
+          activeBtn.classList.add('bg-white', 'text-emerald-700', 'shadow-sm');
+          activeBtn.classList.remove('text-slate-600');
+        }
 
-        document.getElementById('tabContent-check').classList.add('hidden');
-        document.getElementById('tabContent-stats').classList.add('hidden');
-        document.getElementById('tabContent-members').classList.add('hidden');
+        document.getElementById('tabContent-check')?.classList.add('hidden');
+        document.getElementById('tabContent-stats')?.classList.add('hidden');
+        document.getElementById('tabContent-members')?.classList.add('hidden');
 
-        document.getElementById(`tabContent-${tabId}`).classList.remove('hidden');
+        document.getElementById(`tabContent-${tabId}`)?.classList.remove('hidden');
 
         if (tabId === 'stats') {
           this.calculateAndRenderStatistics();
@@ -1226,6 +1255,7 @@
         const toast = document.getElementById('toast');
         const msg = document.getElementById('toastMsg');
         const icon = document.getElementById('toastIcon');
+        if (!toast || !msg || !icon) return;
 
         msg.textContent = message;
         icon.textContent = type === 'success' ? '⚡' : type === 'error' ? '⚠️' : 'ℹ️';
@@ -1237,14 +1267,15 @@
       }
 
       showLoading(msg = '동기화 중입니다...') {
-        document.getElementById('loadingMessage').textContent = msg;
+        const loadingMsg = document.getElementById('loadingMessage');
         const overlay = document.getElementById('loadingOverlay');
-        overlay.classList.remove('pointer-events-none', 'opacity-0');
+        if (loadingMsg) loadingMsg.textContent = msg;
+        if (overlay) overlay.classList.remove('pointer-events-none', 'opacity-0');
       }
 
       hideLoading() {
         const overlay = document.getElementById('loadingOverlay');
-        overlay.classList.add('pointer-events-none', 'opacity-0');
+        if (overlay) overlay.classList.add('pointer-events-none', 'opacity-0');
       }
     }
 

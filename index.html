@@ -322,6 +322,7 @@
                   <th class="py-2.5 px-3">직분</th>
                   <th class="py-2.5 px-3">연락처</th>
                   <th class="py-2.5 px-3">생년월일</th>
+                  <th class="py-2.5 px-3">주소</th>
                   <th class="py-2.5 px-3">상태</th>
                   <th class="py-2.5 px-3">특이사항</th>
                 </tr>
@@ -1937,6 +1938,7 @@
               ` : '<span class="text-slate-400">-</span>'}
             </td>
             <td class="py-2.5 px-3 text-slate-500">${m.birthDate || '-'}</td>
+            <td class="py-2.5 px-3 text-slate-600 text-xs">${m.address || '-'}</td>
             <td class="py-2.5 px-3">
               <span class="px-2 py-0.5 rounded text-[11px] font-black ${
                 m.status === '활동' ? 'bg-emerald-100 text-emerald-800' :
@@ -2009,9 +2011,9 @@
 
       getMockMembers(classId) {
         return [
-          { memberId: 'M0001', name: '홍길동', classId: classId, role: '청년', phone: '010-1234-5678', status: '활동' },
-          { memberId: 'M0002', name: '김영수', classId: classId, role: '청년', phone: '010-2345-6789', status: '새가족' },
-          { memberId: 'M0004', name: '박준호', classId: classId, role: '청년', phone: '010-4567-8901', status: '활동' }
+          { memberId: 'M0001', name: '홍길동', classId: classId, role: '청년', phone: '010-1234-5678', birthDate: '1999-03-12', address: '세종시 한누리대로 100', status: '활동' },
+          { memberId: 'M0002', name: '김영수', classId: classId, role: '청년', phone: '010-2345-6789', birthDate: '2001-08-20', address: '세종시 다정중앙로 20', status: '새가족' },
+          { memberId: 'M0004', name: '박준호', classId: classId, role: '청년', phone: '010-4567-8901', birthDate: '2000-01-30', address: '세종시 보듬3로 55', status: '활동' }
         ];
       }
     }

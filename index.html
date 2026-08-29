@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>세종 조이 안식일학교 스마트 출석부</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js for statistics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Google Fonts (Noto Sans KR) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background-color: #f1f5f9;
+    }
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.92; transform: scale(1.02); }
+    }
+    .alert-pulse {
+      animation: pulse-subtle 2.5s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- Top Navigation Bar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm backdrop-blur-md bg-white/95">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-emerald-200">
+          ⛪
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">세종 조이 안식일학교</h1>
+          <p class="text-xs text-slate-500 font-medium">스마트 출석 및 교인 돌봄 시스템</p>
+        </div>
+      </div>
+
+      <!-- User Badge / Logout -->
+      <div id="userBadgeArea" class="hidden flex items-center space-x-2 sm:space-x-3">
+        <div class="text-right hidden sm:block">
+          <span id="headerClassName" class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">청년 1반</span>
+          <p id="headerLeaderName" class="text-xs text-slate-600 font-medium mt-0.5">김철수 리더님</p>
+        </div>
+        <button id="logoutBtn" class="px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg border border-slate-200 transition">
+          로그아웃
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6">
+
+    <!-- 1. LOGIN SCREEN -->
+    <section id="loginSection" class="max-w-md mx-auto my-8 sm:my-16">
+      <div class="bg-white rounded-2xl shadow-xl border border-slate-100 p-6 sm:p-8">
+        <div class="text-center mb-8">
+          <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 text-emerald-700 rounded-2xl text-2xl mb-3 shadow-inner">
+            🔐
+          </div>
+          <h2 class="text-xl sm:text-2xl font-bold text-slate-900">반별 간편 로그인</h2>
+          <p class="text-xs sm:text-sm text-slate-500 mt-1.5">담당 교과반을 선택하고 접속 비밀번호(PIN)를 입력하세요.</p>
+        </div>
+
+        <form id="loginForm" class="space-y-5" onsubmit="event.preventDefault(); handleLogin();">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">교과반 선택</label>
+            <select id="classSelect" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">
+              <option value="">반 목록을 불러오는 중...</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">접속 비밀번호 (PIN)</label>
+            <input type="password" id="pinInput" placeholder="비밀번호 입력 (예: 1001)" autocomplete="current-password" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">
+          </div>
+
+          <button type="submit" id="loginSubmitBtn" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold rounded-xl shadow-lg shadow-emerald-200 transition flex items-center justify-center space-x-2">
+            <span>출석부 접속하기</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </button>
+        </form>
+
+        <div class="mt-6 pt-5 border-t border-slate-100 text-center">
+          <p class="text-xs text-slate-400">💡 관리자(교역자) 비밀번호로 로그인하면 전교인 출석부 및 전체 통계를 확인하실 수 있습니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. MAIN APP DASHBOARD (Hidden by default) -->
+    <section id="appSection" class="hidden space-y-6">
+
+      <!-- 🚨 3주 연속 결석자 긴급 알림 배너 -->
+      <div id="absentAlertBanner" class="hidden bg-gradient-to-r from-red-50 to-amber-50 border-l-4 border-red-500 rounded-xl p-4 sm:p-5 shadow-sm">
+        <div class="flex items-start justify-between">
+          <div class="flex items-start space-x-3">
+            <div class="p-2 bg-red-100 text-red-600 rounded-lg text-lg alert-pulse">🚨</div>
+            <div>
+              <h3 class="text-sm sm:text-base font-bold text-red-900">
+                심방 및 돌봄이 필요한 교인 (<span id="alertCount">0</span>명)
+              </h3>
+              <p class="text-xs text-red-700 mt-0.5">최근 3주 이상 연속으로 결석한 성도입니다. 따뜻한 격려의 안부 전화를 권장합니다.</p>
+            </div>
+          </div>
+        </div>
+        <!-- Alert cards list -->
+        <div id="absentAlertList" class="mt-3.5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="flex items-center space-x-1 sm:space-x-2 bg-slate-200/80 p-1 rounded-xl w-full sm:w-max overflow-x-auto">
+        <button onclick="switchTab('check')" id="tabBtn-check" class="tab-btn flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs sm:text-sm font-bold bg-white text-emerald-700 shadow-sm transition">
+          ✍️ 출석 체크
+        </button>
+        <button onclick="switchTab('stats')" id="tabBtn-stats" class="tab-btn flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 transition">
+          📊 출석 통계
+        </button>
+        <button onclick="switchTab('members')" id="tabBtn-members" class="tab-btn flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 transition">
+          👥 교인 명부
+        </button>
+      </div>
+
+      <!-- TAB 1: ATTENDANCE CHECK VIEW -->
+      <div id="tabContent-check" class="space-y-4">
+        
+        <!-- Controls Card (Date, Quarter, Class Filter for Admin) -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div class="flex flex-wrap items-center gap-3">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">기준 주일 일자</label>
+              <input type="date" id="attendanceDate" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">분기</label>
+              <select id="quarterSelect" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                <option value="1기">1기 (1~3월)</option>
+                <option value="2기">2기 (4~6월)</option>
+                <option value="3기">3기 (7~9월)</option>
+                <option value="4기">4기 (10~12월)</option>
+              </select>
+            </div>
+
+            <div id="adminClassFilterWrap" class="hidden">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">조회 반 선택 (관리자)</label>
+              <select id="adminClassFilter" onchange="renderAttendanceList()" class="px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-sm font-semibold text-amber-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                <option value="ALL">전체 반 보기</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div class="flex items-center space-x-2 self-end md:self-auto">
+            <button onclick="markAllPresent()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-xs font-bold rounded-lg transition border border-slate-200 flex items-center space-x-1.5">
+              <span>✨ 전원 출석</span>
+            </button>
+            <button onclick="saveAttendance()" id="saveBtn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-bold rounded-lg shadow-md shadow-emerald-200 transition flex items-center space-x-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>시트에 저장</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Attendance Member List Table/Cards -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div class="flex items-center space-x-2">
+              <span class="text-sm font-bold text-slate-800">출석 명단</span>
+              <span id="memberCountBadge" class="text-xs bg-slate-200 text-slate-700 font-semibold px-2 py-0.5 rounded-full">0명</span>
+            </div>
+            <!-- Summary Stats for today -->
+            <div class="flex items-center space-x-3 text-xs font-semibold">
+              <span class="text-emerald-600">출석: <span id="summaryPresent">0</span></span>
+              <span class="text-amber-600">지각: <span id="summaryLate">0</span></span>
+              <span class="text-red-500">결석: <span id="summaryAbsent">0</span></span>
+            </div>
+          </div>
+
+          <!-- Responsive Table List -->
+          <div id="attendanceList" class="divide-y divide-slate-100">
+            <!-- Dynamically populated rows -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: STATISTICS DASHBOARD VIEW -->
+      <div id="tabContent-stats" class="hidden space-y-6">
+        <!-- Stats Filter / Summary Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-semibold text-slate-500">총 등록 교인</span>
+            <p id="statTotalMembers" class="text-xl sm:text-2xl font-black text-slate-900 mt-1">0명</p>
+          </div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-semibold text-slate-500">평균 출석률</span>
+            <p id="statAvgRate" class="text-xl sm:text-2xl font-black text-emerald-600 mt-1">0%</p>
+          </div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-semibold text-slate-500">분기 누적 예배 수</span>
+            <p id="statTotalSabbaths" class="text-xl sm:text-2xl font-black text-slate-900 mt-1">0회</p>
+          </div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-semibold text-slate-500">관심/심방 대상</span>
+            <p id="statCareCount" class="text-xl sm:text-2xl font-black text-red-500 mt-1">0명</p>
+          </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Weekly Trend Chart -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center justify-between">
+              <span>📈 주차별 출석 인원 추이</span>
+              <span class="text-xs font-normal text-slate-400">최근 기록 기준</span>
+            </h3>
+            <div class="h-64 relative">
+              <canvas id="weeklyChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Status Ratio Doughnut Chart -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center justify-between">
+              <span>🍩 출석 상태 비율</span>
+              <span class="text-xs font-normal text-slate-400">누적 비율</span>
+            </h3>
+            <div class="h-64 relative flex items-center justify-center">
+              <canvas id="ratioChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Individual Member Attendance Rate Table -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h3 class="text-sm font-bold text-slate-800">개인별 출석 성실도 및 개근 현황</h3>
+            <span class="text-xs text-slate-400">가중치: 출석 1.0 / 지각 0.5 / 결석 0</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
+                <tr>
+                  <th class="py-3 px-4">성명</th>
+                  <th class="py-3 px-4">소속반</th>
+                  <th class="py-3 px-4 text-center">출석</th>
+                  <th class="py-3 px-4 text-center">지각</th>
+                  <th class="py-3 px-4 text-center">결석</th>
+                  <th class="py-3 px-4 text-right">출석률</th>
+                </tr>
+              </thead>
+              <tbody id="memberStatsTableBody" class="divide-y divide-slate-100">
+                <!-- Dynamically generated rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: MEMBER DIRECTORY VIEW -->
+      <div id="tabContent-members" class="hidden space-y-4">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <h3 class="text-sm font-bold text-slate-800">교인 명부 및 연락처</h3>
+              <p class="text-xs text-slate-500">터치 시 전화 걸기 및 문자 발송이 가능합니다.</p>
+            </div>
+            <input type="text" id="memberSearchInput" oninput="filterMemberList()" placeholder="🔍 이름 또는 연락처 검색" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none w-full sm:w-64">
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
+                <tr>
+                  <th class="py-3 px-4">교인ID</th>
+                  <th class="py-3 px-4">성명</th>
+                  <th class="py-3 px-4">직분</th>
+                  <th class="py-3 px-4">연락처</th>
+                  <th class="py-3 px-4">생년월일</th>
+                  <th class="py-3 px-4">상태</th>
+                  <th class="py-3 px-4">비고</th>
+                </tr>
+              </thead>
+              <tbody id="memberDirectoryBody" class="divide-y divide-slate-100">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center transition-opacity duration-300 opacity-0 pointer-events-none">
+      <div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center space-y-3 max-w-xs text-center">
+        <div class="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
+        <p id="loadingMessage" class="text-sm font-bold text-slate-700">데이터를 불러오는 중입니다...</p>
+      </div>
+    </div>
+
+    <!-- Toast Notification Box -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-2.5 text-sm font-medium">
+      <span id="toastIcon">✨</span>
+      <span id="toastMsg">알림 메시지</span>
+    </div>
+
+  </main>
+
+  <script>
+    // ==========================================
+    // 1. GLOBAL VARIABLES & CONSTANTS
+    // ==========================================
+    const API_URL = "https://script.google.com/macros/s/AKfycbzn2kkDIqszr-dMUbYPHffHlubtBjXb-mYUWApYeU9ot3lYkvrhVl_KPsNL9Y72-ZhK/exec";
+
+    let currentUser = null;       // Currently logged-in class/admin
+    let classList = [];           // All active classes
+    let rawMembers = [];          // Loaded members
+    let rawRecords = [];          // Loaded attendance records
+    let currentAttendance = {};   // { memberId: { status: '출석', reason: '' } }
+    let weeklyChartInstance = null;
+    let ratioChartInstance = null;
+
+    // ==========================================
+    // 2. INITIALIZATION
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', () => {
+      initDefaultDate();
+      loadClassesList();
+      checkSavedSession();
+      
+      document.getElementById('attendanceDate').addEventListener('change', (e) => {
+        autoSelectQuarter(e.target.value);
+        loadAttendanceForSelectedDate(e.target.value);
+      });
+    });
+
+    function initDefaultDate() {
+      const today = new Date();
+      // Set default to today's date in YYYY-MM-DD
+      const dateStr = today.toISOString().split('T')[0];
+      const dateInput = document.getElementById('attendanceDate');
+      dateInput.value = dateStr;
+      autoSelectQuarter(dateStr);
+    }
+
+    function autoSelectQuarter(dateString) {
+      if (!dateString) return;
+      const month = parseInt(dateString.split('-')[1], 10);
+      const qSelect = document.getElementById('quarterSelect');
+      if (month >= 1 && month <= 3) qSelect.value = '1기';
+      else if (month >= 4 && month <= 6) qSelect.value = '2기';
+      else if (month >= 7 && month <= 9) qSelect.value = '3기';
+      else qSelect.value = '4기';
+    }
+
+    // ==========================================
+    // 3. API CALLS & AUTHENTICATION
+    // ==========================================
+    async function loadClassesList() {
+      try {
+        const res = await fetch(`${API_URL}?action=getClasses`);
+        const json = await res.json();
+        if (json.success) {
+          classList = json.data;
+          populateClassSelect();
+        }
+      } catch (err) {
+        showToast('⚠️ 반 목록을 불러오지 못했습니다. 네트워크를 확인하세요.', 'error');
+      }
+    }
+
+    function populateClassSelect() {
+      const select = document.getElementById('classSelect');
+      const adminFilter = document.getElementById('adminClassFilter');
+      
+      select.innerHTML = '<option value="">-- 출석할 반을 선택하세요 --</option>';
+      adminFilter.innerHTML = '<option value="ALL">전체 반 보기</option>';
+
+      classList.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.classId;
+        opt.textContent = `${c.className} (${c.leaderName} 리더)`;
+        select.appendChild(opt);
+
+        const filterOpt = document.createElement('option');
+        filterOpt.value = c.classId;
+        filterOpt.textContent = c.className;
+        adminFilter.appendChild(filterOpt);
+      });
+    }
+
+    async function handleLogin(savedClassId = null, savedPin = null) {
+      const classId = savedClassId || document.getElementById('classSelect').value;
+      const pinCode = savedPin || document.getElementById('pinInput').value.trim();
+
+      if (!classId) {
+        showToast('반을 선택해 주세요.', 'error');
+        return;
+      }
+      if (!pinCode) {
+        showToast('비밀번호(PIN)를 입력해 주세요.', 'error');
+        return;
+      }
+
+      showLoading('인증 및 데이터 동기화 중...');
+
+      try {
+        const url = `${API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}`;
+        const res = await fetch(url);
+        const json = await res.json();
+
+        hideLoading();
+
+        if (json.success) {
+          currentUser = json.user;
+          rawMembers = json.members || [];
+          rawRecords = json.records || [];
+
+          // Save session
+          localStorage.setItem('church_auth', JSON.stringify({ classId, pinCode }));
+
+          setupLoggedInUI(json.absentAlerts || []);
+          showToast(`반갑습니다, ${currentUser.leaderName} 님!`, 'success');
+        } else {
+          localStorage.removeItem('church_auth');
+          showToast(json.message || '비밀번호가 일치하지 않습니다.', 'error');
+        }
+      } catch (err) {
+        hideLoading();
+        showToast('서버 연결에 실패했습니다. 인터넷 상태를 확인해 주세요.', 'error');
+      }
+    }
+
+    function checkSavedSession() {
+      const saved = localStorage.getItem('church_auth');
+      if (saved) {
+        try {
+          const { classId, pinCode } = JSON.parse(saved);
+          handleLogin(classId, pinCode);
+        } catch (e) {
+          localStorage.removeItem('church_auth');
+        }
+      }
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('church_auth');
+      currentUser = null;
+      document.getElementById('appSection').classList.add('hidden');
+      document.getElementById('userBadgeArea').classList.add('hidden');
+      document.getElementById('loginSection').classList.remove('hidden');
+      document.getElementById('pinInput').value = '';
+      showToast('로그아웃 되었습니다.', 'info');
+    });
+
+    // ==========================================
+    // 4. UI SETUP & RENDERING
+    // ==========================================
+    function setupLoggedInUI(absentAlerts) {
+      document.getElementById('loginSection').classList.add('hidden');
+      document.getElementById('appSection').classList.remove('hidden');
+      document.getElementById('userBadgeArea').classList.remove('hidden');
+
+      document.getElementById('headerClassName').textContent = currentUser.className;
+      document.getElementById('headerLeaderName').textContent = `${currentUser.leaderName} 님`;
+
+      if (currentUser.isAdmin) {
+        document.getElementById('adminClassFilterWrap').classList.remove('hidden');
+      } else {
+        document.getElementById('adminClassFilterWrap').classList.add('hidden');
+      }
+
+      // 3주 연속 결석자 렌더링
+      renderAbsentAlerts(absentAlerts);
+
+      // 출석 체크 목록 렌더링
+      loadAttendanceForSelectedDate(document.getElementById('attendanceDate').value);
+
+      // 교인 명부 탭 렌더링
+      renderMemberDirectory();
+    }
+
+    // 🚨 3주 연속 결석자 알림 렌더링
+    function renderAbsentAlerts(alerts) {
+      const banner = document.getElementById('absentAlertBanner');
+      const list = document.getElementById('absentAlertList');
+      const countSpan = document.getElementById('alertCount');
+
+      if (!alerts || alerts.length === 0) {
+        banner.classList.add('hidden');
+        return;
+      }
+
+      banner.classList.remove('hidden');
+      countSpan.textContent = alerts.length;
+      list.innerHTML = '';
+
+      alerts.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'bg-white p-3.5 rounded-xl border border-red-200 shadow-sm flex items-center justify-between';
+        
+        const cleanPhone = (item.phone || '').replace(/[^0-9]/g, '');
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="font-bold text-slate-900 text-sm">${item.name}</span>
+              <span class="text-[10px] font-extrabold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">${item.consecutiveWeeks}주 결석</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">📞 ${item.phone || '연락처 없음'}</p>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            ${cleanPhone ? `
+              <a href="tel:${cleanPhone}" class="p-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                <span>📞 통화</span>
+              </a>
+              <a href="sms:${cleanPhone}" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                <span>💬 문자</span>
+              </a>
+            ` : ''}
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    function loadAttendanceForSelectedDate(targetDate) {
+      currentAttendance = {};
+      
+      // Filter existing records for this date
+      const dateRecords = rawRecords.filter(r => r.date === targetDate);
+      
+      rawMembers.forEach(m => {
+        const found = dateRecords.find(r => r.memberId === m.memberId);
+        if (found) {
+          currentAttendance[m.memberId] = {
+            status: found.status,
+            reason: found.reason || ''
+          };
+        } else {
+          // Default to '출석' if no prior record
+          currentAttendance[m.memberId] = {
+            status: '출석',
+            reason: ''
+          };
+        }
+      });
+
+      renderAttendanceList();
+    }
+
+    function renderAttendanceList() {
+      const container = document.getElementById('attendanceList');
+      const adminFilter = document.getElementById('adminClassFilter').value;
+      
+      let filtered = rawMembers;
+      if (currentUser.isAdmin && adminFilter !== 'ALL') {
+        filtered = rawMembers.filter(m => m.classId === adminFilter);
+      }
+
+      document.getElementById('memberCountBadge').textContent = `${filtered.length}명`;
+      container.innerHTML = '';
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-slate-400 text-sm">등록된 교인이 없습니다.</div>`;
+        updateAttendanceSummary();
+        return;
+      }
+
+      filtered.forEach(member => {
+        const state = currentAttendance[member.memberId] || { status: '출석', reason: '' };
+        const row = document.createElement('div');
+        row.className = 'p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/70 transition';
+
+        const isNewFamily = member.status === '새가족';
+
+        row.innerHTML = `
+          <div class="flex items-start sm:items-center space-x-3">
+            <div class="w-9 h-9 rounded-full ${isNewFamily ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700'} flex items-center justify-center font-bold text-xs flex-shrink-0">
+              ${isNewFamily ? '🌱' : member.name.slice(0, 1)}
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="font-bold text-slate-900 text-sm sm:text-base">${member.name}</span>
+                <span class="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">${member.role || '성도'}</span>
+                ${isNewFamily ? '<span class="text-[10px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">새가족</span>' : ''}
+              </div>
+              <p class="text-xs text-slate-400 mt-0.5">${member.phone || '연락처 미기재'}</p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- 3 Attendance Buttons -->
+            <div class="inline-flex rounded-lg shadow-sm border border-slate-200 bg-slate-100 p-0.5" role="group">
+              <button onclick="setStatus('${member.memberId}', '출석')" class="status-btn-${member.memberId}-출석 px-3 py-1.5 text-xs font-bold rounded-md transition ${state.status === '출석' ? 'bg-emerald-600 text-white shadow' : 'text-slate-600 hover:text-slate-900'}">
+                출석
+              </button>
+              <button onclick="setStatus('${member.memberId}', '지각')" class="status-btn-${member.memberId}-지각 px-3 py-1.5 text-xs font-bold rounded-md transition ${state.status === '지각' ? 'bg-amber-500 text-white shadow' : 'text-slate-600 hover:text-slate-900'}">
+                지각
+              </button>
+              <button onclick="setStatus('${member.memberId}', '결석')" class="status-btn-${member.memberId}-결석 px-3 py-1.5 text-xs font-bold rounded-md transition ${state.status === '결석' ? 'bg-red-500 text-white shadow' : 'text-slate-600 hover:text-slate-900'}">
+                결석
+              </button>
+            </div>
+
+            <!-- Reason input (Always visible or shows when late/absent) -->
+            <input type="text" value="${state.reason || ''}" oninput="setReason('${member.memberId}', this.value)" placeholder="사유 입력 (선택)" class="text-xs px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg w-32 sm:w-40 focus:ring-1 focus:ring-emerald-500 focus:outline-none">
+          </div>
+        `;
+        container.appendChild(row);
+      });
+
+      updateAttendanceSummary();
+    }
+
+    function setStatus(memberId, status) {
+      if (!currentAttendance[memberId]) {
+        currentAttendance[memberId] = { status: '출석', reason: '' };
+      }
+      currentAttendance[memberId].status = status;
+
+      // Update button styles instantly
+      ['출석', '지각', '결석'].forEach(st => {
+        const btn = document.querySelector(`.status-btn-${memberId}-${st}`);
+        if (btn) {
+          if (st === status) {
+            btn.className = `status-btn-${memberId}-${st} px-3 py-1.5 text-xs font-bold rounded-md transition ${
+              st === '출석' ? 'bg-emerald-600 text-white shadow' :
+              st === '지각' ? 'bg-amber-500 text-white shadow' : 'bg-red-500 text-white shadow'
+            }`;
+          } else {
+            btn.className = `status-btn-${memberId}-${st} px-3 py-1.5 text-xs font-bold rounded-md transition text-slate-600 hover:text-slate-900`;
+          }
+        }
+      });
+
+      updateAttendanceSummary();
+    }
+
+    function setReason(memberId, reason) {
+      if (!currentAttendance[memberId]) {
+        currentAttendance[memberId] = { status: '출석', reason: '' };
+      }
+      currentAttendance[memberId].reason = reason;
+    }
+
+    function markAllPresent() {
+      rawMembers.forEach(m => {
+        if (currentAttendance[m.memberId]) {
+          currentAttendance[m.memberId].status = '출석';
+        }
+      });
+      renderAttendanceList();
+      showToast('전원 출석으로 변경되었습니다.', 'info');
+    }
+
+    function updateAttendanceSummary() {
+      let present = 0, late = 0, absent = 0;
+      Object.values(currentAttendance).forEach(v => {
+        if (v.status === '출석') present++;
+        else if (v.status === '지각') late++;
+        else if (v.status === '결석') absent++;
+      });
+
+      document.getElementById('summaryPresent').textContent = present;
+      document.getElementById('summaryLate').textContent = late;
+      document.getElementById('summaryAbsent').textContent = absent;
+    }
+
+    // ==========================================
+    // 5. SAVING ATTENDANCE (POST TO APPS SCRIPT)
+    // ==========================================
+    async function saveAttendance() {
+      const targetDate = document.getElementById('attendanceDate').value;
+      const quarter = document.getElementById('quarterSelect').value;
+
+      if (!targetDate) {
+        showToast('날짜를 선택해 주세요.', 'error');
+        return;
+      }
+
+      const recordsToSave = [];
+      rawMembers.forEach(m => {
+        const state = currentAttendance[m.memberId] || { status: '출석', reason: '' };
+        recordsToSave.push({
+          memberId: m.memberId,
+          classId: m.classId,
+          status: state.status,
+          reason: state.reason
+        });
+      });
+
+      showLoading('출석 데이터를 구글 시트에 저장 중...');
+
+      try {
+        const payload = {
+          date: targetDate,
+          quarter: quarter,
+          checkedBy: currentUser.leaderName,
+          records: recordsToSave
+        };
+
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+
+        hideLoading();
+
+        if (json.success) {
+          showToast('🎉 구글 시트에 출석이 성공적으로 저장되었습니다!', 'success');
+          // Update local records copy
+          recordsToSave.forEach(rec => {
+            const idx = rawRecords.findIndex(r => r.date === targetDate && r.memberId === rec.memberId);
+            const score = rec.status === '출석' ? 1.0 : (rec.status === '지각' ? 0.5 : 0.0);
+            const newObj = {
+              recordId: `${targetDate}_${rec.memberId}`,
+              date: targetDate,
+              quarter: quarter,
+              memberId: rec.memberId,
+              classId: rec.classId,
+              status: rec.status,
+              score: score,
+              reason: rec.reason,
+              checkedBy: currentUser.leaderName
+            };
+            if (idx >= 0) rawRecords[idx] = newObj;
+            else rawRecords.push(newObj);
+          });
+        } else {
+          showToast(json.message || '저장에 실패했습니다.', 'error');
+        }
+      } catch (err) {
+        hideLoading();
+        showToast('저장 중 네트워크 오류가 발생했습니다.', 'error');
+      }
+    }
+
+    // ==========================================
+    // 6. STATISTICS & CHARTS
+    // ==========================================
+    function calculateAndRenderStatistics() {
+      // 1. Total Members
+      const totalMembers = rawMembers.length;
+      document.getElementById('statTotalMembers').textContent = `${totalMembers}명`;
+
+      // 2. Aggregate stats from rawRecords
+      const uniqueDates = [...new Set(rawRecords.map(r => r.date))].sort();
+      document.getElementById('statTotalSabbaths').textContent = `${uniqueDates.length}회`;
+
+      let totalScore = 0;
+      let totalPossible = uniqueDates.length * totalMembers;
+      let presentCount = 0, lateCount = 0, absentCount = 0;
+
+      const memberStatsMap = {};
+      rawMembers.forEach(m => {
+        memberStatsMap[m.memberId] = {
+          name: m.name,
+          classId: m.classId,
+          present: 0,
+          late: 0,
+          absent: 0,
+          score: 0
+        };
+      });
+
+      rawRecords.forEach(r => {
+        if (memberStatsMap[r.memberId]) {
+          if (r.status === '출석') {
+            memberStatsMap[r.memberId].present++;
+            memberStatsMap[r.memberId].score += 1.0;
+            presentCount++;
+            totalScore += 1.0;
+          } else if (r.status === '지각') {
+            memberStatsMap[r.memberId].late++;
+            memberStatsMap[r.memberId].score += 0.5;
+            lateCount++;
+            totalScore += 0.5;
+          } else {
+            memberStatsMap[r.memberId].absent++;
+            absentCount++;
+          }
+        }
+      });
+
+      const avgRate = totalPossible > 0 ? ((totalScore / totalPossible) * 100).toFixed(1) : 0;
+      document.getElementById('statAvgRate').textContent = `${avgRate}%`;
+
+      // 3. Care count (Members with rate < 60% or > 2 consecutive absences)
+      let careCount = 0;
+      Object.values(memberStatsMap).forEach(ms => {
+        const mRate = uniqueDates.length > 0 ? (ms.score / uniqueDates.length) * 100 : 100;
+        if (mRate < 60) careCount++;
+      });
+      document.getElementById('statCareCount').textContent = `${careCount}명`;
+
+      // 4. Render Table
+      renderMemberStatsTable(memberStatsMap, uniqueDates.length);
+
+      // 5. Render Weekly Chart
+      renderWeeklyTrendChart(uniqueDates);
+
+      // 6. Render Doughnut Chart
+      renderRatioDoughnutChart(presentCount, lateCount, absentCount);
+    }
+
+    function renderMemberStatsTable(statsMap, totalWeeks) {
+      const tbody = document.getElementById('memberStatsTableBody');
+      tbody.innerHTML = '';
+
+      const list = Object.values(statsMap);
+      list.sort((a, b) => b.score - a.score); // Highest rate first
+
+      list.forEach(item => {
+        const rate = totalWeeks > 0 ? ((item.score / totalWeeks) * 100).toFixed(1) : '100.0';
+        const isPerfect = totalWeeks > 0 && parseFloat(rate) === 100.0;
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-bold text-slate-900 flex items-center space-x-1.5">
+            <span>${item.name}</span>
+            ${isPerfect ? '<span class="text-xs" title="분기 개근">👑</span>' : ''}
+          </td>
+          <td class="py-3 px-4 text-slate-500">${item.classId}</td>
+          <td class="py-3 px-4 text-center font-semibold text-emerald-600">${item.present}</td>
+          <td class="py-3 px-4 text-center font-semibold text-amber-600">${item.late}</td>
+          <td class="py-3 px-4 text-center font-semibold text-red-500">${item.absent}</td>
+          <td class="py-3 px-4 text-right">
+            <span class="inline-block px-2.5 py-1 rounded-full text-xs font-extrabold ${
+              rate >= 90 ? 'bg-emerald-100 text-emerald-800' :
+              rate >= 70 ? 'bg-blue-100 text-blue-800' :
+              rate >= 50 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'
+            }">
+              ${rate}%
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderWeeklyTrendChart(uniqueDates) {
+      const ctx = document.getElementById('weeklyChart').getContext('2d');
+      if (weeklyChartInstance) weeklyChartInstance.destroy();
+
+      const labels = uniqueDates.map(d => d.slice(5)); // '03-01'
+      const counts = uniqueDates.map(d => {
+        return rawRecords.filter(r => r.date === d && (r.status === '출석' || r.status === '지각')).length;
+      });
+
+      weeklyChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels.length ? labels : ['기록 없음'],
+          datasets: [{
+            label: '출석 인원',
+            data: counts.length ? counts : [0],
+            borderColor: '#059669',
+            backgroundColor: 'rgba(5, 150, 105, 0.08)',
+            borderWidth: 3,
+            tension: 0.35,
+            fill: true,
+            pointBackgroundColor: '#059669',
+            pointRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    function renderRatioDoughnutChart(present, late, absent) {
+      const ctx = document.getElementById('ratioChart').getContext('2d');
+      if (ratioChartInstance) ratioChartInstance.destroy();
+
+      const total = present + late + absent;
+      const data = total === 0 ? [1] : [present, late, absent];
+      const bgColors = total === 0 ? ['#e2e8f0'] : ['#059669', '#f59e0b', '#ef4444'];
+      const labels = total === 0 ? ['데이터 없음'] : ['정상 출석', '지각', '결석'];
+
+      ratioChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: bgColors,
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+          },
+          cutout: '70%'
+        }
+      });
+    }
+
+    // ==========================================
+    // 7. MEMBER DIRECTORY & TAB NAVIGATION
+    // ==========================================
+    function renderMemberDirectory() {
+      const tbody = document.getElementById('memberDirectoryBody');
+      tbody.innerHTML = '';
+
+      rawMembers.forEach(m => {
+        const cleanPhone = (m.phone || '').replace(/[^0-9]/g, '');
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition';
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-mono text-xs text-slate-400">${m.memberId}</td>
+          <td class="py-3 px-4 font-bold text-slate-900">${m.name}</td>
+          <td class="py-3 px-4 text-slate-600">${m.role || '-'}</td>
+          <td class="py-3 px-4">
+            ${cleanPhone ? `
+              <div class="flex items-center space-x-2">
+                <a href="tel:${cleanPhone}" class="text-emerald-700 font-semibold hover:underline">📞 ${m.phone}</a>
+              </div>
+            ` : '<span class="text-slate-400">-</span>'}
+          </td>
+          <td class="py-3 px-4 text-slate-500">${m.birthDate || '-'}</td>
+          <td class="py-3 px-4">
+            <span class="px-2 py-0.5 rounded text-[11px] font-bold ${
+              m.status === '활동' ? 'bg-emerald-100 text-emerald-800' :
+              m.status === '새가족' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'
+            }">${m.status}</span>
+          </td>
+          <td class="py-3 px-4 text-slate-400 text-xs">${m.notes || '-'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterMemberList() {
+      const q = document.getElementById('memberSearchInput').value.toLowerCase();
+      const rows = document.querySelectorAll('#memberDirectoryBody tr');
+      rows.forEach(r => {
+        const text = r.textContent.toLowerCase();
+        r.style.display = text.includes(q) ? '' : 'none';
+      });
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-white', 'text-emerald-700', 'shadow-sm');
+        btn.classList.add('text-slate-600');
+      });
+      document.getElementById(`tabBtn-${tabId}`).classList.add('bg-white', 'text-emerald-700', 'shadow-sm');
+      document.getElementById(`tabBtn-${tabId}`).classList.remove('text-slate-600');
+
+      document.getElementById('tabContent-check').classList.add('hidden');
+      document.getElementById('tabContent-stats').classList.add('hidden');
+      document.getElementById('tabContent-members').classList.add('hidden');
+
+      document.getElementById(`tabContent-${tabId}`).classList.remove('hidden');
+
+      if (tabId === 'stats') {
+        calculateAndRenderStatistics();
+      }
+    }
+
+    // ==========================================
+    // 8. HELPERS (TOAST, LOADING)
+    // ==========================================
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      const msg = document.getElementById('toastMsg');
+      const icon = document.getElementById('toastIcon');
+
+      msg.textContent = message;
+      icon.textContent = type === 'success' ? '✅' : type === 'error' ? '⚠️' : 'ℹ️';
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+
+    function showLoading(msg = '처리 중입니다...') {
+      document.getElementById('loadingMessage').textContent = msg;
+      const overlay = document.getElementById('loadingOverlay');
+      overlay.classList.remove('pointer-events-none', 'opacity-0');
+    }
+
+    function hideLoading() {
+      const overlay = document.getElementById('loadingOverlay');
+      overlay.classList.add('pointer-events-none', 'opacity-0');
+    }
+  </script>
+</body>
+</html>

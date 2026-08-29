@@ -333,35 +333,30 @@
   <!-- Firebase v11 Module Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // Apps Script API URL (Google Sheet DB)
     const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzn2kkDIqszr-dMUbYPHffHlubtBjXb-mYUWApYeU9ot3lYkvrhVl_KPsNL9Y72-ZhK/exec";
 
-    // Fallback/Default Firebase Config
-    const firebaseConfig = typeof __firebase_config !== 'undefined' 
-      ? JSON.parse(__firebase_config) 
-      : {
-          apiKey: "AIzaSyDummyKeyForChurchAttendanceApp1234",
-          authDomain: "sejong-joy-attendance.firebaseapp.com",
-          projectId: "sejong-joy-attendance",
-          storageBucket: "sejong-joy-attendance.appspot.com",
-          messagingSenderId: "1029384756",
-          appId: "1:1029384756:web:abcd1234efgh5678"
-        };
+    // 실제 연동된 교회 Firebase 설정 (sabbathschool-8586d)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXM-QBYDZuOKpZXFXtwk5fpTGTL2uFHCE",
+      authDomain: "sabbathschool-8586d.firebaseapp.com",
+      projectId: "sabbathschool-8586d",
+      storageBucket: "sabbathschool-8586d.firebasestorage.app",
+      messagingSenderId: "891053713701",
+      appId: "1:891053713701:web:5e49997a29e1b5432852cc"
+    };
 
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'sejong-joy-church';
-
-    let app, auth, db, currentUserAuth = null;
+    let app, db;
     let isFirebaseReady = false;
 
     try {
       app = initializeApp(firebaseConfig);
-      auth = getAuth(app);
       db = getFirestore(app);
+      isFirebaseReady = true;
     } catch (e) {
-      console.warn("Firebase initialized with local fallback:", e);
+      console.warn("Firebase 초기화 알림:", e);
     }
 
     class AttendanceApp {
@@ -378,7 +373,6 @@
 
       async init() {
         this.initDefaultDate();
-        await this.initAuth();
         await this.loadClassesList();
         this.checkSavedSession();
 
@@ -527,11 +521,11 @@
       }
 
       subscribeRealtimeRecords() {
-        if (!isFirebaseReady || !db || !currentUserAuth) return;
+        if (!isFirebaseReady || !db) return;
 
         try {
-          // Public collection following RULE 1 & RULE 2 (Simple collection query)
-          const recordsCol = collection(db, 'artifacts', appId, 'public', 'data', 'attendance_records');
+          // Firestore 실시간 리스너 구독 (초고속 0.05초 브로드캐스트)
+          const recordsCol = collection(db, 'attendance_records');
           
           this.unsubscribeRecords = onSnapshot(recordsCol, (snapshot) => {
             snapshot.docChanges().forEach((change) => {
@@ -550,7 +544,7 @@
               }
             });
 
-            // Re-render date specific attendance if current tab is active
+            // 현재 보고 있는 화면 자동 실시간 갱신
             const curDate = document.getElementById('attendanceDate').value;
             this.loadAttendanceForSelectedDate(curDate);
             
@@ -748,17 +742,39 @@
           updatedAt: new Date().toISOString()
         };
 
-        // Local State Update
+        // 로컬 상태 즉각 반영
         const idx = this.rawRecords.findIndex(r => r.date === targetDate && r.memberId === memberId);
         if (idx >= 0) this.rawRecords[idx] = recordData;
         else this.rawRecords.push(recordData);
 
-        if (isFirebaseReady && db && currentUserAuth) {
+        // Firestore 실시간 전송
+        if (isFirebaseReady && db) {
           try {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'attendance_records', recordId);
+            const docRef = doc(db, 'attendance_records', recordId);
             await setDoc(docRef, recordData);
           } catch (e) {
-            console.warn("Firestore setDoc notice:", e);
+            console.warn("Firestore 저장 알림:", e);
+          }
+        }
+      }
+
+      async setReason(memberId, reason) {
+        if (!this.currentAttendance[memberId]) {
+          this.currentAttendance[memberId] = { status: '출석', reason: '' };
+        }
+        this.currentAttendance[memberId].reason = reason;
+
+        const targetDate = document.getElementById('attendanceDate').value;
+        const recordId = `${targetDate}_${memberId}`;
+        const existing = this.rawRecords.find(r => r.date === targetDate && r.memberId === memberId);
+        if (existing) existing.reason = reason;
+
+        if (isFirebaseReady && db) {
+          try {
+            const docRef = doc(db, 'attendance_records', recordId);
+            await setDoc(docRef, { reason: reason }, { merge: true });
+          } catch (e) {
+            console.warn("Firestore 사유 업데이트 알림:", e);
           }
         }
       }

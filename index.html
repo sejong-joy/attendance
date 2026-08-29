@@ -161,17 +161,26 @@
         <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div class="flex flex-wrap items-center gap-3">
             <div>
-              <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">기준 주일 일자</label>
-              <input type="date" id="attendanceDate" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">연도 및 분기</label>
+              <div class="flex items-center space-x-1.5">
+                <select id="yearSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                  <option value="2025">2025년</option>
+                  <option value="2026" selected>2026년</option>
+                  <option value="2027">2027년</option>
+                </select>
+                <select id="quarterSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                  <option value="1기">1기 (1~3월)</option>
+                  <option value="2기">2기 (4~6월)</option>
+                  <option value="3기">3기 (7~9월)</option>
+                  <option value="4기">4기 (10~12월)</option>
+                </select>
+              </div>
             </div>
 
             <div>
-              <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">분기</label>
-              <select id="quarterSelect" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                <option value="1기">1기 (1~3월)</option>
-                <option value="2기">2기 (4~6월)</option>
-                <option value="3기">3기 (7~9월)</option>
-                <option value="4기">4기 (10~12월)</option>
+              <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">📖 안식일(교과) 선택</label>
+              <select id="sabbathSelect" onchange="window.appInstance.onSabbathSelectChange()" class="px-3 py-2 bg-emerald-50 border border-emerald-300 rounded-lg text-sm font-bold text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-sm">
+                <!-- '제1과 7월 4일 (토)' 형태로 동적 생성 -->
               </select>
             </div>
 
@@ -333,7 +342,7 @@
   <!-- Firebase v11 Module Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // Apps Script API URL (Google Sheet DB)
     const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzn2kkDIqszr-dMUbYPHffHlubtBjXb-mYUWApYeU9ot3lYkvrhVl_KPsNL9Y72-ZhK/exec";
@@ -356,7 +365,7 @@
       db = getFirestore(app);
       isFirebaseReady = true;
     } catch (e) {
-      console.warn("Firebase 초기화 알림:", e);
+      console.warn("Firebase 초기화 오류:", e);
     }
 
     class AttendanceApp {
@@ -372,51 +381,106 @@
       }
 
       async init() {
-        this.initDefaultDate();
+        this.initCurrentYearAndQuarter();
         await this.loadClassesList();
         this.checkSavedSession();
-
-        document.getElementById('attendanceDate').addEventListener('change', (e) => {
-          this.autoSelectQuarter(e.target.value);
-          this.loadAttendanceForSelectedDate(e.target.value);
-        });
 
         document.getElementById('logoutBtn').addEventListener('click', () => {
           this.handleLogout();
         });
       }
 
-      async initAuth() {
-        try {
-          if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-            const userCred = await signInWithCustomToken(auth, __initial_auth_token);
-            currentUserAuth = userCred.user;
-          } else if (auth) {
-            const userCred = await signInAnonymously(auth);
-            currentUserAuth = userCred.user;
+      // 오늘 날짜를 기준으로 해당 연도/분기 자동 선택 및 토요일 목록 생성
+      initCurrentYearAndQuarter() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth() + 1;
+
+        const yearSelect = document.getElementById('yearSelect');
+        if (yearSelect) yearSelect.value = String(year);
+
+        const qSelect = document.getElementById('quarterSelect');
+        let quarter = '1기';
+        if (month >= 1 && month <= 3) quarter = '1기';
+        else if (month >= 4 && month <= 6) quarter = '2기';
+        else if (month >= 7 && month <= 9) quarter = '3기';
+        else quarter = '4기';
+
+        if (qSelect) qSelect.value = quarter;
+
+        this.generateSabbathOptions(year, quarter);
+      }
+
+      // 분기 내 모든 안식일(토요일) 목록을 계산하여 "제N과 M월 D일" 옵션 생성
+      generateSabbathOptions(year, quarter) {
+        let startMonth = 1;
+        let endMonth = 3;
+
+        if (quarter === '2기') { startMonth = 4; endMonth = 6; }
+        else if (quarter === '3기') { startMonth = 7; endMonth = 9; }
+        else if (quarter === '4기') { startMonth = 10; endMonth = 12; }
+
+        const sabbaths = [];
+        const startDate = new Date(year, startMonth - 1, 1);
+        const endDate = new Date(year, endMonth, 0); // 해당 분기 말일
+
+        const cur = new Date(startDate);
+        while (cur <= endDate) {
+          if (cur.getDay() === 6) { // 6 = 토요일 (안식일)
+            const y = cur.getFullYear();
+            const m = String(cur.getMonth() + 1).padStart(2, '0');
+            const d = String(cur.getDate()).padStart(2, '0');
+            sabbaths.push({
+              dateStr: `${y}-${m}-${d}`,
+              monthNum: cur.getMonth() + 1,
+              dayNum: cur.getDate(),
+              fullDate: new Date(cur)
+            });
           }
-          isFirebaseReady = true;
-        } catch (err) {
-          console.warn("Auth initialization skipped:", err);
+          cur.setDate(cur.getDate() + 1);
+        }
+
+        const select = document.getElementById('sabbathSelect');
+        select.innerHTML = '';
+
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        
+        let closestDateStr = sabbaths[0]?.dateStr || todayStr;
+        let minDiff = Infinity;
+
+        sabbaths.forEach((item, idx) => {
+          const lessonNo = idx + 1; // 1과, 2과...
+          const opt = document.createElement('option');
+          opt.value = item.dateStr;
+          opt.textContent = `제${lessonNo}과 ${item.monthNum}월 ${item.dayNum}일`;
+          select.appendChild(opt);
+
+          // 오늘 날짜와 가장 가까운 안식일 자동 선택
+          const diff = Math.abs(item.fullDate.getTime() - today.getTime());
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestDateStr = item.dateStr;
+          }
+        });
+
+        if (sabbaths.length > 0) {
+          select.value = closestDateStr;
         }
       }
 
-      initDefaultDate() {
-        const today = new Date();
-        const dateStr = today.toISOString().split('T')[0];
-        const dateInput = document.getElementById('attendanceDate');
-        dateInput.value = dateStr;
-        this.autoSelectQuarter(dateStr);
+      onQuarterOrYearChange() {
+        const year = parseInt(document.getElementById('yearSelect').value, 10);
+        const quarter = document.getElementById('quarterSelect').value;
+        this.generateSabbathOptions(year, quarter);
+        this.onSabbathSelectChange();
       }
 
-      autoSelectQuarter(dateString) {
-        if (!dateString) return;
-        const month = parseInt(dateString.split('-')[1], 10);
-        const qSelect = document.getElementById('quarterSelect');
-        if (month >= 1 && month <= 3) qSelect.value = '1기';
-        else if (month >= 4 && month <= 6) qSelect.value = '2기';
-        else if (month >= 7 && month <= 9) qSelect.value = '3기';
-        else qSelect.value = '4기';
+      onSabbathSelectChange() {
+        const selectedDate = document.getElementById('sabbathSelect').value;
+        if (this.currentUser) {
+          this.loadAttendanceForSelectedDate(selectedDate);
+        }
       }
 
       async loadClassesList() {
@@ -481,7 +545,7 @@
             localStorage.setItem('church_auth', JSON.stringify({ classId, pinCode }));
             this.setupLoggedInUI(json.absentAlerts || []);
             
-            // Connect Firestore Real-Time Live Sync
+            // Firebase Firestore 실시간 구독 시작 (0.05초 실시간 동기화)
             this.subscribeRealtimeRecords();
             this.showToast(`반갑습니다, ${this.currentUser.leaderName} 님! (실시간 연결됨)`, 'success');
           } else {
@@ -524,7 +588,6 @@
         if (!isFirebaseReady || !db) return;
 
         try {
-          // Firestore 실시간 리스너 구독 (초고속 0.05초 브로드캐스트)
           const recordsCol = collection(db, 'attendance_records');
           
           this.unsubscribeRecords = onSnapshot(recordsCol, (snapshot) => {
@@ -532,7 +595,7 @@
               const data = change.doc.data();
               if (!data) return;
 
-              const idx = this.rawRecords.findIndex(r => r.recordId === change.doc.id);
+              const idx = this.rawRecords.findIndex(r => r.recordId === change.doc.id || (r.date === data.date && r.memberId === data.memberId));
               if (change.type === "added" || change.type === "modified") {
                 if (idx >= 0) {
                   this.rawRecords[idx] = data;
@@ -544,18 +607,18 @@
               }
             });
 
-            // 현재 보고 있는 화면 자동 실시간 갱신
-            const curDate = document.getElementById('attendanceDate').value;
+            // 현재 선택된 안식일 화면 실시간 갱신
+            const curDate = document.getElementById('sabbathSelect').value;
             this.loadAttendanceForSelectedDate(curDate);
             
             if (!document.getElementById('tabContent-stats').classList.contains('hidden')) {
               this.calculateAndRenderStatistics();
             }
           }, (error) => {
-            console.warn("Firestore snapshot listener notice:", error);
+            console.warn("Firestore 실시간 수신 알림:", error);
           });
         } catch (e) {
-          console.warn("Firestore real-time subscription fallback:", e);
+          console.warn("Firestore 구독 오류:", e);
         }
       }
 
@@ -574,7 +637,7 @@
         }
 
         this.renderAbsentAlerts(absentAlerts);
-        this.loadAttendanceForSelectedDate(document.getElementById('attendanceDate').value);
+        this.loadAttendanceForSelectedDate(document.getElementById('sabbathSelect').value);
         this.renderMemberDirectory();
       }
 
@@ -722,7 +785,7 @@
         this.updateAttendanceSummary();
 
         // ⚡ 0.05초 초고속 Firestore 실시간 브로드캐스트
-        const targetDate = document.getElementById('attendanceDate').value;
+        const targetDate = document.getElementById('sabbathSelect').value;
         const quarter = document.getElementById('quarterSelect').value;
         const member = this.rawMembers.find(m => m.memberId === memberId);
         if (!member) return;
@@ -742,7 +805,7 @@
           updatedAt: new Date().toISOString()
         };
 
-        // 로컬 상태 즉각 반영
+        // 로컬 배열 즉각 반영
         const idx = this.rawRecords.findIndex(r => r.date === targetDate && r.memberId === memberId);
         if (idx >= 0) this.rawRecords[idx] = recordData;
         else this.rawRecords.push(recordData);
@@ -753,7 +816,7 @@
             const docRef = doc(db, 'attendance_records', recordId);
             await setDoc(docRef, recordData);
           } catch (e) {
-            console.warn("Firestore 저장 알림:", e);
+            console.error("Firestore 실시간 저장 오류:", e);
           }
         }
       }
@@ -764,7 +827,7 @@
         }
         this.currentAttendance[memberId].reason = reason;
 
-        const targetDate = document.getElementById('attendanceDate').value;
+        const targetDate = document.getElementById('sabbathSelect').value;
         const recordId = `${targetDate}_${memberId}`;
         const existing = this.rawRecords.find(r => r.date === targetDate && r.memberId === memberId);
         if (existing) existing.reason = reason;
@@ -774,28 +837,7 @@
             const docRef = doc(db, 'attendance_records', recordId);
             await setDoc(docRef, { reason: reason }, { merge: true });
           } catch (e) {
-            console.warn("Firestore 사유 업데이트 알림:", e);
-          }
-        }
-      }
-
-      async setReason(memberId, reason) {
-        if (!this.currentAttendance[memberId]) {
-          this.currentAttendance[memberId] = { status: '출석', reason: '' };
-        }
-        this.currentAttendance[memberId].reason = reason;
-
-        const targetDate = document.getElementById('attendanceDate').value;
-        const recordId = `${targetDate}_${memberId}`;
-        const existing = this.rawRecords.find(r => r.date === targetDate && r.memberId === memberId);
-        if (existing) existing.reason = reason;
-
-        if (isFirebaseReady && db && currentUserAuth) {
-          try {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'attendance_records', recordId);
-            await setDoc(docRef, { reason: reason }, { merge: true });
-          } catch (e) {
-            console.warn("Firestore reason update notice:", e);
+            console.error("Firestore 사유 업데이트 오류:", e);
           }
         }
       }
@@ -821,7 +863,7 @@
       }
 
       async syncToSheets() {
-        const targetDate = document.getElementById('attendanceDate').value;
+        const targetDate = document.getElementById('sabbathSelect').value;
         const quarter = document.getElementById('quarterSelect').value;
 
         const recordsToSave = [];

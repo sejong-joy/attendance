@@ -19,6 +19,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Chart.js for statistics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- SheetJS for Excel generation -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <!-- Google Fonts (Noto Sans KR) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -53,6 +55,30 @@
     .live-dot {
       animation: live-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
     }
+
+    /* Print Stylesheet */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printContainer, #printContainer * {
+        visibility: visible;
+      }
+      #printContainer {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 10px;
+        background: white;
+        color: black;
+      }
+      @page {
+        size: auto;
+        margin: 10mm;
+      }
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white pb-6">
@@ -79,8 +105,11 @@
         </div>
       </div>
 
-      <!-- User Badge & Sync Status Area -->
-      <div id="userBadgeArea" class="hidden flex items-center space-x-2.5">
+      <!-- User Badge & Actions -->
+      <div id="userBadgeArea" class="hidden flex items-center space-x-2">
+        <button onclick="window.appInstance.openExportModal()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-black rounded-lg border border-slate-300 transition flex items-center space-x-1 shadow-2xs">
+          <span>🖨️ 인쇄/엑셀</span>
+        </button>
         <div class="text-right hidden sm:block">
           <span id="headerClassName" class="text-xs font-black text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">반명</span>
           <p id="headerLeaderName" class="text-xs text-slate-700 font-bold mt-0.5">리더님</p>
@@ -131,9 +160,9 @@
     </section>
 
     <!-- 2. MAIN APP DASHBOARD -->
-    <section id="appSection" class="hidden space-y-3.5 sm:space-y-4">
+    <section id="appSection" class="hidden space-y-3 sm:space-y-3.5">
 
-      <!-- 🚨 3주 연속 결석자 긴급 알림 배너 (State 1 미심방 대상) -->
+      <!-- 🚨 3주 연속 결석자 긴급 알림 배너 -->
       <div id="absentAlertBanner" class="hidden bg-gradient-to-r from-red-50 to-amber-50 border-l-4 border-red-500 rounded-xl p-3 sm:p-4 shadow-sm">
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-2.5">
@@ -152,21 +181,38 @@
       </div>
 
       <!-- Navigation Tabs -->
-      <div class="flex items-center space-x-1 bg-slate-200/90 p-1 rounded-xl w-full sm:w-max">
-        <button onclick="window.appInstance.switchTab('check')" id="tabBtn-check" class="tab-btn flex-1 sm:flex-initial px-2.5 py-1 rounded-lg text-sm sm:text-base font-black tracking-tight whitespace-nowrap bg-white text-emerald-800 shadow-sm transition">
-          ✍️ 출석 체크 (실시간)
-        </button>
-        <button onclick="window.appInstance.switchTab('stats')" id="tabBtn-stats" class="tab-btn flex-1 sm:flex-initial px-2.5 py-1 rounded-lg text-sm sm:text-base font-black tracking-tight whitespace-nowrap text-slate-600 hover:text-slate-900 transition">
-          📊 출석 통계
-        </button>
-        <button onclick="window.appInstance.switchTab('members')" id="tabBtn-members" class="tab-btn flex-1 sm:flex-initial px-2.5 py-1 rounded-lg text-sm sm:text-base font-black tracking-tight whitespace-nowrap text-slate-600 hover:text-slate-900 transition">
-          👥 교인 명부
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <div class="flex items-center space-x-1 bg-slate-200/90 p-1 rounded-xl w-full sm:w-max">
+          <button onclick="window.appInstance.switchTab('check')" id="tabBtn-check" class="tab-btn flex-1 sm:flex-initial px-2.5 py-1 rounded-lg text-sm sm:text-base font-black tracking-tight whitespace-nowrap bg-white text-emerald-800 shadow-sm transition">
+            ✍️ 출석 체크 (실시간)
+          </button>
+          <button onclick="window.appInstance.switchTab('stats')" id="tabBtn-stats" class="tab-btn flex-1 sm:flex-initial px-2.5 py-1 rounded-lg text-sm sm:text-base font-black tracking-tight whitespace-nowrap text-slate-600 hover:text-slate-900 transition">
+            📊 출석 통계
+          </button>
+          <button onclick="window.appInstance.switchTab('members')" id="tabBtn-members" class="tab-btn flex-1 sm:flex-initial px-2.5 py-1 rounded-lg text-sm sm:text-base font-black tracking-tight whitespace-nowrap text-slate-600 hover:text-slate-900 transition">
+            👥 교인 명부
+          </button>
+        </div>
+
+        <button onclick="window.appInstance.openExportModal()" class="sm:hidden w-full py-2 bg-slate-800 text-white text-xs font-black rounded-xl shadow-xs flex items-center justify-center space-x-1">
+          <span>🖨️ 보고서 인쇄 및 엑셀 다운로드</span>
         </button>
       </div>
 
       <!-- TAB 1: ATTENDANCE CHECK VIEW -->
       <div id="tabContent-check" class="space-y-2.5">
         
+        <!-- [관리자 전용] 상단 실시간 반별 출석 현황 바 (가로 스크롤) -->
+        <div id="adminClassStatusBarWrap" class="hidden bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
+          <div class="text-[11px] font-black text-slate-400 mb-1.5 flex items-center justify-between">
+            <span>⚡ 실시간 반별 출석 체크 현황</span>
+            <span class="text-[10px] text-slate-400">터치 시 해당 반으로 즉시 전환</span>
+          </div>
+          <div id="classChipsContainer" class="flex items-center space-x-1.5 overflow-x-auto custom-scrollbar pb-1">
+            <!-- 동적 반별 칩 버튼 -->
+          </div>
+        </div>
+
         <!-- Controls Card -->
         <div class="bg-white rounded-xl border border-slate-200 p-2.5 sm:p-3 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-2">
           <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
@@ -331,7 +377,108 @@
 
     </section>
 
-    <!-- 1. Urgent Absentee 3-Week Modal (🚨 팝업) -->
+    <!-- [신규 모달] 🖨️ 보고서 인쇄 및 엑셀 다운로드 선택창 (4종 서식) -->
+    <div id="exportModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3.5 transition-opacity duration-200 opacity-0 pointer-events-none">
+      <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-200" id="exportModalBox">
+        <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="text-xl">🖨️</span>
+            <div>
+              <h3 class="text-base sm:text-lg font-black text-slate-900 leading-tight">보고서 인쇄 및 엑셀 내보내기</h3>
+              <p class="text-xs text-slate-500 font-bold">출력할 행정 서식을 선택하세요</p>
+            </div>
+          </div>
+          <button onclick="window.appInstance.closeExportModal()" class="text-slate-400 hover:text-slate-800 text-lg font-bold p-1">✕</button>
+        </div>
+
+        <div class="p-4 space-y-3 max-h-[75vh] overflow-y-auto custom-scrollbar">
+
+          <!-- 서식 1: 반별 13주 종합 출석부 -->
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl hover:border-emerald-400 transition">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="font-black text-slate-900 text-sm sm:text-base flex items-center space-x-1.5">
+                <span>📄</span>
+                <span>1. 반별 13주 종합 출석부</span>
+              </span>
+              <span class="text-[10px] font-black bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">A4 가로 권장</span>
+            </div>
+            <p class="text-xs text-slate-500 font-bold mb-3">상단 결재란과 1~13주차 기호(⭕/△/❌), 누적 출석률이 포함된 분기 출석부입니다.</p>
+            <div class="flex space-x-2">
+              <button onclick="window.appInstance.printReport(1)" class="w-1/2 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1">
+                <span>🖨️ 바로 인쇄</span>
+              </button>
+              <button onclick="window.appInstance.exportExcel(1)" class="w-1/2 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1">
+                <span>📥 엑셀(.xlsx)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 서식 2: 안식일학교 전체 종합 보고서 -->
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl hover:border-emerald-400 transition">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="font-black text-slate-900 text-sm sm:text-base flex items-center space-x-1.5">
+                <span>📊</span>
+                <span>2. 전체 반 종합 결산 보고서</span>
+              </span>
+              <span class="text-[10px] font-black bg-blue-100 text-blue-800 px-2 py-0.5 rounded">A4 세로 권장</span>
+            </div>
+            <p class="text-xs text-slate-500 font-bold mb-3">반별 재적 인원, 출석자 수, 평균 출석률을 한눈에 대조하는 행정 보고서입니다.</p>
+            <div class="flex space-x-2">
+              <button onclick="window.appInstance.printReport(2)" class="w-1/2 py-2 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1">
+                <span>🖨️ 바로 인쇄</span>
+              </button>
+              <button onclick="window.appInstance.exportExcel(2)" class="w-1/2 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1">
+                <span>📥 엑셀(.xlsx)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 서식 3: 주간 현장 수기 체크표 -->
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl hover:border-emerald-400 transition">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="font-black text-slate-900 text-sm sm:text-base flex items-center space-x-1.5">
+                <span>📝</span>
+                <span>3. 당일 현장 수기 출석 체크표</span>
+              </span>
+              <span class="text-[10px] font-black bg-amber-100 text-amber-800 px-2 py-0.5 rounded">현장 비치용</span>
+            </div>
+            <p class="text-xs text-slate-500 font-bold mb-3">스마트폰 사용이 익숙지 않은 리더를 위해 현장에서 손으로 체크할 수 있는 인쇄물입니다.</p>
+            <button onclick="window.appInstance.printReport(3)" class="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1">
+              <span>🖨️ 체크표 인쇄하기</span>
+            </button>
+          </div>
+
+          <!-- 서식 4: 심방 및 돌봄 대상자 명부 -->
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl hover:border-emerald-400 transition">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="font-black text-slate-900 text-sm sm:text-base flex items-center space-x-1.5">
+                <span>🚨</span>
+                <span>4. 심방 및 돌봄 대상자 명부</span>
+              </span>
+              <span class="text-[10px] font-black bg-red-100 text-red-800 px-2 py-0.5 rounded">목회/심방용</span>
+            </div>
+            <p class="text-xs text-slate-500 font-bold mb-3">3주 연속 결석자 및 출석률 60% 미만 성도 명단과 사유 메모가 정리된 서식입니다.</p>
+            <div class="flex space-x-2">
+              <button onclick="window.appInstance.printReport(4)" class="w-1/2 py-2 bg-red-600 hover:bg-red-700 text-white font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1">
+                <span>🖨️ 바로 인쇄</span>
+              </button>
+              <button onclick="window.appInstance.exportExcel(4)" class="w-1/2 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1">
+                <span>📥 엑셀(.xlsx)</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 text-right">
+          <button onclick="window.appInstance.closeExportModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black text-xs sm:text-sm rounded-lg transition">
+            닫기
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Urgent Absentee 3-Week Modal -->
     <div id="urgentAlertModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border-2 border-red-400 w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200" id="urgentModalBox">
         <div class="px-4 py-3 bg-red-50 border-b border-red-100 flex items-center justify-between">
@@ -355,7 +502,7 @@
       </div>
     </div>
 
-    <!-- 2. Care Visit Modal (State 2: 심방완료 사유 입력) -->
+    <!-- Care Visit Modal -->
     <div id="careVisitModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border-2 border-blue-300 w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200" id="careModalBox">
         <div class="px-4 py-3 bg-blue-50 border-b border-blue-100 flex items-center justify-between">
@@ -386,7 +533,7 @@
       </div>
     </div>
 
-    <!-- 3. Member Attendance Detail Modal (개인별 과별 출석 팝업창) -->
+    <!-- Member Attendance Detail Modal -->
     <div id="memberDetailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-200" id="memberModalBox">
         <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
@@ -417,7 +564,7 @@
       </div>
     </div>
 
-    <!-- 4. Stat Card Detail Modal (상단 4대 핵심 통계 세부 팝업창) -->
+    <!-- Stat Card Detail Modal -->
     <div id="statDetailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-xl overflow-hidden transform scale-95 transition-transform duration-200" id="statModalBox">
         <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
@@ -439,6 +586,9 @@
         </div>
       </div>
     </div>
+
+    <!-- [인쇄 전용 컨테이너] (평소에는 숨김, 인쇄 시 브라우저에 표시) -->
+    <div id="printContainer" class="hidden print:block"></div>
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center transition-opacity duration-200 opacity-0 pointer-events-none">
@@ -498,6 +648,7 @@
         this.autoSyncTimer = null;
         this.isOnline = navigator.onLine;
         this.isSyncing = false;
+        this.selectedFilterClass = 'ALL';
       }
 
       async init() {
@@ -511,10 +662,9 @@
         });
       }
 
-      // 반 코드(C01)를 친근한 한글 반 이름(청년 1반)으로 즉시 변환하는 헬퍼 함수
       getClassName(classId) {
         if (!classId) return '-';
-        if (classId === 'ADMIN') return '관리자(전체)';
+        if (classId === 'ADMIN' || classId === 'ALL') return '전체 반';
         const found = this.classList.find(c => c.classId === classId);
         return found ? found.className : classId;
       }
@@ -575,10 +725,9 @@
         this.generateSabbathOptions(year, quarter);
       }
 
-      generateSabbathOptions(year, quarter) {
+      getQuarterSabbaths(year, quarter) {
         let startMonth = 1;
         let endMonth = 3;
-
         if (quarter === '2기') { startMonth = 4; endMonth = 6; }
         else if (quarter === '3기') { startMonth = 7; endMonth = 9; }
         else if (quarter === '4기') { startMonth = 10; endMonth = 12; }
@@ -593,20 +742,20 @@
             const y = cur.getFullYear();
             const m = String(cur.getMonth() + 1).padStart(2, '0');
             const d = String(cur.getDate()).padStart(2, '0');
-            saturdays_push_helper(sabbaths, y, m, d, cur);
+            sabbaths.push({
+              dateStr: `${y}-${m}-${d}`,
+              monthNum: cur.getMonth() + 1,
+              dayNum: cur.getDate(),
+              fullDate: new Date(cur)
+            });
           }
           cur.setDate(cur.getDate() + 1);
         }
+        return sabbaths;
+      }
 
-        function saturdays_push_helper(arr, y, m, d, c) {
-          arr.push({
-            dateStr: `${y}-${m}-${d}`,
-            monthNum: c.getMonth() + 1,
-            dayNum: c.getDate(),
-            fullDate: new Date(c)
-          });
-        }
-
+      generateSabbathOptions(year, quarter) {
+        const sabbaths = this.getQuarterSabbaths(year, quarter);
         const select = document.getElementById('sabbathSelect');
         if (!select) return;
         select.innerHTML = '';
@@ -652,6 +801,7 @@
         const selectedDate = document.getElementById('sabbathSelect')?.value;
         if (this.currentUser && selectedDate) {
           this.loadAttendanceForSelectedDate(selectedDate);
+          this.renderClassMonitoringBar();
         }
       }
 
@@ -700,7 +850,7 @@
           opt.textContent = `${c.className} (${c.leaderName} 리더)`;
           select.appendChild(opt);
 
-          if (adminFilter) {
+          if (adminFilter && c.classId !== 'ADMIN') {
             const filterOpt = document.createElement('option');
             filterOpt.value = c.classId;
             filterOpt.textContent = c.className;
@@ -772,6 +922,7 @@
             } else {
               this.renderAttendanceList();
               this.renderMemberDirectory();
+              this.renderClassMonitoringBar();
               this.updateAbsentBanner();
               this.checkAndAutoOpenUrgentModal();
             }
@@ -921,6 +1072,7 @@
 
             const curDate = document.getElementById('sabbathSelect')?.value;
             if (curDate) this.loadAttendanceForSelectedDate(curDate);
+            this.renderClassMonitoringBar();
             
             const statsContent = document.getElementById('tabContent-stats');
             if (statsContent && !statsContent.classList.contains('hidden')) {
@@ -976,9 +1128,13 @@
         if (hdrLeader) hdrLeader.textContent = `${this.currentUser.leaderName} 리더님`;
 
         const filterWrap = document.getElementById('adminClassFilterWrap');
-        if (filterWrap) {
-          if (this.currentUser.isAdmin) filterWrap.classList.remove('hidden');
-          else filterWrap.classList.add('hidden');
+        const statusBarWrap = document.getElementById('adminClassStatusBarWrap');
+        if (this.currentUser.isAdmin) {
+          filterWrap?.classList.remove('hidden');
+          statusBarWrap?.classList.remove('hidden');
+        } else {
+          filterWrap?.classList.add('hidden');
+          statusBarWrap?.classList.add('hidden');
         }
 
         this.calculateConsecutiveAbsentees();
@@ -986,12 +1142,71 @@
         const selDate = document.getElementById('sabbathSelect')?.value;
         if (selDate) this.loadAttendanceForSelectedDate(selDate);
         this.renderMemberDirectory();
+        this.renderClassMonitoringBar();
+      }
+
+      // [신규 기능] 관리자 상단 실시간 반별 출석 현황 바 렌더링
+      renderClassMonitoringBar() {
+        if (!this.currentUser || !this.currentUser.isAdmin) return;
+        const container = document.getElementById('classChipsContainer');
+        if (!container) return;
+
+        const curDate = document.getElementById('sabbathSelect')?.value;
+        const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
+        
+        container.innerHTML = '';
+
+        // 전체 반 칩
+        const allBtn = document.createElement('button');
+        allBtn.className = `px-3 py-1.5 rounded-lg text-xs font-black whitespace-nowrap transition flex items-center space-x-1 ${
+          this.selectedFilterClass === 'ALL' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+        }`;
+        allBtn.innerHTML = `<span>✨ 전체 반</span> <span class="opacity-80 text-[11px]">(${this.rawMembers.length}명)</span>`;
+        allBtn.onclick = () => this.selectMonitoringClass('ALL');
+        container.appendChild(allBtn);
+
+        // 각 반별 칩
+        activeClasses.forEach(c => {
+          const classMembers = this.rawMembers.filter(m => m.classId === c.classId);
+          const checkedCount = classMembers.filter(m => {
+            const r = this.rawRecords.find(rec => rec.date === curDate && rec.memberId === m.memberId);
+            return r && (r.status === '출석' || r.status === '지각' || r.status === '결석');
+          }).length;
+
+          const isCompleted = classMembers.length > 0 && checkedCount === classMembers.length;
+          const isSelected = this.selectedFilterClass === c.classId;
+
+          const btn = document.createElement('button');
+          btn.className = `px-3 py-1.5 rounded-lg text-xs font-black whitespace-nowrap transition flex items-center space-x-1.5 ${
+            isSelected 
+              ? 'bg-emerald-700 text-white shadow-xs' 
+              : isCompleted 
+                ? 'bg-emerald-50 text-emerald-800 border border-emerald-300' 
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+          }`;
+
+          btn.innerHTML = `
+            <span>${c.className}</span>
+            <span class="text-[11px] px-1.5 py-0.2 rounded-full ${isSelected ? 'bg-white/20' : isCompleted ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-200'}">
+              ${checkedCount}/${classMembers.length}
+            </span>
+          `;
+          btn.onclick = () => this.selectMonitoringClass(c.classId);
+          container.appendChild(btn);
+        });
+      }
+
+      selectMonitoringClass(classId) {
+        this.selectedFilterClass = classId;
+        const filterSelect = document.getElementById('adminClassFilter');
+        if (filterSelect) filterSelect.value = classId;
+        this.renderAttendanceList();
+        this.renderClassMonitoringBar();
       }
 
       updateAbsentBanner() {
         const banner = document.getElementById('absentAlertBanner');
         const countSpan = document.getElementById('alertCount');
-        
         const unhandled = Object.values(this.absentAlertMap).filter(a => !this.careNotesMap[a.memberId]);
 
         if (unhandled.length > 0) {
@@ -1148,12 +1363,15 @@
 
       renderAttendanceList() {
         const container = document.getElementById('attendanceList');
-        const adminFilter = document.getElementById('adminClassFilter')?.value || 'ALL';
         if (!container) return;
 
         let filtered = this.rawMembers;
-        if (this.currentUser && this.currentUser.isAdmin && adminFilter !== 'ALL') {
-          filtered = this.rawMembers.filter(m => m.classId === adminFilter);
+        const activeFilter = (this.currentUser && this.currentUser.isAdmin) 
+          ? (this.selectedFilterClass || document.getElementById('adminClassFilter')?.value || 'ALL')
+          : this.currentUser.classId;
+
+        if (activeFilter !== 'ALL') {
+          filtered = this.rawMembers.filter(m => m.classId === activeFilter);
         }
 
         const countBadge = document.getElementById('memberCountBadge');
@@ -1244,7 +1462,6 @@
         if (!member || !targetDate) return;
 
         const recordId = `${targetDate}_${memberId}`;
-
         const isCancelling = (currentStatus === status);
         const finalStatus = isCancelling ? null : status;
         this.currentAttendance[memberId].status = finalStatus;
@@ -1325,6 +1542,7 @@
 
         this.updateAttendanceSummary();
         this.renderAttendanceList();
+        this.renderClassMonitoringBar();
         this.triggerAutoSheetSync();
       }
 
@@ -1533,7 +1751,6 @@
         this.renderWeeklyTrendChart(uniqueDates);
       }
 
-      // [개인별 출석 테이블] C01 대신 친근한 반 이름으로 표시
       renderMemberStatsTable(statsMap, totalWeeks) {
         const tbody = document.getElementById('memberStatsTableBody');
         if (!tbody) return;
@@ -1596,27 +1813,7 @@
         if (nameEl) nameEl.textContent = `${member.name} (${member.role || '성도'})`;
         if (subEl) subEl.textContent = `${this.getClassName(member.classId)} · ${year}년 ${quarter} 안식일 출석 현황`;
 
-        let startMonth = 1, endMonth = 3;
-        if (quarter === '2기') { startMonth = 4; endMonth = 6; }
-        else if (quarter === '3기') { startMonth = 7; endMonth = 9; }
-        else if (quarter === '4기') { startMonth = 10; endMonth = 12; }
-
-        const sabbaths = [];
-        const cur = new Date(year, startMonth - 1, 1);
-        const endDate = new Date(year, endMonth, 0);
-
-        while (cur <= endDate) {
-          if (cur.getDay() === 6) {
-            const y = cur.getFullYear();
-            const m = String(cur.getMonth() + 1).padStart(2, '0');
-            const d = String(cur.getDate()).padStart(2, '0');
-            sabbaths.push({
-              dateStr: `${y}-${m}-${d}`,
-              label: `${cur.getMonth() + 1}월 ${cur.getDate()}일`
-            });
-          }
-          cur.setDate(cur.getDate() + 1);
-        }
+        const sabbaths = this.getQuarterSabbaths(year, quarter);
 
         const grid = document.getElementById('modalLessonsGrid');
         if (!grid) return;
@@ -1652,7 +1849,7 @@
           card.innerHTML = 
             '<div>' +
               '<div class="text-xs font-black text-slate-800">제' + lessonNo + '과</div>' +
-              '<div class="text-[10px] text-slate-400 font-bold">' + item.label + '</div>' +
+              '<div class="text-[10px] text-slate-400 font-bold">' + item.monthNum + '월 ' + item.dayNum + '일</div>' +
             '</div>' +
             '<div class="flex items-center justify-center w-7 h-7">' +
               iconHtml +
@@ -1682,7 +1879,6 @@
         if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
       }
 
-      // 모달 내부 통계 팝업에서도 반 이름으로 표시
       openStatDetailModal(type) {
         const modal = document.getElementById('statDetailModal');
         const box = document.getElementById('statModalBox');
@@ -1970,7 +2166,6 @@
         });
       }
 
-      // [교인 명부 탭] 드롭다운에서 (C01) 표기를 지우고 순수 '반 이름'만 표시
       renderMemberDirectory() {
         const tbody = document.getElementById('memberDirectoryBody');
         if (!tbody) return;
@@ -2066,6 +2261,7 @@
             this.showToast(`✨ ${memberName} 성도님의 반이 [${targetClassName}]으로 이동되었습니다.`, 'success');
             this.renderMemberDirectory();
             this.renderAttendanceList();
+            this.renderClassMonitoringBar();
             
             const statsContent = document.getElementById('tabContent-stats');
             if (statsContent && !statsContent.classList.contains('hidden')) {
@@ -2111,6 +2307,360 @@
         if (tabId === 'stats') {
           this.calculateAndRenderStatistics();
         }
+      }
+
+      // [신규 기능] 인쇄 및 엑셀 다운로드 모달 제어
+      openExportModal() {
+        const modal = document.getElementById('exportModal');
+        const box = document.getElementById('exportModalBox');
+        if (!modal || !box) return;
+
+        modal.classList.remove('pointer-events-none', 'opacity-0');
+        box.classList.remove('scale-95');
+        box.classList.add('scale-100');
+      }
+
+      closeExportModal() {
+        const modal = document.getElementById('exportModal');
+        const box = document.getElementById('exportModalBox');
+        if (box) { box.classList.remove('scale-100'); box.classList.add('scale-95'); }
+        if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
+      }
+
+      // [신규 기능] 4가지 공문서 인쇄 템플릿 렌더러
+      printReport(type) {
+        const year = document.getElementById('yearSelect')?.value || '2026';
+        const quarter = document.getElementById('quarterSelect')?.value || '3기';
+        const activeFilter = (this.currentUser && this.currentUser.isAdmin)
+          ? (this.selectedFilterClass || document.getElementById('adminClassFilter')?.value || 'ALL')
+          : this.currentUser.classId;
+
+        const className = this.getClassName(activeFilter);
+        const sabbaths = this.getQuarterSabbaths(parseInt(year, 10), quarter);
+        const targetMembers = (activeFilter === 'ALL') ? this.rawMembers : this.rawMembers.filter(m => m.classId === activeFilter);
+
+        const printBox = document.getElementById('printContainer');
+        if (!printBox) return;
+
+        let html = '';
+
+        // 상단 결재란 공통 컴포넌트
+        const approvalBoxHtml = `
+          <table style="width: 250px; border-collapse: collapse; font-size: 11px; text-align: center; margin-left: auto;">
+            <tr>
+              <th style="border: 1px solid #333; padding: 2px 4px; background: #f1f5f9; width: 33%;">담 당</th>
+              <th style="border: 1px solid #333; padding: 2px 4px; background: #f1f5f9; width: 33%;">안교장</th>
+              <th style="border: 1px solid #333; padding: 2px 4px; background: #f1f5f9; width: 34%;">담임목사</th>
+            </tr>
+            <tr style="height: 48px;">
+              <td style="border: 1px solid #333;"></td>
+              <td style="border: 1px solid #333;"></td>
+              <td style="border: 1px solid #333;"></td>
+            </tr>
+          </table>
+        `;
+
+        if (type === 1) {
+          // 서식 1: 반별 13주 종합 출석부 (A4 가로 최적화)
+          html = `
+            <div style="font-family: 'Noto Sans KR', sans-serif; padding: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px;">
+                <div>
+                  <h2 style="font-size: 20px; font-weight: 900; margin: 0; color: #111827;">${year}년 ${quarter} 안식일학교 출석부 (${className})</h2>
+                  <p style="font-size: 11px; color: #4b5563; margin: 2px 0 0 0;">세종 조이 안식일학교 · 출력일시: ${new Date().toLocaleDateString('ko-KR')}</p>
+                </div>
+                ${approvalBoxHtml}
+              </div>
+
+              <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: center;">
+                <thead>
+                  <tr style="background-color: #f8fafc;">
+                    <th style="border: 1px solid #cbd5e1; padding: 5px;">성명</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 5px;">직분</th>
+                    ${sabbaths.map((s, idx) => `
+                      <th style="border: 1px solid #cbd5e1; padding: 4px; font-size: 10px; width: 26px;">
+                        제${idx + 1}과<br><span style="font-size: 8px; color: #64748b;">${s.monthNum}/${s.dayNum}</span>
+                      </th>
+                    `).join('')}
+                    <th style="border: 1px solid #cbd5e1; padding: 5px; color: #047857;">출</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 5px; color: #b45309;">지</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 5px; color: #b91c1c;">결</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 5px;">출석률</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${targetMembers.map(m => {
+                    let p = 0, l = 0, a = 0;
+                    const weekTds = sabbaths.map(s => {
+                      const rec = this.rawRecords.find(r => r.memberId === m.memberId && r.date === s.dateStr);
+                      if (rec && rec.status === '출석') { p++; return '<td style="border: 1px solid #cbd5e1; color: #059669; font-weight: bold;">⭕</td>'; }
+                      if (rec && rec.status === '지각') { l++; return '<td style="border: 1px solid #cbd5e1; color: #d97706; font-weight: bold;">△</td>'; }
+                      if (rec && rec.status === '결석') { a++; return '<td style="border: 1px solid #cbd5e1; color: #dc2626; font-weight: bold;">❌</td>'; }
+                      return '<td style="border: 1px solid #cbd5e1; color: #cbd5e1;">-</td>';
+                    }).join('');
+
+                    const totalChecked = p + l + a;
+                    const score = (p * 1.0) + (l * 0.5);
+                    const rate = totalChecked > 0 ? ((score / totalChecked) * 100).toFixed(0) + '%' : '-';
+
+                    return `
+                      <tr>
+                        <td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: bold; text-align: left;">${m.name}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 4px; color: #64748b;">${m.role || '성도'}</td>
+                        ${weekTds}
+                        <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #047857;">${p}</td>
+                        <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #b45309;">${l}</td>
+                        <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #b91c1c;">${a}</td>
+                        <td style="border: 1px solid #cbd5e1; font-weight: bold;">${rate}</td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        } else if (type === 2) {
+          // 서식 2: 전체 반 종합 결산 보고서 (A4 세로 최적화)
+          const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
+          html = `
+            <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px;">
+                <div>
+                  <h2 style="font-size: 20px; font-weight: 900; margin: 0;">${year}년 ${quarter} 안식일학교 전체 종합 결산 보고서</h2>
+                  <p style="font-size: 11px; color: #4b5563; margin: 3px 0 0 0;">세종 조이 안식일학교 당회 및 총무 보고용</p>
+                </div>
+                ${approvalBoxHtml}
+              </div>
+
+              <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; margin-top: 10px;">
+                <thead>
+                  <tr style="background: #f8fafc;">
+                    <th style="border: 1px solid #94a3b8; padding: 8px;">교과반명</th>
+                    <th style="border: 1px solid #94a3b8; padding: 8px;">담당 리더</th>
+                    <th style="border: 1px solid #94a3b8; padding: 8px;">재적 인원</th>
+                    <th style="border: 1px solid #94a3b8; padding: 8px;">총 출석 횟수</th>
+                    <th style="border: 1px solid #94a3b8; padding: 8px;">평균 출석률</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${activeClasses.map(c => {
+                    const members = this.rawMembers.filter(m => m.classId === c.classId);
+                    let classScore = 0;
+                    let classChecked = 0;
+
+                    members.forEach(m => {
+                      const mRecs = this.rawRecords.filter(r => r.memberId === m.memberId && (!r.quarter || r.quarter === quarter));
+                      mRecs.forEach(r => {
+                        if (r.status === '출석') { classScore += 1.0; classChecked++; }
+                        else if (r.status === '지각') { classScore += 0.5; classChecked++; }
+                        else if (r.status === '결석') { classChecked++; }
+                      });
+                    });
+
+                    const avg = classChecked > 0 ? ((classScore / classChecked) * 100).toFixed(1) + '%' : '-';
+
+                    return `
+                      <tr>
+                        <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold;">${c.className}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 8px;">${c.leaderName}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold;">${members.length}명</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 8px;">${classScore}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold; color: #059669;">${avg}</td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        } else if (type === 3) {
+          // 서식 3: 당일 현장 수기 출석 체크표 (A4 세로 최적화)
+          const curDate = document.getElementById('sabbathSelect')?.value || '';
+          html = `
+            <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
+              <div style="border-bottom: 2px solid #111; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-end;">
+                <div>
+                  <h2 style="font-size: 18px; font-weight: 900; margin: 0;">안식일학교 현장 수기 출석부 (${className})</h2>
+                  <p style="font-size: 11px; color: #555; margin: 2px 0 0 0;">예배 일자: ${curDate} · 세종 조이 안식일학교</p>
+                </div>
+                <span style="font-size: 11px; font-weight: bold; color: #666;">기호: ⭕ 출석 / △ 지각 / ❌ 결석</span>
+              </div>
+
+              <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                <thead>
+                  <tr style="background: #f1f5f9; text-align: center;">
+                    <th style="border: 1px solid #94a3b8; padding: 6px; width: 40px;">No</th>
+                    <th style="border: 1px solid #94a3b8; padding: 6px; width: 80px;">성 명</th>
+                    <th style="border: 1px solid #94a3b8; padding: 6px; width: 60px;">직 분</th>
+                    <th style="border: 1px solid #94a3b8; padding: 6px; width: 100px;">출석 확인</th>
+                    <th style="border: 1px solid #94a3b8; padding: 6px;">결석 사유 및 심방 메모</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${targetMembers.map((m, idx) => `
+                    <tr style="height: 36px;">
+                      <td style="border: 1px solid #cbd5e1; text-align: center; color: #64748b;">${idx + 1}</td>
+                      <td style="border: 1px solid #cbd5e1; padding-left: 8px; font-weight: bold;">${m.name}</td>
+                      <td style="border: 1px solid #cbd5e1; text-align: center; color: #64748b;">${m.role || '성도'}</td>
+                      <td style="border: 1px solid #cbd5e1; text-align: center; font-size: 14px;">[ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ]</td>
+                      <td style="border: 1px solid #cbd5e1; padding-left: 8px;"></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        } else if (type === 4) {
+          // 서식 4: 심방 및 돌봄 대상자 명부 (A4 세로 최적화)
+          const careList = this.rawMembers.filter(m => {
+            const mRecs = this.rawRecords.filter(r => r.memberId === m.memberId && (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
+            if (mRecs.length < 2) return false;
+            let sc = 0;
+            mRecs.forEach(r => { if (r.status === '출석') sc += 1.0; else if (r.status === '지각') sc += 0.5; });
+            return (sc / mRecs.length) * 100 < 60;
+          });
+
+          html = `
+            <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px; border-bottom: 2px solid #dc2626; padding-bottom: 8px;">
+                <div>
+                  <h2 style="font-size: 18px; font-weight: 900; margin: 0; color: #991b1b;">🚨 안식일학교 심방 및 중보기도 대상자 명부</h2>
+                  <p style="font-size: 11px; color: #666; margin: 2px 0 0 0;">${year}년 ${quarter} 기준 · 출석률 60% 미만 및 장기 결석 성도</p>
+                </div>
+                ${approvalBoxHtml}
+              </div>
+
+              <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                <thead>
+                  <tr style="background: #fef2f2; text-align: center;">
+                    <th style="border: 1px solid #f87171; padding: 6px;">성명</th>
+                    <th style="border: 1px solid #f87171; padding: 6px;">소속반</th>
+                    <th style="border: 1px solid #f87171; padding: 6px;">연락처</th>
+                    <th style="border: 1px solid #f87171; padding: 6px;">최근 결석 사유 / 심방 기록</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${careList.map(m => {
+                    const care = this.careNotesMap[m.memberId];
+                    return `
+                      <tr style="height: 36px;">
+                        <td style="border: 1px solid #fca5a5; padding: 6px; font-weight: bold;">${m.name} (${m.role || '성도'})</td>
+                        <td style="border: 1px solid #fca5a5; text-align: center;">${this.getClassName(m.classId)}</td>
+                        <td style="border: 1px solid #fca5a5; text-align: center;">${m.phone || '-'}</td>
+                        <td style="border: 1px solid #fca5a5; padding: 6px; color: #1e3a8a;">
+                          ${care ? `<b>[심방완료]</b> ${care.reason} (${care.handledBy})` : '<span style="color: #dc2626;">심방 필요</span>'}
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
+
+        printBox.innerHTML = html;
+        this.closeExportModal();
+        setTimeout(() => {
+          window.print();
+        }, 300);
+      }
+
+      // [신규 기능] SheetJS 기반 원클릭 엑셀 내보내기 엔진
+      exportExcel(type) {
+        if (typeof XLSX === 'undefined') {
+          this.showToast('엑셀 생성 라이브러리를 불러오는 중입니다.', 'error');
+          return;
+        }
+
+        const year = document.getElementById('yearSelect')?.value || '2026';
+        const quarter = document.getElementById('quarterSelect')?.value || '3기';
+        const activeFilter = (this.currentUser && this.currentUser.isAdmin)
+          ? (this.selectedFilterClass || document.getElementById('adminClassFilter')?.value || 'ALL')
+          : this.currentUser.classId;
+
+        const className = this.getClassName(activeFilter);
+        const sabbaths = this.getQuarterSabbaths(parseInt(year, 10), quarter);
+        const targetMembers = (activeFilter === 'ALL') ? this.rawMembers : this.rawMembers.filter(m => m.classId === activeFilter);
+
+        const wb = XLSX.utils.book_new();
+
+        if (type === 1) {
+          // 서식 1: 13주 종합 출석부 엑셀
+          const headers = ['성명', '소속반', '직분', ...sabbaths.map((s, i) => `제${i+1}과(${s.monthNum}/${s.dayNum})`), '출석', '지각', '결석', '출석률'];
+          const rows = targetMembers.map(m => {
+            let p = 0, l = 0, a = 0;
+            const weekMarks = sabbaths.map(s => {
+              const rec = this.rawRecords.find(r => r.memberId === m.memberId && r.date === s.dateStr);
+              if (rec && rec.status === '출석') { p++; return '⭕'; }
+              if (rec && rec.status === '지각') { l++; return '△'; }
+              if (rec && rec.status === '결석') { a++; return '❌'; }
+              return '-';
+            });
+            const totalChecked = p + l + a;
+            const score = (p * 1.0) + (l * 0.5);
+            const rate = totalChecked > 0 ? ((score / totalChecked) * 100).toFixed(1) + '%' : '-';
+
+            return [m.name, this.getClassName(m.classId), m.role || '성도', ...weekMarks, p, l, a, rate];
+          });
+
+          const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+          XLSX.utils.book_append_sheet(wb, ws, `${quarter} 출석부`);
+          XLSX.writeFile(wb, `${year}_${quarter}_${className}_출석부.xlsx`);
+        } else if (type === 2) {
+          // 서식 2: 전체 반 종합 결산 엑셀
+          const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
+          const headers = ['교과반명', '담당 리더', '재적 인원', '총 출석 횟수', '평균 출석률'];
+          const rows = activeClasses.map(c => {
+            const members = this.rawMembers.filter(m => m.classId === c.classId);
+            let classScore = 0;
+            let classChecked = 0;
+            members.forEach(m => {
+              const mRecs = this.rawRecords.filter(r => r.memberId === m.memberId && (!r.quarter || r.quarter === quarter));
+              mRecs.forEach(r => {
+                if (r.status === '출석') { classScore += 1.0; classChecked++; }
+                else if (r.status === '지각') { classScore += 0.5; classChecked++; }
+                else if (r.status === '결석') { classChecked++; }
+              });
+            });
+            const avg = classChecked > 0 ? ((classScore / classChecked) * 100).toFixed(1) + '%' : '-';
+            return [c.className, c.leaderName, members.length, classScore, avg];
+          });
+
+          const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+          XLSX.utils.book_append_sheet(wb, ws, '전체결산');
+          XLSX.writeFile(wb, `${year}_${quarter}_안교_종합결산보고서.xlsx`);
+        } else if (type === 4) {
+          // 서식 4: 심방 대상자 명부 엑셀
+          const headers = ['성명', '소속반', '직분', '연락처', '심방상태', '결석/심방 사유', '담당자'];
+          const careList = this.rawMembers.filter(m => {
+            const mRecs = this.rawRecords.filter(r => r.memberId === m.memberId && (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
+            if (mRecs.length < 2) return false;
+            let sc = 0;
+            mRecs.forEach(r => { if (r.status === '출석') sc += 1.0; else if (r.status === '지각') sc += 0.5; });
+            return (sc / mRecs.length) * 100 < 60;
+          });
+
+          const rows = careList.map(m => {
+            const care = this.careNotesMap[m.memberId];
+            return [
+              m.name,
+              this.getClassName(m.classId),
+              m.role || '성도',
+              m.phone || '-',
+              care ? '심방완료' : '심방필요',
+              care ? care.reason : '-',
+              care ? care.handledBy : '-'
+            ];
+          });
+
+          const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+          XLSX.utils.book_append_sheet(wb, ws, '돌봄명부');
+          XLSX.writeFile(wb, `${year}_${quarter}_심방및돌봄명부.xlsx`);
+        }
+
+        this.showToast('📥 엑셀 파일이 성공적으로 다운로드되었습니다.', 'success');
+        this.closeExportModal();
       }
 
       showToast(message, type = 'info') {

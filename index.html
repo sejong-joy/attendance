@@ -19,8 +19,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Chart.js for statistics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- SheetJS for Excel generation -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Style-enabled SheetJS for colored Excel output -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <!-- Google Fonts (Noto Sans KR) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -377,15 +377,15 @@
 
     </section>
 
-    <!-- [신규 모달] 🖨️ 보고서 인쇄 및 엑셀 다운로드 선택창 (4종 서식) -->
+    <!-- [보고서 인쇄 및 엑셀 다운로드 모달 (보강형)] -->
     <div id="exportModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3.5 transition-opacity duration-200 opacity-0 pointer-events-none">
-      <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-200" id="exportModalBox">
+      <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-xl overflow-hidden transform scale-95 transition-transform duration-200" id="exportModalBox">
         <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
           <div class="flex items-center space-x-2">
             <span class="text-xl">🖨️</span>
             <div>
               <h3 class="text-base sm:text-lg font-black text-slate-900 leading-tight">보고서 인쇄 및 엑셀 내보내기</h3>
-              <p class="text-xs text-slate-500 font-bold">출력할 행정 서식을 선택하세요</p>
+              <p class="text-xs text-slate-500 font-bold">원하는 행정 양식을 선택해 출력하거나 다운로드하세요</p>
             </div>
           </div>
           <button onclick="window.appInstance.closeExportModal()" class="text-slate-400 hover:text-slate-800 text-lg font-bold p-1">✕</button>
@@ -402,39 +402,56 @@
               </span>
               <span class="text-[10px] font-black bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">A4 가로 권장</span>
             </div>
-            <p class="text-xs text-slate-500 font-bold mb-3">상단 결재란과 1~13주차 기호(⭕/△/❌), 누적 출석률이 포함된 분기 출석부입니다.</p>
+            <p class="text-xs text-slate-500 font-bold mb-3">상단 결재란과 1~13주차 기호(⭕/△/❌), 누적 출석률이 컬러로 반영된 분기 출석부입니다.</p>
             <div class="flex space-x-2">
-              <button onclick="window.appInstance.printReport(1)" class="w-1/2 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1">
-                <span>🖨️ 바로 인쇄</span>
+              <button onclick="window.appInstance.printReport(1)" class="w-1/2 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
+                <span>🖨️ A4 가로 인쇄</span>
               </button>
-              <button onclick="window.appInstance.exportExcel(1)" class="w-1/2 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1">
-                <span>📥 엑셀(.xlsx)</span>
+              <button onclick="window.appInstance.exportExcel(1)" class="w-1/2 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
+                <span>📥 컬러 엑셀 다운로드</span>
               </button>
             </div>
           </div>
 
-          <!-- 서식 2: 안식일학교 전체 종합 보고서 -->
-          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl hover:border-emerald-400 transition">
+          <!-- 서식 2: 안식일학교 전체 종합 결산 보고서 (분기 / 연간 선택 지원) -->
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl hover:border-blue-400 transition">
             <div class="flex items-center justify-between mb-1.5">
               <span class="font-black text-slate-900 text-sm sm:text-base flex items-center space-x-1.5">
                 <span>📊</span>
                 <span>2. 전체 반 종합 결산 보고서</span>
               </span>
-              <span class="text-[10px] font-black bg-blue-100 text-blue-800 px-2 py-0.5 rounded">A4 세로 권장</span>
+              <span class="text-[10px] font-black bg-blue-100 text-blue-800 px-2 py-0.5 rounded">A4 세로 / KPI + 반별 + 추이</span>
             </div>
-            <p class="text-xs text-slate-500 font-bold mb-3">반별 재적 인원, 출석자 수, 평균 출석률을 한눈에 대조하는 행정 보고서입니다.</p>
+            <p class="text-xs text-slate-500 font-bold mb-2">분기 핵심 지표(재적, 개근자, 전체 출석률) 및 반별 상세표, 주차별 참석 인원 추이가 집약된 공문서입니다.</p>
+            
+            <div class="bg-white p-2.5 rounded-lg border border-slate-200 space-y-2 mb-3">
+              <div class="flex items-center justify-between text-xs font-black text-slate-700">
+                <span>집계 범위 선택:</span>
+                <div class="space-x-2">
+                  <label class="cursor-pointer inline-flex items-center space-x-1">
+                    <input type="radio" name="reportPeriod" value="quarter" checked class="text-blue-600">
+                    <span>선택 분기 (<span id="modalSelectedQuarter">3기</span>)</span>
+                  </label>
+                  <label class="cursor-pointer inline-flex items-center space-x-1">
+                    <input type="radio" name="reportPeriod" value="year" class="text-blue-600">
+                    <span>1개년(연간 전체)</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
             <div class="flex space-x-2">
-              <button onclick="window.appInstance.printReport(2)" class="w-1/2 py-2 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1">
-                <span>🖨️ 바로 인쇄</span>
+              <button onclick="window.appInstance.printReport(2)" class="w-1/2 py-2 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
+                <span>🖨️ 종합 보고서 인쇄</span>
               </button>
-              <button onclick="window.appInstance.exportExcel(2)" class="w-1/2 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1">
-                <span>📥 엑셀(.xlsx)</span>
+              <button onclick="window.appInstance.exportExcel(2)" class="w-1/2 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
+                <span>📥 컬러 엑셀 다운로드</span>
               </button>
             </div>
           </div>
 
           <!-- 서식 3: 주간 현장 수기 체크표 -->
-          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl hover:border-emerald-400 transition">
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl hover:border-amber-400 transition">
             <div class="flex items-center justify-between mb-1.5">
               <span class="font-black text-slate-900 text-sm sm:text-base flex items-center space-x-1.5">
                 <span>📝</span>
@@ -443,13 +460,13 @@
               <span class="text-[10px] font-black bg-amber-100 text-amber-800 px-2 py-0.5 rounded">현장 비치용</span>
             </div>
             <p class="text-xs text-slate-500 font-bold mb-3">스마트폰 사용이 익숙지 않은 리더를 위해 현장에서 손으로 체크할 수 있는 인쇄물입니다.</p>
-            <button onclick="window.appInstance.printReport(3)" class="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1">
-              <span>🖨️ 체크표 인쇄하기</span>
+            <button onclick="window.appInstance.printReport(3)" class="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
+              <span>🖨️ 수기 체크표 인쇄하기</span>
             </button>
           </div>
 
           <!-- 서식 4: 심방 및 돌봄 대상자 명부 -->
-          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl hover:border-emerald-400 transition">
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl hover:border-red-400 transition">
             <div class="flex items-center justify-between mb-1.5">
               <span class="font-black text-slate-900 text-sm sm:text-base flex items-center space-x-1.5">
                 <span>🚨</span>
@@ -459,11 +476,11 @@
             </div>
             <p class="text-xs text-slate-500 font-bold mb-3">3주 연속 결석자 및 출석률 60% 미만 성도 명단과 사유 메모가 정리된 서식입니다.</p>
             <div class="flex space-x-2">
-              <button onclick="window.appInstance.printReport(4)" class="w-1/2 py-2 bg-red-600 hover:bg-red-700 text-white font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1">
+              <button onclick="window.appInstance.printReport(4)" class="w-1/2 py-2 bg-red-600 hover:bg-red-700 text-white font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
                 <span>🖨️ 바로 인쇄</span>
               </button>
-              <button onclick="window.appInstance.exportExcel(4)" class="w-1/2 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1">
-                <span>📥 엑셀(.xlsx)</span>
+              <button onclick="window.appInstance.exportExcel(4)" class="w-1/2 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
+                <span>📥 엑셀 다운로드</span>
               </button>
             </div>
           </div>
@@ -587,7 +604,7 @@
       </div>
     </div>
 
-    <!-- [인쇄 전용 컨테이너] (평소에는 숨김, 인쇄 시 브라우저에 표시) -->
+    <!-- [인쇄 전용 컨테이너] -->
     <div id="printContainer" class="hidden print:block"></div>
 
     <!-- Loading Overlay -->
@@ -1145,7 +1162,6 @@
         this.renderClassMonitoringBar();
       }
 
-      // [신규 기능] 관리자 상단 실시간 반별 출석 현황 바 렌더링
       renderClassMonitoringBar() {
         if (!this.currentUser || !this.currentUser.isAdmin) return;
         const container = document.getElementById('classChipsContainer');
@@ -1156,7 +1172,6 @@
         
         container.innerHTML = '';
 
-        // 전체 반 칩
         const allBtn = document.createElement('button');
         allBtn.className = `px-3 py-1.5 rounded-lg text-xs font-black whitespace-nowrap transition flex items-center space-x-1 ${
           this.selectedFilterClass === 'ALL' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -1165,7 +1180,6 @@
         allBtn.onclick = () => this.selectMonitoringClass('ALL');
         container.appendChild(allBtn);
 
-        // 각 반별 칩
         activeClasses.forEach(c => {
           const classMembers = this.rawMembers.filter(m => m.classId === c.classId);
           const checkedCount = classMembers.filter(m => {
@@ -2309,12 +2323,14 @@
         }
       }
 
-      // [신규 기능] 인쇄 및 엑셀 다운로드 모달 제어
       openExportModal() {
         const modal = document.getElementById('exportModal');
         const box = document.getElementById('exportModalBox');
-        if (!modal || !box) return;
+        const qSpan = document.getElementById('modalSelectedQuarter');
+        const quarter = document.getElementById('quarterSelect')?.value || '3기';
+        if (qSpan) qSpan.textContent = quarter;
 
+        if (!modal || !box) return;
         modal.classList.remove('pointer-events-none', 'opacity-0');
         box.classList.remove('scale-95');
         box.classList.add('scale-100');
@@ -2327,10 +2343,11 @@
         if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
       }
 
-      // [신규 기능] 4가지 공문서 인쇄 템플릿 렌더러
+      // [공문서 A4 인쇄 렌더러]
       printReport(type) {
         const year = document.getElementById('yearSelect')?.value || '2026';
         const quarter = document.getElementById('quarterSelect')?.value || '3기';
+        const isYearly = document.querySelector('input[name="reportPeriod"]:checked')?.value === 'year';
         const activeFilter = (this.currentUser && this.currentUser.isAdmin)
           ? (this.selectedFilterClass || document.getElementById('adminClassFilter')?.value || 'ALL')
           : this.currentUser.classId;
@@ -2343,8 +2360,6 @@
         if (!printBox) return;
 
         let html = '';
-
-        // 상단 결재란 공통 컴포넌트
         const approvalBoxHtml = `
           <table style="width: 250px; border-collapse: collapse; font-size: 11px; text-align: center; margin-left: auto;">
             <tr>
@@ -2361,13 +2376,13 @@
         `;
 
         if (type === 1) {
-          // 서식 1: 반별 13주 종합 출석부 (A4 가로 최적화)
+          // 서식 1: 반별 13주 종합 출석부
           html = `
             <div style="font-family: 'Noto Sans KR', sans-serif; padding: 10px;">
               <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px;">
                 <div>
                   <h2 style="font-size: 20px; font-weight: 900; margin: 0; color: #111827;">${year}년 ${quarter} 안식일학교 출석부 (${className})</h2>
-                  <p style="font-size: 11px; color: #4b5563; margin: 2px 0 0 0;">세종 조이 안식일학교 · 출력일시: ${new Date().toLocaleDateString('ko-KR')}</p>
+                  <p style="font-size: 11px; color: #4b5563; margin: 2px 0 0 0;">세종 조이 안식일학교 · 출력일: ${new Date().toLocaleDateString('ko-KR')}</p>
                 </div>
                 ${approvalBoxHtml}
               </div>
@@ -2378,7 +2393,7 @@
                     <th style="border: 1px solid #cbd5e1; padding: 5px;">성명</th>
                     <th style="border: 1px solid #cbd5e1; padding: 5px;">직분</th>
                     ${sabbaths.map((s, idx) => `
-                      <th style="border: 1px solid #cbd5e1; padding: 4px; font-size: 10px; width: 26px;">
+                      <th style="border: 1px solid #cbd5e1; padding: 4px; font-size: 10px; width: 28px;">
                         제${idx + 1}과<br><span style="font-size: 8px; color: #64748b;">${s.monthNum}/${s.dayNum}</span>
                       </th>
                     `).join('')}
@@ -2405,8 +2420,8 @@
 
                     return `
                       <tr>
-                        <td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: bold; text-align: left;">${m.name}</td>
-                        <td style="border: 1px solid #cbd5e1; padding: 4px; color: #64748b;">${m.role || '성도'}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: bold; text-align: left;">${m.name}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 5px; color: #64748b;">${m.role || '성도'}</td>
                         ${weekTds}
                         <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #047857;">${p}</td>
                         <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #b45309;">${l}</td>
@@ -2420,61 +2435,135 @@
             </div>
           `;
         } else if (type === 2) {
-          // 서식 2: 전체 반 종합 결산 보고서 (A4 세로 최적화)
+          // 서식 2: 전체 반 종합 결산 보고서 (3단 구조 확장형)
           const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
+          const reportTitle = isYearly ? `${year}년도 안식일학교 연간 종합 결산 보고서` : `${year}년 ${quarter} 안식일학교 종합 결산 보고서`;
+
+          const validRecs = this.rawRecords.filter(r => {
+            const periodMatch = isYearly ? (r.date && r.date.startsWith(year)) : (!r.quarter || r.quarter === quarter);
+            return periodMatch && (r.status === '출석' || r.status === '지각' || r.status === '결석');
+          });
+
+          const uniqueDates = [...new Set(validRecs.map(r => r.date))].sort();
+          let totScore = 0;
+          validRecs.forEach(r => { if (r.status === '출석') totScore += 1.0; else if (r.status === '지각') totScore += 0.5; });
+          const totalAvgRate = validRecs.length > 0 ? ((totScore / validRecs.length) * 100).toFixed(1) + '%' : '0.0%';
+
+          let perfectCount = 0;
+          let careCount = 0;
+          this.rawMembers.forEach(m => {
+            const mRecs = validRecs.filter(r => r.memberId === m.memberId);
+            if (mRecs.length >= 3) {
+              let sc = 0;
+              mRecs.forEach(r => { if (r.status === '출석') sc += 1.0; else if (r.status === '지각') sc += 0.5; });
+              const rt = (sc / mRecs.length) * 100;
+              if (rt === 100) perfectCount++;
+              if (rt < 60) careCount++;
+            }
+          });
+
           html = `
             <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
-              <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 14px; border-bottom: 2px solid #0f172a; padding-bottom: 8px;">
                 <div>
-                  <h2 style="font-size: 20px; font-weight: 900; margin: 0;">${year}년 ${quarter} 안식일학교 전체 종합 결산 보고서</h2>
-                  <p style="font-size: 11px; color: #4b5563; margin: 3px 0 0 0;">세종 조이 안식일학교 당회 및 총무 보고용</p>
+                  <h2 style="font-size: 20px; font-weight: 900; margin: 0; color: #0f172a;">${reportTitle}</h2>
+                  <p style="font-size: 11px; color: #475569; margin: 3px 0 0 0;">세종 조이 안식일학교 행정 및 당회 보고용 · 집계일자: ${new Date().toLocaleDateString('ko-KR')}</p>
                 </div>
                 ${approvalBoxHtml}
               </div>
 
-              <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; margin-top: 10px;">
+              <!-- 1. 핵심 지표 요약 (KPI) -->
+              <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; margin-bottom: 16px;">
+                <tr style="background: #f1f5f9; font-weight: bold; color: #334155;">
+                  <th style="border: 1px solid #cbd5e1; padding: 6px;">총 등록 교인</th>
+                  <th style="border: 1px solid #cbd5e1; padding: 6px;">활동 교인</th>
+                  <th style="border: 1px solid #cbd5e1; padding: 6px;">새가족</th>
+                  <th style="border: 1px solid #cbd5e1; padding: 6px;">누적 예배수</th>
+                  <th style="border: 1px solid #cbd5e1; padding: 6px;">전체 평균 출석률</th>
+                  <th style="border: 1px solid #cbd5e1; padding: 6px;">개근 성도</th>
+                  <th style="border: 1px solid #cbd5e1; padding: 6px;">심방/돌봄 대상</th>
+                </tr>
+                <tr style="font-size: 13px; font-weight: 900;">
+                  <td style="border: 1px solid #cbd5e1; padding: 6px;">${this.rawMembers.length}명</td>
+                  <td style="border: 1px solid #cbd5e1; padding: 6px; color: #047857;">${this.rawMembers.filter(m => m.status === '활동').length}명</td>
+                  <td style="border: 1px solid #cbd5e1; padding: 6px; color: #b45309;">${this.rawMembers.filter(m => m.status === '새가족').length}명</td>
+                  <td style="border: 1px solid #cbd5e1; padding: 6px;">${uniqueDates.length}회</td>
+                  <td style="border: 1px solid #cbd5e1; padding: 6px; color: #059669;">${totalAvgRate}</td>
+                  <td style="border: 1px solid #cbd5e1; padding: 6px; color: #0284c7;">${perfectCount}명</td>
+                  <td style="border: 1px solid #cbd5e1; padding: 6px; color: #dc2626;">${careCount}명</td>
+                </tr>
+              </table>
+
+              <!-- 2. 반별 세부 결산 비교표 -->
+              <h4 style="font-size: 13px; font-weight: 900; margin: 0 0 6px 0; color: #1e293b;">📌 교과반별 상세 비교 결산표</h4>
+              <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; margin-bottom: 16px;">
                 <thead>
-                  <tr style="background: #f8fafc;">
-                    <th style="border: 1px solid #94a3b8; padding: 8px;">교과반명</th>
-                    <th style="border: 1px solid #94a3b8; padding: 8px;">담당 리더</th>
-                    <th style="border: 1px solid #94a3b8; padding: 8px;">재적 인원</th>
-                    <th style="border: 1px solid #94a3b8; padding: 8px;">총 출석 횟수</th>
-                    <th style="border: 1px solid #94a3b8; padding: 8px;">평균 출석률</th>
+                  <tr style="background: #f8fafc; font-weight: bold;">
+                    <th style="border: 1px solid #cbd5e1; padding: 6px;">교과반명</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px;">담당 리더</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px;">재적</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; color: #047857;">출석(⭕)</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; color: #b45309;">지각(△)</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; color: #b91c1c;">결석(❌)</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px;">평균 출석률</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px;">개근 인원</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${activeClasses.map(c => {
                     const members = this.rawMembers.filter(m => m.classId === c.classId);
-                    let classScore = 0;
-                    let classChecked = 0;
+                    let p = 0, l = 0, a = 0, classPerfect = 0;
 
                     members.forEach(m => {
-                      const mRecs = this.rawRecords.filter(r => r.memberId === m.memberId && (!r.quarter || r.quarter === quarter));
+                      const mRecs = validRecs.filter(r => r.memberId === m.memberId);
+                      let mScore = 0;
                       mRecs.forEach(r => {
-                        if (r.status === '출석') { classScore += 1.0; classChecked++; }
-                        else if (r.status === '지각') { classScore += 0.5; classChecked++; }
-                        else if (r.status === '결석') { classChecked++; }
+                        if (r.status === '출석') { p++; mScore += 1.0; }
+                        else if (r.status === '지각') { l++; mScore += 0.5; }
+                        else if (r.status === '결석') { a++; }
                       });
+                      if (mRecs.length >= 3 && (mScore / mRecs.length) === 1.0) classPerfect++;
                     });
 
-                    const avg = classChecked > 0 ? ((classScore / classChecked) * 100).toFixed(1) + '%' : '-';
+                    const totChecked = p + l + a;
+                    const cScore = (p * 1.0) + (l * 0.5);
+                    const avg = totChecked > 0 ? ((cScore / totChecked) * 100).toFixed(1) + '%' : '-';
 
                     return `
                       <tr>
-                        <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold;">${c.className}</td>
-                        <td style="border: 1px solid #cbd5e1; padding: 8px;">${c.leaderName}</td>
-                        <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold;">${members.length}명</td>
-                        <td style="border: 1px solid #cbd5e1; padding: 8px;">${classScore}</td>
-                        <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: bold; color: #059669;">${avg}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold; text-align: left;">${c.className}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 6px;">${c.leaderName}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold;">${members.length}명</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 6px; color: #047857; font-weight: bold;">${p}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 6px; color: #b45309; font-weight: bold;">${l}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 6px; color: #b91c1c; font-weight: bold;">${a}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: 900; color: #059669;">${avg}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold; color: #0284c7;">${classPerfect}명</td>
                       </tr>
                     `;
                   }).join('')}
                 </tbody>
               </table>
+
+              <!-- 3. 주차별 전체 출석 인원 추이표 -->
+              <h4 style="font-size: 13px; font-weight: 900; margin: 0 0 6px 0; color: #1e293b;">📈 예배 주차별 전체 출석 현황 추이</h4>
+              <table style="width: 100%; border-collapse: collapse; font-size: 10px; text-align: center;">
+                <tr style="background: #f8fafc;">
+                  <th style="border: 1px solid #cbd5e1; padding: 4px; font-weight: bold; width: 70px;">구분</th>
+                  ${uniqueDates.map(d => `<th style="border: 1px solid #cbd5e1; padding: 4px;">${d.slice(5)}</th>`).join('')}
+                </tr>
+                <tr>
+                  <td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: bold; background: #f1f5f9;">출석 인원</td>
+                  ${uniqueDates.map(d => {
+                    const cnt = validRecs.filter(r => r.date === d && (r.status === '출석' || r.status === '지각')).length;
+                    return `<td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: bold; color: #047857;">${cnt}명</td>`;
+                  }).join('')}
+                </tr>
+              </table>
             </div>
           `;
         } else if (type === 3) {
-          // 서식 3: 당일 현장 수기 출석 체크표 (A4 세로 최적화)
+          // 서식 3: 당일 현장 수기 출석 체크표
           const curDate = document.getElementById('sabbathSelect')?.value || '';
           html = `
             <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
@@ -2511,7 +2600,7 @@
             </div>
           `;
         } else if (type === 4) {
-          // 서식 4: 심방 및 돌봄 대상자 명부 (A4 세로 최적화)
+          // 서식 4: 심방 및 돌봄 대상자 명부
           const careList = this.rawMembers.filter(m => {
             const mRecs = this.rawRecords.filter(r => r.memberId === m.memberId && (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
             if (mRecs.length < 2) return false;
@@ -2566,7 +2655,7 @@
         }, 300);
       }
 
-      // [신규 기능] SheetJS 기반 원클릭 엑셀 내보내기 엔진
+      // [컬러 엑셀(.xlsx) 생성 엔진 - xlsx-js-style 적용]
       exportExcel(type) {
         if (typeof XLSX === 'undefined') {
           this.showToast('엑셀 생성 라이브러리를 불러오는 중입니다.', 'error');
@@ -2575,6 +2664,7 @@
 
         const year = document.getElementById('yearSelect')?.value || '2026';
         const quarter = document.getElementById('quarterSelect')?.value || '3기';
+        const isYearly = document.querySelector('input[name="reportPeriod"]:checked')?.value === 'year';
         const activeFilter = (this.currentUser && this.currentUser.isAdmin)
           ? (this.selectedFilterClass || document.getElementById('adminClassFilter')?.value || 'ALL')
           : this.currentUser.classId;
@@ -2585,54 +2675,207 @@
 
         const wb = XLSX.utils.book_new();
 
-        if (type === 1) {
-          // 서식 1: 13주 종합 출석부 엑셀
-          const headers = ['성명', '소속반', '직분', ...sabbaths.map((s, i) => `제${i+1}과(${s.monthNum}/${s.dayNum})`), '출석', '지각', '결석', '출석률'];
-          const rows = targetMembers.map(m => {
-            let p = 0, l = 0, a = 0;
-            const weekMarks = sabbaths.map(s => {
-              const rec = this.rawRecords.find(r => r.memberId === m.memberId && r.date === s.dateStr);
-              if (rec && rec.status === '출석') { p++; return '⭕'; }
-              if (rec && rec.status === '지각') { l++; return '△'; }
-              if (rec && rec.status === '결석') { a++; return '❌'; }
-              return '-';
-            });
-            const totalChecked = p + l + a;
-            const score = (p * 1.0) + (l * 0.5);
-            const rate = totalChecked > 0 ? ((score / totalChecked) * 100).toFixed(1) + '%' : '-';
+        // 엑셀 셀 스타일 프리셋
+        const styleHeader = {
+          font: { bold: true, color: { rgb: "1E293B" }, sz: 11 },
+          fill: { fgColor: { rgb: "F1F5F9" } },
+          alignment: { horizontal: "center", vertical: "center" },
+          border: { top: { style: "thin", color: { rgb: "CBD5E1" } }, bottom: { style: "thin", color: { rgb: "CBD5E1" } }, left: { style: "thin", color: { rgb: "CBD5E1" } }, right: { style: "thin", color: { rgb: "CBD5E1" } } }
+        };
 
-            return [m.name, this.getClassName(m.classId), m.role || '성도', ...weekMarks, p, l, a, rate];
+        const stylePresent = {
+          font: { bold: true, color: { rgb: "059669" }, sz: 12 },
+          alignment: { horizontal: "center", vertical: "center" }
+        };
+
+        const styleLate = {
+          font: { bold: true, color: { rgb: "D97706" }, sz: 12 },
+          alignment: { horizontal: "center", vertical: "center" }
+        };
+
+        const styleAbsent = {
+          font: { bold: true, color: { rgb: "DC2626" }, sz: 12 },
+          alignment: { horizontal: "center", vertical: "center" }
+        };
+
+        const styleNormalCenter = {
+          font: { color: { rgb: "334155" }, sz: 10 },
+          alignment: { horizontal: "center", vertical: "center" }
+        };
+
+        if (type === 1) {
+          // 서식 1: 컬러 13주 종합 출석부 엑셀
+          const headers = ['성명', '소속반', '직분', ...sabbaths.map((s, i) => `제${i+1}과(${s.monthNum}/${s.dayNum})`), '출석', '지각', '결석', '출석률'];
+          
+          const sheetData = [];
+          // 1행: 헤더
+          sheetData.push(headers.map(h => ({ v: h, s: styleHeader })));
+
+          // 본문 행
+          targetMembers.forEach(m => {
+            let p = 0, l = 0, a = 0;
+            const rowCells = [
+              { v: m.name, s: { font: { bold: true } } },
+              { v: this.getClassName(m.classId), s: styleNormalCenter },
+              { v: m.role || '성도', s: styleNormalCenter }
+            ];
+
+            sabbaths.forEach(s => {
+              const rec = this.rawRecords.find(r => r.memberId === m.memberId && r.date === s.dateStr);
+              if (rec && rec.status === '출석') {
+                p++;
+                rowCells.push({ v: '⭕', s: stylePresent });
+              } else if (rec && rec.status === '지각') {
+                l++;
+                rowCells.push({ v: '△', s: styleLate });
+              } else if (rec && rec.status === '결석') {
+                a++;
+                rowCells.push({ v: '❌', s: styleAbsent });
+              } else {
+                rowCells.push({ v: '-', s: styleNormalCenter });
+              }
+            });
+
+            const totChecked = p + l + a;
+            const score = (p * 1.0) + (l * 0.5);
+            const rate = totChecked > 0 ? ((score / totChecked) * 100).toFixed(1) + '%' : '-';
+
+            rowCells.push(
+              { v: p, s: { font: { bold: true, color: { rgb: "059669" } }, alignment: { horizontal: "center" } } },
+              { v: l, s: { font: { bold: true, color: { rgb: "D97706" } }, alignment: { horizontal: "center" } } },
+              { v: a, s: { font: { bold: true, color: { rgb: "DC2626" } }, alignment: { horizontal: "center" } } },
+              { v: rate, s: { font: { bold: true }, alignment: { horizontal: "center" } } }
+            );
+
+            sheetData.push(rowCells);
           });
 
-          const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+          const ws = XLSX.utils.aoa_to_sheet(sheetData);
+          ws['!cols'] = [{ wch: 10 }, { wch: 12 }, { wch: 8 }, ...sabbaths.map(() => ({ wch: 11 })), { wch: 6 }, { wch: 6 }, { wch: 6 }, { wch: 10 }];
+
           XLSX.utils.book_append_sheet(wb, ws, `${quarter} 출석부`);
           XLSX.writeFile(wb, `${year}_${quarter}_${className}_출석부.xlsx`);
+
         } else if (type === 2) {
-          // 서식 2: 전체 반 종합 결산 엑셀
+          // 서식 2: 전체 반 종합 결산 엑셀 (보강된 3단 구조)
           const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
-          const headers = ['교과반명', '담당 리더', '재적 인원', '총 출석 횟수', '평균 출석률'];
-          const rows = activeClasses.map(c => {
-            const members = this.rawMembers.filter(m => m.classId === c.classId);
-            let classScore = 0;
-            let classChecked = 0;
-            members.forEach(m => {
-              const mRecs = this.rawRecords.filter(r => r.memberId === m.memberId && (!r.quarter || r.quarter === quarter));
-              mRecs.forEach(r => {
-                if (r.status === '출석') { classScore += 1.0; classChecked++; }
-                else if (r.status === '지각') { classScore += 0.5; classChecked++; }
-                else if (r.status === '결석') { classChecked++; }
-              });
-            });
-            const avg = classChecked > 0 ? ((classScore / classChecked) * 100).toFixed(1) + '%' : '-';
-            return [c.className, c.leaderName, members.length, classScore, avg];
+          const reportTitle = isYearly ? `${year}년도 안식일학교 연간 종합 결산 보고서` : `${year}년 ${quarter} 안식일학교 종합 결산 보고서`;
+
+          const validRecs = this.rawRecords.filter(r => {
+            const periodMatch = isYearly ? (r.date && r.date.startsWith(year)) : (!r.quarter || r.quarter === quarter);
+            return periodMatch && (r.status === '출석' || r.status === '지각' || r.status === '결석');
           });
 
-          const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-          XLSX.utils.book_append_sheet(wb, ws, '전체결산');
-          XLSX.writeFile(wb, `${year}_${quarter}_안교_종합결산보고서.xlsx`);
+          const uniqueDates = [...new Set(validRecs.map(r => r.date))].sort();
+          let totScore = 0;
+          validRecs.forEach(r => { if (r.status === '출석') totScore += 1.0; else if (r.status === '지각') totScore += 0.5; });
+          const totalAvgRate = validRecs.length > 0 ? ((totScore / validRecs.length) * 100).toFixed(1) + '%' : '0.0%';
+
+          let perfectCount = 0;
+          let careCount = 0;
+          this.rawMembers.forEach(m => {
+            const mRecs = validRecs.filter(r => r.memberId === m.memberId);
+            if (mRecs.length >= 3) {
+              let sc = 0;
+              mRecs.forEach(r => { if (r.status === '출석') sc += 1.0; else if (r.status === '지각') sc += 0.5; });
+              const rt = (sc / mRecs.length) * 100;
+              if (rt === 100) perfectCount++;
+              if (rt < 60) careCount++;
+            }
+          });
+
+          const sheetData = [
+            [{ v: reportTitle, s: { font: { bold: true, sz: 14 } } }],
+            [{ v: `세종 조이 안식일학교 · 출력일: ${new Date().toLocaleDateString('ko-KR')}`, s: { font: { sz: 9, color: { rgb: "64748B" } } } }],
+            [],
+            [{ v: "1. 안식일학교 핵심 지표 요약", s: { font: { bold: true, sz: 11 } } }],
+            [
+              { v: "총 등록 교인", s: styleHeader },
+              { v: "활동 교인", s: styleHeader },
+              { v: "새가족", s: styleHeader },
+              { v: "누적 예배수", s: styleHeader },
+              { v: "전체 평균 출석률", s: styleHeader },
+              { v: "개근 성도", s: styleHeader },
+              { v: "심방/돌봄 대상", s: styleHeader }
+            ],
+            [
+              { v: `${this.rawMembers.length}명`, s: styleNormalCenter },
+              { v: `${this.rawMembers.filter(m => m.status === '활동').length}명`, s: { font: { bold: true, color: { rgb: "059669" } }, alignment: { horizontal: "center" } } },
+              { v: `${this.rawMembers.filter(m => m.status === '새가족').length}명`, s: { font: { bold: true, color: { rgb: "D97706" } }, alignment: { horizontal: "center" } } },
+              { v: `${uniqueDates.length}회`, s: styleNormalCenter },
+              { v: totalAvgRate, s: { font: { bold: true, color: { rgb: "059669" } }, alignment: { horizontal: "center" } } },
+              { v: `${perfectCount}명`, s: { font: { bold: true, color: { rgb: "0284C7" } }, alignment: { horizontal: "center" } } },
+              { v: `${careCount}명`, s: { font: { bold: true, color: { rgb: "DC2626" } }, alignment: { horizontal: "center" } } }
+            ],
+            [],
+            [{ v: "2. 교과반별 상세 비교 결산", s: { font: { bold: true, sz: 11 } } }],
+            [
+              { v: "교과반명", s: styleHeader },
+              { v: "담당 리더", s: styleHeader },
+              { v: "재적", s: styleHeader },
+              { v: "출석(⭕)", s: styleHeader },
+              { v: "지각(△)", s: styleHeader },
+              { v: "결석(❌)", s: styleHeader },
+              { v: "평균 출석률", s: styleHeader },
+              { v: "개근 인원", s: styleHeader }
+            ]
+          ];
+
+          activeClasses.forEach(c => {
+            const members = this.rawMembers.filter(m => m.classId === c.classId);
+            let p = 0, l = 0, a = 0, classPerfect = 0;
+
+            members.forEach(m => {
+              const mRecs = validRecs.filter(r => r.memberId === m.memberId);
+              let mScore = 0;
+              mRecs.forEach(r => {
+                if (r.status === '출석') { p++; mScore += 1.0; }
+                else if (r.status === '지각') { l++; mScore += 0.5; }
+                else if (r.status === '결석') { a++; }
+              });
+              if (mRecs.length >= 3 && (mScore / mRecs.length) === 1.0) classPerfect++;
+            });
+
+            const totChecked = p + l + a;
+            const cScore = (p * 1.0) + (l * 0.5);
+            const avg = totChecked > 0 ? ((cScore / totChecked) * 100).toFixed(1) + '%' : '-';
+
+            sheetData.push([
+              { v: c.className, s: { font: { bold: true } } },
+              { v: c.leaderName, s: styleNormalCenter },
+              { v: `${members.length}명`, s: styleNormalCenter },
+              { v: p, s: { font: { bold: true, color: { rgb: "059669" } }, alignment: { horizontal: "center" } } },
+              { v: l, s: { font: { bold: true, color: { rgb: "D97706" } }, alignment: { horizontal: "center" } } },
+              { v: a, s: { font: { bold: true, color: { rgb: "DC2626" } }, alignment: { horizontal: "center" } } },
+              { v: avg, s: { font: { bold: true, color: { rgb: "059669" } }, alignment: { horizontal: "center" } } },
+              { v: `${classPerfect}명`, s: { font: { bold: true, color: { rgb: "0284C7" } }, alignment: { horizontal: "center" } } }
+            ]);
+          });
+
+          sheetData.push([]);
+          sheetData.push([{ v: "3. 예배 주차별 전체 출석 현황 추이", s: { font: { bold: true, sz: 11 } } }]);
+          
+          const weekHeader = [{ v: "구분", s: styleHeader }];
+          const weekValues = [{ v: "출석 인원", s: { font: { bold: true }, alignment: { horizontal: "center" } } }];
+
+          uniqueDates.forEach(d => {
+            weekHeader.push({ v: d.slice(5), s: styleHeader });
+            const cnt = validRecs.filter(r => r.date === d && (r.status === '출석' || r.status === '지각')).length;
+            weekValues.push({ v: `${cnt}명`, s: { font: { bold: true, color: { rgb: "059669" } }, alignment: { horizontal: "center" } } });
+          });
+
+          sheetData.push(weekHeader);
+          sheetData.push(weekValues);
+
+          const ws = XLSX.utils.aoa_to_sheet(sheetData);
+          ws['!cols'] = [{ wch: 14 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }];
+
+          XLSX.utils.book_append_sheet(wb, ws, '종합결산');
+          const fileName = isYearly ? `${year}년도_안교_연간종합결산보고서.xlsx` : `${year}_${quarter}_안교_종합결산보고서.xlsx`;
+          XLSX.writeFile(wb, fileName);
+
         } else if (type === 4) {
           // 서식 4: 심방 대상자 명부 엑셀
-          const headers = ['성명', '소속반', '직분', '연락처', '심방상태', '결석/심방 사유', '담당자'];
           const careList = this.rawMembers.filter(m => {
             const mRecs = this.rawRecords.filter(r => r.memberId === m.memberId && (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
             if (mRecs.length < 2) return false;
@@ -2641,25 +2884,41 @@
             return (sc / mRecs.length) * 100 < 60;
           });
 
-          const rows = careList.map(m => {
+          const sheetData = [
+            [{ v: `${year}년 ${quarter} 안식일학교 심방 및 돌봄 대상자 명부`, s: { font: { bold: true, sz: 13, color: { rgb: "DC2626" } } } }],
+            [],
+            [
+              { v: "성명", s: styleHeader },
+              { v: "소속반", s: styleHeader },
+              { v: "직분", s: styleHeader },
+              { v: "연락처", s: styleHeader },
+              { v: "심방상태", s: styleHeader },
+              { v: "결석/심방 사유", s: styleHeader },
+              { v: "담당자", s: styleHeader }
+            ]
+          ];
+
+          careList.forEach(m => {
             const care = this.careNotesMap[m.memberId];
-            return [
-              m.name,
-              this.getClassName(m.classId),
-              m.role || '성도',
-              m.phone || '-',
-              care ? '심방완료' : '심방필요',
-              care ? care.reason : '-',
-              care ? care.handledBy : '-'
-            ];
+            sheetData.push([
+              { v: m.name, s: { font: { bold: true } } },
+              { v: this.getClassName(m.classId), s: styleNormalCenter },
+              { v: m.role || '성도', s: styleNormalCenter },
+              { v: m.phone || '-', s: styleNormalCenter },
+              { v: care ? '심방완료' : '심방필요', s: { font: { bold: true, color: { rgb: care ? "0284C7" : "DC2626" } }, alignment: { horizontal: "center" } } },
+              { v: care ? care.reason : '-', s: { font: { color: { rgb: "334155" } } } },
+              { v: care ? care.handledBy : '-', s: styleNormalCenter }
+            ]);
           });
 
-          const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+          const ws = XLSX.utils.aoa_to_sheet(sheetData);
+          ws['!cols'] = [{ wch: 10 }, { wch: 12 }, { wch: 8 }, { wch: 15 }, { wch: 10 }, { wch: 25 }, { wch: 10 }];
+
           XLSX.utils.book_append_sheet(wb, ws, '돌봄명부');
           XLSX.writeFile(wb, `${year}_${quarter}_심방및돌봄명부.xlsx`);
         }
 
-        this.showToast('📥 엑셀 파일이 성공적으로 다운로드되었습니다.', 'success');
+        this.showToast('📥 컬러 엑셀 파일이 성공적으로 생성되었습니다.', 'success');
         this.closeExportModal();
       }
 

@@ -115,7 +115,6 @@
 
           <div>
             <label class="block text-xs sm:text-sm font-black text-slate-700 mb-1.5">접속 비밀번호 (PIN)</label>
-            <!-- 영문 및 특수문자 입력 지원을 위해 inputmode 제한 해제 -->
             <input type="password" id="pinInput" placeholder="비밀번호 입력 (예: joy2026!)" autocomplete="current-password" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-base sm:text-lg font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none tracking-wider transition">
           </div>
 
@@ -301,7 +300,7 @@
         </div>
       </div>
 
-      <!-- TAB 3: MEMBER DIRECTORY VIEW (개인정보 보호 강화: 주소, 생년월일, 특이사항 제거) -->
+      <!-- TAB 3: MEMBER DIRECTORY VIEW -->
       <div id="tabContent-members" class="hidden space-y-3">
         <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-3.5 sm:p-4">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pb-3 border-b border-slate-100">
@@ -462,10 +461,8 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // Apps Script API URL (Google Sheet DB)
     const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzn2kkDIqszr-dMUbYPHffHlubtBjXb-mYUWApYeU9ot3lYkvrhVl_KPsNL9Y72-ZhK/exec";
 
-    // 실제 연동된 교회 Firebase 설정 (sabbathschool-8586d)
     const firebaseConfig = {
       apiKey: "AIzaSyBXM-QBYDZuOKpZXFXtwk5fpTGTL2uFHCE",
       authDomain: "sabbathschool-8586d.firebaseapp.com",
@@ -512,6 +509,14 @@
         document.getElementById('logoutBtn')?.addEventListener('click', () => {
           this.handleLogout();
         });
+      }
+
+      // 반 코드(C01)를 친근한 한글 반 이름(청년 1반)으로 즉시 변환하는 헬퍼 함수
+      getClassName(classId) {
+        if (!classId) return '-';
+        if (classId === 'ADMIN') return '관리자(전체)';
+        const found = this.classList.find(c => c.classId === classId);
+        return found ? found.className : classId;
       }
 
       setupNetworkListeners() {
@@ -1528,6 +1533,7 @@
         this.renderWeeklyTrendChart(uniqueDates);
       }
 
+      // [개인별 출석 테이블] C01 대신 친근한 반 이름으로 표시
       renderMemberStatsTable(statsMap, totalWeeks) {
         const tbody = document.getElementById('memberStatsTableBody');
         if (!tbody) return;
@@ -1559,7 +1565,7 @@
                 '<span class="text-[10px] text-slate-400">🔍</span>' +
               '</div>' +
             '</td>' +
-            '<td class="py-2.5 px-3 text-slate-500 font-bold">' + item.classId + '</td>' +
+            '<td class="py-2.5 px-3 text-slate-600 font-bold">' + this.getClassName(item.classId) + '</td>' +
             '<td class="py-2.5 px-3 text-center font-black text-emerald-600 text-sm sm:text-base">' + item.present + '</td>' +
             '<td class="py-2.5 px-3 text-center font-black text-amber-600 text-sm sm:text-base">' + item.late + '</td>' +
             '<td class="py-2.5 px-3 text-center font-black text-red-500 text-sm sm:text-base">' + item.absent + '</td>' +
@@ -1588,7 +1594,7 @@
         const nameEl = document.getElementById('modalMemberName');
         const subEl = document.getElementById('modalMemberSub');
         if (nameEl) nameEl.textContent = `${member.name} (${member.role || '성도'})`;
-        if (subEl) subEl.textContent = `${member.classId} · ${year}년 ${quarter} 안식일 출석 현황`;
+        if (subEl) subEl.textContent = `${this.getClassName(member.classId)} · ${year}년 ${quarter} 안식일 출석 현황`;
 
         let startMonth = 1, endMonth = 3;
         if (quarter === '2기') { startMonth = 4; endMonth = 6; }
@@ -1676,6 +1682,7 @@
         if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
       }
 
+      // 모달 내부 통계 팝업에서도 반 이름으로 표시
       openStatDetailModal(type) {
         const modal = document.getElementById('statDetailModal');
         const box = document.getElementById('statModalBox');
@@ -1753,7 +1760,7 @@
                           '<span class="text-[10px] text-slate-500 bg-white border border-slate-200 px-1 py-0.5 rounded font-bold">' + (m.role || '성도') + '</span>' +
                           (m.status === '새가족' ? '<span class="text-[10px] text-amber-700 bg-amber-100 px-1 py-0.5 rounded font-black">새가족</span>' : '') +
                         '</div>' +
-                        '<p class="text-xs text-slate-400 font-bold mt-0.5">' + m.classId + ' · ' + (m.phone || '연락처 미기재') + '</p>' +
+                        '<p class="text-xs text-slate-500 font-bold mt-0.5">' + this.getClassName(m.classId) + ' · ' + (m.phone || '연락처 미기재') + '</p>' +
                       '</div>' +
                     '</div>' +
                     (cleanPhone ? 
@@ -1816,7 +1823,7 @@
                         '<div class="flex items-center space-x-1.5">' +
                           '<span class="text-slate-400 w-4">' + (idx + 1) + '</span>' +
                           '<span class="text-slate-900 font-black">' + item.name + '</span>' +
-                          '<span class="text-[10px] text-slate-400">(' + item.classId + ')</span>' +
+                          '<span class="text-[11px] text-slate-500 font-bold">(' + this.getClassName(item.classId) + ')</span>' +
                         '</div>' +
                         '<div class="flex items-center space-x-2">' +
                           '<span class="text-[11px] text-slate-500">출 ' + item.present + ' · 지 ' + item.late + ' · 결 ' + item.absent + ' (총 ' + item.checkedCount + '회)</span>' +
@@ -1893,10 +1900,10 @@
                         '<div class="flex items-center space-x-1.5">' +
                           '<span class="font-black text-slate-900 text-sm sm:text-base">' + m.name + '</span>' +
                           '<span class="text-[10px] font-black bg-red-100 text-red-700 px-1.5 py-0.5 rounded">출석률 ' + rate + '%</span>' +
-                          '<span class="text-[10px] text-slate-500 bg-white border border-slate-200 px-1 py-0.5 rounded font-bold">' + m.role + '</span>' +
+                          '<span class="text-[10px] text-slate-500 bg-white border border-slate-200 px-1 py-0.5 rounded font-bold">' + (m.role || '성도') + '</span>' +
                         '</div>' +
                         '<p class="text-xs text-slate-600 font-bold mt-0.5">' +
-                          '총 ' + m.checkedCount + '회 기록 중 <strong class="text-red-600">결석 ' + m.absent + '회</strong> (출석 ' + m.present + ' · 지각 ' + m.late + ')' +
+                          this.getClassName(m.classId) + ' · 총 ' + m.checkedCount + '회 중 <strong class="text-red-600">결석 ' + m.absent + '회</strong>' +
                         '</p>' +
                         '<p class="text-xs text-slate-400 font-bold mt-0.5">📞 ' + (m.phone || '연락처 없음') + '</p>' +
                       '</div>' +
@@ -1963,7 +1970,7 @@
         });
       }
 
-      // [개인정보 보호 강화] 불필요한 주소, 생년월일, 특이사항을 제외하고 렌더링
+      // [교인 명부 탭] 드롭다운에서 (C01) 표기를 지우고 순수 '반 이름'만 표시
       renderMemberDirectory() {
         const tbody = document.getElementById('memberDirectoryBody');
         if (!tbody) return;
@@ -1981,11 +1988,11 @@
           if (isAdmin) {
             let optionsHtml = activeClasses.map(c => {
               const isSelected = c.classId === m.classId ? 'selected' : '';
-              return `<option value="${c.classId}" ${isSelected}>${c.className} (${c.classId})</option>`;
+              return `<option value="${c.classId}" ${isSelected}>${c.className}</option>`;
             }).join('');
 
             if (!activeClasses.some(c => c.classId === m.classId)) {
-              optionsHtml = `<option value="${m.classId}" selected>${m.classId}</option>` + optionsHtml;
+              optionsHtml = `<option value="${m.classId}" selected>${this.getClassName(m.classId)}</option>` + optionsHtml;
             }
 
             classCellHtml = 
@@ -1993,7 +2000,7 @@
                 optionsHtml +
               `</select>`;
           } else {
-            classCellHtml = `<span class="px-2 py-0.5 rounded text-xs font-black bg-slate-100 text-slate-700 border border-slate-200">${m.classId}</span>`;
+            classCellHtml = `<span class="px-2 py-0.5 rounded text-xs font-black bg-slate-100 text-slate-700 border border-slate-200">${this.getClassName(m.classId)}</span>`;
           }
 
           tr.innerHTML = 
@@ -2017,7 +2024,8 @@
       }
 
       async updateMemberClass(memberId, newClassId, memberName) {
-        if (!confirm(`${memberName} 성도님의 소속반을 [${newClassId}] 반으로 변경하시겠습니까?`)) {
+        const targetClassName = this.getClassName(newClassId);
+        if (!confirm(`${memberName} 성도님의 소속반을 [${targetClassName}]으로 변경하시겠습니까?`)) {
           this.renderMemberDirectory();
           return;
         }
@@ -2055,7 +2063,7 @@
               }
             }
 
-            this.showToast(`✨ ${memberName} 성도님의 반이 [${newClassId}] 반으로 이동되었습니다.`, 'success');
+            this.showToast(`✨ ${memberName} 성도님의 반이 [${targetClassName}]으로 이동되었습니다.`, 'success');
             this.renderMemberDirectory();
             this.renderAttendanceList();
             

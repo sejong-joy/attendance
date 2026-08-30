@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>세종 조이 안식일학교 스마트 웹 출석부</title>
 
+  <!-- PWA & Mobile Web App Meta Tags -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -12,12 +13,13 @@
   <meta name="theme-color" content="#047857">
   <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/church.png">
   <link rel="icon" href="https://img.icons8.com/color/96/church.png" type="image/png">
+  <link rel="manifest" href="data:application/manifest+json;utf-8,%7B%22name%22%3A%22%EC%84%B8%EC%A2%85%20%EC%A1%B0%EC%9D%B4%20%EC%B6%9C%EC%84%9D%EB%B6%80%22%2C%22short_name%22%3A%22%EC%A1%B0%EC%9D%B4%EC%B6%9C%EC%84%9D%EB%B6%80%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f8fafc%22%2C%22theme_color%22%3A%22%23047857%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fimg.icons8.com%2Fcolor%2F192%2Fchurch.png%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
 
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js for statistics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- 엑셀 파일 내보내기 라이브러리 -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  
+  <!-- Google Fonts (Noto Sans KR) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -27,32 +29,29 @@
       font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
-    .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 9999px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background-color: #f1f5f9; }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background-color: #f1f5f9;
+    }
     @keyframes alert-pulse {
       0%, 100% { border-color: rgba(239, 68, 68, 1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
       50% { border-color: rgba(220, 38, 38, 0.6); box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); }
     }
-    .pulse-danger { animation: alert-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-    @keyframes live-ping { 75%, 100% { transform: scale(2); opacity: 0; } }
-    .live-dot { animation: live-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-    /* A4 인쇄 전용 스타일 */
-    @media print {
-      body * { visibility: hidden; }
-      #printArea, #printArea * { visibility: visible; }
-      #printArea {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        margin: 0;
-        padding: 10px;
-        background: white;
-      }
+    .pulse-danger {
+      animation: alert-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes live-ping {
+      75%, 100% { transform: scale(2); opacity: 0; }
+    }
+    .live-dot {
+      animation: live-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
     }
   </style>
 </head>
@@ -80,6 +79,7 @@
         </div>
       </div>
 
+      <!-- User Badge & Clean Sync Status Area -->
       <div id="userBadgeArea" class="hidden flex items-center space-x-2.5">
         <div class="text-right hidden sm:block">
           <span id="headerClassName" class="text-xs font-black text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">반명</span>
@@ -125,7 +125,7 @@
         </form>
 
         <div class="mt-5 pt-4 border-t border-slate-100 text-center">
-          <p class="text-xs text-slate-400 font-bold">💡 실시간 동기화로 체크 즉시 모든 리더/교역자 화면에 반영됩니다.</p>
+          <p class="text-xs text-slate-400 font-bold">💡 실시간 동기화로 체크 즉시 모든 리더/교역자 화면에 0.05초 만에 반영됩니다.</p>
         </div>
       </div>
     </section>
@@ -133,7 +133,7 @@
     <!-- 2. MAIN APP DASHBOARD -->
     <section id="appSection" class="hidden space-y-3.5 sm:space-y-4">
 
-      <!-- 3주 연속 결석자 알림 배너 -->
+      <!-- 🚨 3주 연속 결석자 긴급 알림 배너 (State 1 미심방 대상) -->
       <div id="absentAlertBanner" class="hidden bg-gradient-to-r from-red-50 to-amber-50 border-l-4 border-red-500 rounded-xl p-3 sm:p-4 shadow-sm">
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-2.5">
@@ -167,9 +167,10 @@
       <!-- TAB 1: ATTENDANCE CHECK VIEW -->
       <div id="tabContent-check" class="space-y-2.5">
         
-        <!-- Controls Card (날짜 선택 + 엑셀 내보내기 & 인쇄 버튼 그룹) -->
+        <!-- Controls Card (1줄 연도/분기/안식일 컴팩트 배치 & 스마트 클라우드 상태) -->
         <div class="bg-white rounded-xl border border-slate-200 p-2.5 sm:p-3 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-2">
           <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <!-- 1줄 셀렉터 그룹 -->
             <div class="flex items-center space-x-1">
               <select id="yearSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-1.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs sm:text-sm font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                 <option value="2025">2025년</option>
@@ -183,21 +184,19 @@
                 <option value="4기">4기</option>
               </select>
               <select id="sabbathSelect" onchange="window.appInstance.onSabbathSelectChange()" class="px-2 py-1 bg-emerald-50 border border-emerald-300 rounded-lg text-xs sm:text-sm font-black text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-xs">
+                <!-- 동적 안식일 과 목록 -->
               </select>
             </div>
 
-            <!-- 반별 엑셀 다운로드 및 A4 인쇄 액션 버튼 -->
-            <div class="flex items-center space-x-1">
-              <button onclick="window.appInstance.exportToExcel()" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs sm:text-sm font-black tracking-tight whitespace-nowrap transition flex items-center space-x-1 shadow-xs" title="현재 반 1~13과 전체 출석부 엑셀 파일 저장">
-                <span>📥 엑셀 다운로드</span>
-              </button>
-              <button onclick="window.appInstance.printReport()" class="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-lg text-xs sm:text-sm font-black tracking-tight whitespace-nowrap transition flex items-center space-x-1 shadow-xs" title="보고용 A4 서식 인쇄 및 PDF 저장">
-                <span>🖨️ 보고서 인쇄</span>
-              </button>
+            <div id="adminClassFilterWrap" class="hidden">
+              <select id="adminClassFilter" onchange="window.appInstance.renderAttendanceList()" class="px-2 py-1 bg-amber-50 border border-amber-200 rounded-lg text-xs sm:text-sm font-black text-amber-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                <option value="ALL">전체 반 보기</option>
+              </select>
             </div>
           </div>
 
-          <div class="flex items-center justify-between sm:justify-end space-x-2">
+          <!-- Quick Action & Smart Cloud Status (수동버튼 대체) -->
+          <div class="flex items-center justify-between sm:justify-end space-x-2.5">
             <div id="syncStatusBadge" class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition">
               <span id="syncStatusIcon">☁️</span>
               <span id="syncStatusText">자동 저장됨</span>
@@ -209,19 +208,6 @@
           </div>
         </div>
 
-        <!-- 반별 선택 및 실시간 출석 현황 바 -->
-        <div class="bg-white rounded-xl border border-slate-200 p-2 shadow-xs">
-          <div class="flex items-center justify-between px-1 mb-1.5">
-            <span class="text-xs font-black text-slate-700 flex items-center space-x-1">
-              <span>📋 교과반 선택 및 현황</span>
-            </span>
-            <span id="currentActiveClassNameBadge" class="text-[11px] font-black text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-              전체 반 보기
-            </span>
-          </div>
-          <div id="classSelectorTabs" class="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5"></div>
-        </div>
-
         <!-- Attendance Member List Card -->
         <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-3 sm:p-4">
           <div class="pb-2.5 mb-3 border-b border-slate-100 flex items-center justify-between">
@@ -229,6 +215,7 @@
               <span class="text-sm sm:text-base font-black text-slate-900">출석 명단</span>
               <span id="memberCountBadge" class="text-xs bg-slate-100 text-slate-700 font-black px-2 py-0.5 rounded-full border border-slate-200">0명</span>
             </div>
+            <!-- Summary Stats -->
             <div class="flex items-center space-x-2 text-xs font-black bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200">
               <span class="text-emerald-700">출석 <span id="summaryPresent" class="text-sm font-black">0</span></span>
               <span class="text-slate-300">|</span>
@@ -238,13 +225,14 @@
             </div>
           </div>
 
+          <!-- 개별 카드 목록 -->
           <div id="attendanceList" class="grid grid-cols-1 gap-2.5"></div>
         </div>
       </div>
 
       <!-- TAB 2: STATISTICS DASHBOARD VIEW -->
       <div id="tabContent-stats" class="hidden space-y-4">
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:grid-cols-4 gap-2 sm:gap-3">
           <div onclick="window.appInstance.openStatDetailModal('members')" class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-400 transition cursor-pointer group">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-500 group-hover:text-emerald-700">총 등록 교인</span>
@@ -275,6 +263,7 @@
           </div>
         </div>
 
+        <!-- 주차별 출석 추이 -->
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
           <h3 class="text-sm sm:text-base font-black text-slate-900 mb-3 flex items-center justify-between">
             <span>📈 주차별 출석 인원 추이</span>
@@ -285,13 +274,14 @@
           </div>
         </div>
 
+        <!-- 개인별 출석 -->
         <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
           <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
             <div>
               <h3 class="text-sm sm:text-base font-black text-slate-900">개인별 출석</h3>
               <p class="text-xs text-slate-400 font-bold mt-0.5">성명을 터치하면 과별 세부 출석(⭕ / △ / ❌) 팝업이 표시됩니다.</p>
             </div>
-            <span class="text-xs text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded">출석 1.0 / 지각 0.5 / 결석 0</span>
+            <span class="text-xs text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded">가중치: 출석 1.0 / 지각 0.5 / 결석 0</span>
           </div>
           <div class="overflow-x-auto custom-scrollbar">
             <table class="w-full text-left text-xs sm:text-sm">
@@ -328,6 +318,7 @@
                 <tr>
                   <th class="py-2.5 px-3">교인ID</th>
                   <th class="py-2.5 px-3">이름</th>
+                  <th class="py-2.5 px-3">소속반 변경</th>
                   <th class="py-2.5 px-3">직분</th>
                   <th class="py-2.5 px-3">연락처</th>
                   <th class="py-2.5 px-3">생년월일</th>
@@ -344,7 +335,7 @@
 
     </section>
 
-    <!-- 1. Urgent Absentee 3-Week Modal -->
+    <!-- 1. Urgent Absentee 3-Week Modal (🚨 팝업) -->
     <div id="urgentAlertModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border-2 border-red-400 w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200" id="urgentModalBox">
         <div class="px-4 py-3 bg-red-50 border-b border-red-100 flex items-center justify-between">
@@ -368,7 +359,7 @@
       </div>
     </div>
 
-    <!-- 2. Care Visit Modal -->
+    <!-- 2. Care Visit Modal (State 2: 심방완료 사유 입력) -->
     <div id="careVisitModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border-2 border-blue-300 w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200" id="careModalBox">
         <div class="px-4 py-3 bg-blue-50 border-b border-blue-100 flex items-center justify-between">
@@ -389,7 +380,7 @@
             <input type="text" id="careReasonInput" required placeholder="예: 해외 출장, 입원 치료, 시험 준비 등" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none">
           </div>
           <div class="bg-blue-50 p-2.5 rounded-xl border border-blue-200 text-xs font-bold text-blue-900 leading-relaxed">
-            💡 <b>하이브리드 돌봄:</b> 사유를 기록하면 긴급 배너에서 제외되며, 성도가 다음 안식일에 <b>출석</b>하면 경고 상태가 자동으로 완전히 리셋됩니다.
+            💡 <b>하이브리드 돌봄:</b> 사유를 기록하면 붉은 긴급 배너에서 제외되며, 성도가 다음 안식일에 <b>출석</b>하면 경고 상태가 자동으로 완전히 리셋됩니다.
           </div>
           <div class="flex space-x-2 pt-1">
             <button type="button" onclick="window.appInstance.closeCareModal()" class="w-1/2 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black text-xs sm:text-sm tracking-tight rounded-xl transition">취소</button>
@@ -399,7 +390,7 @@
       </div>
     </div>
 
-    <!-- 3. Member Attendance Detail Modal -->
+    <!-- 3. Member Attendance Detail Modal (개인별 과별 출석 팝업창) -->
     <div id="memberDetailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-200" id="memberModalBox">
         <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
@@ -453,9 +444,6 @@
       </div>
     </div>
 
-    <!-- 🖨️ A4 인쇄 전용 영역 (평소에는 숨김) -->
-    <div id="printArea" class="hidden"></div>
-
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white p-5 rounded-2xl shadow-2xl flex flex-col items-center space-y-2.5 max-w-xs text-center">
@@ -472,12 +460,15 @@
 
   </main>
 
+  <!-- Firebase v11 Module Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getFirestore, doc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+    // Apps Script API URL (Google Sheet DB)
     const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzn2kkDIqszr-dMUbYPHffHlubtBjXb-mYUWApYeU9ot3lYkvrhVl_KPsNL9Y72-ZhK/exec";
 
+    // 실제 연동된 교회 Firebase 설정 (sabbathschool-8586d)
     const firebaseConfig = {
       apiKey: "AIzaSyBXM-QBYDZuOKpZXFXtwk5fpTGTL2uFHCE",
       authDomain: "sabbathschool-8586d.firebaseapp.com",
@@ -505,9 +496,8 @@
         this.rawMembers = [];
         this.rawRecords = [];
         this.currentAttendance = {};
-        this.selectedClassFilter = 'ALL';
-        this.absentAlertMap = {};
-        this.careNotesMap = {};
+        this.absentAlertMap = {}; // State 1: 3주 연속 결석자
+        this.careNotesMap = {};   // State 2: 심방 완료 데이터
         this.unsubscribeRecords = null;
         this.unsubscribeCareNotes = null;
         this.weeklyChartInstance = null;
@@ -527,6 +517,7 @@
         });
       }
 
+      // 오프라인 대기열 및 네트워크 감지 리스너
       setupNetworkListeners() {
         window.addEventListener('online', () => {
           this.isOnline = true;
@@ -542,6 +533,7 @@
         });
       }
 
+      // 구글 닥스/노션 스타일 스마트 클라우드 상태 표시기 업데이트
       updateCloudStatusBadge(state, customText = '') {
         const badge = document.getElementById('syncStatusBadge');
         const icon = document.getElementById('syncStatusIcon');
@@ -563,6 +555,7 @@
         }
       }
 
+      // 오늘 날짜 기준 해당 연도/분기 자동 선택 및 토요일 목록 생성
       initCurrentYearAndQuarter() {
         const today = new Date();
         const year = today.getFullYear();
@@ -679,8 +672,8 @@
           if (!this.classList.length) {
             this.classList = [
               { classId: 'ADMIN', className: '관리자 (교역자/전체)', leaderName: '교역자', isAdmin: true },
-              { classId: 'C01', className: '청년 1반', leaderName: '최세원', isAdmin: false },
-              { classId: 'C02', className: '장년 1반', leaderName: '고윤호', isAdmin: false },
+              { classId: 'C01', className: '청년 1반', leaderName: '김철수', isAdmin: false },
+              { classId: 'C02', className: '청년 2반', leaderName: '이영희', isAdmin: false },
               { classId: 'C03', className: '믿음반', leaderName: '박민수', isAdmin: false }
             ];
             this.populateClassSelect();
@@ -690,20 +683,30 @@
 
       populateClassSelect() {
         const select = document.getElementById('classSelect');
+        const adminFilter = document.getElementById('adminClassFilter');
         if (!select) return;
 
         const curVal = select.value;
         select.innerHTML = '<option value="">-- 출석할 반을 선택하세요 --</option>';
+        if (adminFilter) adminFilter.innerHTML = '<option value="ALL">전체 반 보기</option>';
 
         this.classList.forEach(c => {
           const opt = document.createElement('option');
           opt.value = c.classId;
           opt.textContent = `${c.className} (${c.leaderName} 리더)`;
           select.appendChild(opt);
+
+          if (adminFilter) {
+            const filterOpt = document.createElement('option');
+            filterOpt.value = c.classId;
+            filterOpt.textContent = c.className;
+            adminFilter.appendChild(filterOpt);
+          }
         });
         if (curVal) select.value = curVal;
       }
 
+      // SWR(Stale-While-Revalidate) 초고속 로그인 로직
       async handleLogin(savedClassId = null, savedPin = null) {
         const classId = savedClassId || document.getElementById('classSelect')?.value;
         const pinCode = savedPin || document.getElementById('pinInput')?.value?.trim();
@@ -722,7 +725,6 @@
             const cached = JSON.parse(cachedStr);
             if (cached.user) {
               this.currentUser = cached.user;
-              this.selectedClassFilter = this.currentUser.isAdmin ? 'ALL' : this.currentUser.classId;
               this.rawMembers = cached.members || [];
               this.rawRecords = cached.records || [];
               this.updateAbsentAlertMap(cached.absentAlerts || []);
@@ -750,7 +752,6 @@
 
           if (json.success) {
             this.currentUser = json.user;
-            this.selectedClassFilter = this.currentUser.isAdmin ? 'ALL' : this.currentUser.classId;
             this.rawMembers = json.members || [];
             this.rawRecords = json.records || [];
             this.updateAbsentAlertMap(json.absentAlerts || []);
@@ -766,7 +767,6 @@
               this.showToast(`반갑습니다, ${this.currentUser.leaderName} 리더님!`, 'success');
               this.checkAndAutoOpenUrgentModal();
             } else {
-              this.renderClassSelectorTabs();
               this.renderAttendanceList();
               this.renderMemberDirectory();
               this.updateAbsentBanner();
@@ -786,7 +786,6 @@
             const found = this.classList.find(c => c.classId === classId);
             if (found) {
               this.currentUser = found;
-              this.selectedClassFilter = this.currentUser.isAdmin ? 'ALL' : this.currentUser.classId;
               this.rawMembers = this.getMockMembers(classId);
               this.rawRecords = [];
               this.calculateConsecutiveAbsentees();
@@ -847,6 +846,7 @@
         }
       }
 
+      // 실시간 3주 연속 결석자 자동 계산 엔진
       calculateConsecutiveAbsentees() {
         if (!this.rawMembers || !this.rawRecords) return;
 
@@ -889,6 +889,7 @@
         }
       }
 
+      // Realtime Firestore 구독
       subscribeRealtimeRecords() {
         if (!isFirebaseReady || !db) return;
         if (this.unsubscribeRecords) {
@@ -930,6 +931,7 @@
         }
       }
 
+      // 심방 완료 노트 실시간 구독 (State 2)
       subscribeCareNotes() {
         if (!isFirebaseReady || !db) return;
         if (this.unsubscribeCareNotes) {
@@ -971,64 +973,17 @@
         if (hdrClass) hdrClass.textContent = this.currentUser.className;
         if (hdrLeader) hdrLeader.textContent = `${this.currentUser.leaderName} 리더님`;
 
+        const filterWrap = document.getElementById('adminClassFilterWrap');
+        if (filterWrap) {
+          if (this.currentUser.isAdmin) filterWrap.classList.remove('hidden');
+          else filterWrap.classList.add('hidden');
+        }
+
         this.calculateConsecutiveAbsentees();
         this.updateAbsentBanner();
-        this.renderClassSelectorTabs();
-
         const selDate = document.getElementById('sabbathSelect')?.value;
         if (selDate) this.loadAttendanceForSelectedDate(selDate);
         this.renderMemberDirectory();
-      }
-
-      renderClassSelectorTabs() {
-        const container = document.getElementById('classSelectorTabs');
-        const badgeEl = document.getElementById('currentActiveClassNameBadge');
-        if (!container) return;
-        container.innerHTML = '';
-
-        const uniqueClassIds = [...new Set(this.rawMembers.map(m => m.classId).filter(Boolean))].sort();
-
-        const allBtn = document.createElement('button');
-        const isAll = (this.selectedClassFilter === 'ALL');
-        allBtn.className = 'shrink-0 px-2.5 py-1 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-lg transition ' +
-          (isAll ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-700');
-        allBtn.innerHTML = '✨ 전체 반 (' + this.rawMembers.length + '명)';
-        allBtn.onclick = () => this.selectClassFilter('ALL');
-        container.appendChild(allBtn);
-
-        uniqueClassIds.forEach(cId => {
-          const classInfo = this.classList.find(c => c.classId === cId);
-          const cName = classInfo ? classInfo.className : cId;
-          const classMembers = this.rawMembers.filter(m => m.classId === cId);
-          
-          let pCount = 0;
-          classMembers.forEach(m => {
-            if (this.currentAttendance[m.memberId]?.status === '출석') pCount++;
-          });
-
-          const isSelected = (this.selectedClassFilter === cId);
-          const btn = document.createElement('button');
-          btn.className = 'shrink-0 px-2.5 py-1 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-lg transition ' +
-            (isSelected ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-700');
-          btn.innerHTML = cName + ' (' + pCount + '/' + classMembers.length + ')';
-          btn.onclick = () => this.selectClassFilter(cId);
-          container.appendChild(btn);
-        });
-
-        if (badgeEl) {
-          if (this.selectedClassFilter === 'ALL') {
-            badgeEl.textContent = '전체 반 (' + this.rawMembers.length + '명)';
-          } else {
-            const curClass = this.classList.find(c => c.classId === this.selectedClassFilter);
-            badgeEl.textContent = (curClass ? curClass.className : this.selectedClassFilter) + ' 명단';
-          }
-        }
-      }
-
-      selectClassFilter(classId) {
-        this.selectedClassFilter = classId;
-        this.renderClassSelectorTabs();
-        this.renderAttendanceList();
       }
 
       updateAbsentBanner() {
@@ -1185,6 +1140,7 @@
               reason: found.reason || ''
             };
           } else {
+            // 기록이 없는 미래 또는 미체크 주차: 기본값을 null로 설정하여 미체크 대기 상태 유지
             this.currentAttendance[m.memberId] = {
               status: null,
               reason: ''
@@ -1192,17 +1148,18 @@
           }
         });
 
-        this.renderClassSelectorTabs();
         this.renderAttendanceList();
       }
 
+      // 출석 체크 카드 렌더링
       renderAttendanceList() {
         const container = document.getElementById('attendanceList');
+        const adminFilter = document.getElementById('adminClassFilter')?.value || 'ALL';
         if (!container) return;
 
         let filtered = this.rawMembers;
-        if (this.selectedClassFilter !== 'ALL') {
-          filtered = this.rawMembers.filter(m => m.classId === this.selectedClassFilter);
+        if (this.currentUser && this.currentUser.isAdmin && adminFilter !== 'ALL') {
+          filtered = this.rawMembers.filter(m => m.classId === adminFilter);
         }
 
         const countBadge = document.getElementById('memberCountBadge');
@@ -1210,7 +1167,7 @@
         container.innerHTML = '';
 
         if (filtered.length === 0) {
-          container.innerHTML = '<div class="p-6 text-center text-slate-400 text-xs font-bold">해당 반에 등록된 교인이 없습니다.</div>';
+          container.innerHTML = '<div class="p-6 text-center text-slate-400 text-xs font-bold">등록된 교인이 없습니다.</div>';
           this.updateAttendanceSummary();
           return;
         }
@@ -1219,8 +1176,8 @@
           const state = this.currentAttendance[member.memberId] || { status: null, reason: '' };
           const is3WeekAbsent = !!this.absentAlertMap[member.memberId];
           const careNote = this.careNotesMap[member.memberId];
-          const isCareHandled = is3WeekAbsent && !!careNote;
-          const isUrgentActive = is3WeekAbsent && !careNote;
+          const isCareHandled = is3WeekAbsent && !!careNote; // State 2
+          const isUrgentActive = is3WeekAbsent && !careNote;  // State 1
           const isNewFamily = member.status === '새가족';
 
           const row = document.createElement('div');
@@ -1250,7 +1207,6 @@
                 '<div class="flex items-center space-x-1.5 flex-wrap">' +
                   '<span class="font-black text-slate-900 text-base sm:text-lg">' + member.name + '</span>' +
                   '<span class="text-xs font-bold text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">' + (member.role || '성도') + '</span>' +
-                  '<span class="text-[11px] font-bold text-slate-400 bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded">' + member.classId + '</span>' +
                   (isNewFamily ? '<span class="text-xs font-bold text-amber-800 bg-amber-100 border border-amber-200 px-1.5 py-0.5 rounded">새가족</span>' : '') +
                   urgentBadgeHtml +
                   careBadgeHtml +
@@ -1282,6 +1238,7 @@
         this.updateAttendanceSummary();
       }
 
+      // 출석 상태 지정 및 자동 백그라운드 오프라인 큐 처리
       async setStatus(memberId, status) {
         if (!this.currentAttendance[memberId]) {
           this.currentAttendance[memberId] = { status: null, reason: '' };
@@ -1312,6 +1269,7 @@
         if (idx >= 0) this.rawRecords[idx] = recordData;
         else this.rawRecords.push(recordData);
 
+        // 출석/지각 시 연속 결석 해제, 결석 시 연속 결석 즉시 재계산
         if (status === '출석' || status === '지각') {
           delete this.absentAlertMap[memberId];
           delete this.careNotesMap[memberId];
@@ -1322,15 +1280,18 @@
           }
         }
 
+        // 실시간 연속 결석 판별 실행
         this.calculateConsecutiveAbsentees();
         this.updateAbsentBanner();
 
+        // 🚨 결석을 눌러 3주 연속 결석이 된 경우 즉시 긴급 알림 모달 팝업
         if (status === '결석' && this.absentAlertMap[memberId] && !this.careNotesMap[memberId]) {
           setTimeout(() => {
             this.openUrgentModal();
           }, 150);
         }
 
+        // 버튼 UI 즉시 반영
         ['출석', '지각', '결석'].forEach(st => {
           const btn = document.querySelector(`.status-btn-${memberId}-${st}`);
           if (btn) {
@@ -1340,10 +1301,10 @@
           }
         });
 
-        this.renderClassSelectorTabs();
         this.updateAttendanceSummary();
         this.renderAttendanceList();
 
+        // Firebase 0.05초 초고속 기록
         if (isFirebaseReady && db && navigator.onLine) {
           try {
             const docRef = doc(db, 'attendance_records', recordId);
@@ -1353,6 +1314,7 @@
           }
         }
 
+        // 로컬 오프라인 큐에 데이터 기록 후 자동 백그라운드 시트 동기화 실행
         this.enqueueOfflineRecord(recordData);
         this.triggerAutoSheetSync();
       }
@@ -1382,6 +1344,7 @@
         }, 1200);
       }
 
+      // 오프라인 대기열 일괄 전송 (Auto-Drain)
       async processOfflineQueue() {
         if (this.isSyncing) return;
         if (!navigator.onLine) {
@@ -1469,29 +1432,18 @@
       }
 
       markAllPresent() {
-        let targets = this.rawMembers;
-        if (this.selectedClassFilter !== 'ALL') {
-          targets = this.rawMembers.filter(m => m.classId === this.selectedClassFilter);
-        }
-
-        targets.forEach(m => {
+        this.rawMembers.forEach(m => {
           this.setStatus(m.memberId, '출석');
         });
-        this.showToast('⚡ 해당 반 전원 출석으로 실시간 저장되었습니다.', 'success');
+        this.showToast('⚡ 전원 출석으로 실시간 저장되었습니다.', 'success');
       }
 
       updateAttendanceSummary() {
         let present = 0, late = 0, absent = 0;
-        let targets = this.rawMembers;
-        if (this.selectedClassFilter !== 'ALL') {
-          targets = this.rawMembers.filter(m => m.classId === this.selectedClassFilter);
-        }
-
-        targets.forEach(m => {
-          const st = this.currentAttendance[m.memberId]?.status;
-          if (st === '출석') present++;
-          else if (st === '지각') late++;
-          else if (st === '결석') absent++;
+        Object.values(this.currentAttendance).forEach(v => {
+          if (v.status === '출석') present++;
+          else if (v.status === '지각') late++;
+          else if (v.status === '결석') absent++;
         });
 
         const pEl = document.getElementById('summaryPresent');
@@ -1599,162 +1551,6 @@
 
           tbody.appendChild(tr);
         });
-      }
-
-      // 📥 엑셀 내보내기 핵심 로직 (연도 + 분기 + 선택된 반 1~13과 매트릭스)
-      exportToExcel() {
-        const year = document.getElementById('yearSelect')?.value || '2026';
-        const quarter = document.getElementById('quarterSelect')?.value || '1기';
-        
-        let targetMembers = this.rawMembers;
-        let classNameLabel = '전체반';
-        if (this.selectedClassFilter !== 'ALL') {
-          targetMembers = this.rawMembers.filter(m => m.classId === this.selectedClassFilter);
-          const found = this.classList.find(c => c.classId === this.selectedClassFilter);
-          classNameLabel = found ? found.className : this.selectedClassFilter;
-        }
-
-        if (targetMembers.length === 0) {
-          this.showToast('출력할 교인 데이터가 없습니다.', 'error');
-          return;
-        }
-
-        const sabbathOptions = Array.from(document.getElementById('sabbathSelect')?.options || []);
-        const headerRow = ['소속반', '교인ID', '성명', '직분'];
-        sabbathOptions.forEach((opt, idx) => {
-          headerRow.push(`제${idx + 1}과 (${opt.value.slice(5)})`);
-        });
-        headerRow.push('출석', '지각', '결석', '출석률(%)');
-
-        const excelData = [headerRow];
-
-        targetMembers.forEach(m => {
-          const row = [m.classId, m.memberId, m.name, m.role || '성도'];
-          let p = 0, l = 0, a = 0;
-
-          sabbathOptions.forEach(opt => {
-            const dateStr = opt.value;
-            const rec = this.rawRecords.find(r => r.memberId === m.memberId && r.date === dateStr);
-            if (rec) {
-              if (rec.status === '출석') { row.push('⭕'); p++; }
-              else if (rec.status === '지각') { row.push('△'); l++; }
-              else if (rec.status === '결석') { row.push('❌'); a++; }
-              else { row.push('-'); }
-            } else {
-              row.push('-');
-            }
-          });
-
-          const totalPossible = p + l + a;
-          const score = p * 1.0 + l * 0.5;
-          const rate = totalPossible > 0 ? ((score / totalPossible) * 100).toFixed(1) + '%' : '0.0%';
-
-          row.push(p, l, a, rate);
-          excelData.push(row);
-        });
-
-        const ws = XLSX.utils.aoa_to_sheet(excelData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, `${quarter}_출석부`);
-
-        const fileName = `${year}년_${quarter}_세종조이_${classNameLabel}_출석부.xlsx`;
-        XLSX.writeFile(wb, fileName);
-        this.showToast(`📊 ${fileName} 다운로드가 완료되었습니다.`, 'success');
-      }
-
-      // 🖨️ 보고용 A4 서식 인쇄 및 PDF 저장 로직
-      printReport() {
-        const year = document.getElementById('yearSelect')?.value || '2026';
-        const quarter = document.getElementById('quarterSelect')?.value || '1기';
-        
-        let targetMembers = this.rawMembers;
-        let classNameLabel = '전체 반';
-        if (this.selectedClassFilter !== 'ALL') {
-          targetMembers = this.rawMembers.filter(m => m.classId === this.selectedClassFilter);
-          const found = this.classList.find(c => c.classId === this.selectedClassFilter);
-          classNameLabel = found ? found.className : this.selectedClassFilter;
-        }
-
-        const sabbathOptions = Array.from(document.getElementById('sabbathSelect')?.options || []);
-        const printArea = document.getElementById('printArea');
-        if (!printArea) return;
-
-        let tableHeaderCols = '<th class="border border-slate-700 p-1 bg-slate-100 text-xs">반</th>' +
-                              '<th class="border border-slate-700 p-1 bg-slate-100 text-xs">성명</th>' +
-                              '<th class="border border-slate-700 p-1 bg-slate-100 text-xs">직분</th>';
-        
-        sabbathOptions.forEach((opt, idx) => {
-          tableHeaderCols += `<th class="border border-slate-700 p-1 bg-slate-100 text-[10px] whitespace-nowrap">${idx + 1}과<br>${opt.value.slice(5)}</th>`;
-        });
-        tableHeaderCols += '<th class="border border-slate-700 p-1 bg-slate-100 text-xs">출석</th>' +
-                           '<th class="border border-slate-700 p-1 bg-slate-100 text-xs">지각</th>' +
-                           '<th class="border border-slate-700 p-1 bg-slate-100 text-xs">결석</th>' +
-                           '<th class="border border-slate-700 p-1 bg-slate-100 text-xs">출석률</th>';
-
-        let tableRows = '';
-        targetMembers.forEach(m => {
-          let p = 0, l = 0, a = 0;
-          let cols = `<td class="border border-slate-700 p-1 text-center text-xs font-bold">${m.classId}</td>` +
-                     `<td class="border border-slate-700 p-1 text-center text-xs font-black">${m.name}</td>` +
-                     `<td class="border border-slate-700 p-1 text-center text-xs">${m.role || '성도'}</td>`;
-          
-          sabbathOptions.forEach(opt => {
-            const rec = this.rawRecords.find(r => r.memberId === m.memberId && r.date === opt.value);
-            if (rec) {
-              if (rec.status === '출석') { cols += '<td class="border border-slate-700 p-1 text-center text-xs text-emerald-700 font-black">⭕</td>'; p++; }
-              else if (rec.status === '지각') { cols += '<td class="border border-slate-700 p-1 text-center text-xs text-amber-600 font-black">△</td>'; l++; }
-              else if (rec.status === '결석') { cols += '<td class="border border-slate-700 p-1 text-center text-xs text-red-600 font-black">❌</td>'; a++; }
-              else { cols += '<td class="border border-slate-700 p-1 text-center text-xs text-slate-300">-</td>'; }
-            } else {
-              cols += '<td class="border border-slate-700 p-1 text-center text-xs text-slate-300">-</td>';
-            }
-          });
-
-          const total = p + l + a;
-          const score = p * 1.0 + l * 0.5;
-          const rate = total > 0 ? ((score / total) * 100).toFixed(1) + '%' : '0.0%';
-
-          cols += `<td class="border border-slate-700 p-1 text-center text-xs font-bold">${p}</td>` +
-                  `<td class="border border-slate-700 p-1 text-center text-xs font-bold">${l}</td>` +
-                  `<td class="border border-slate-700 p-1 text-center text-xs font-bold">${a}</td>` +
-                  `<td class="border border-slate-700 p-1 text-center text-xs font-black">${rate}</td>`;
-
-          tableRows += `<tr>${cols}</tr>`;
-        });
-
-        printArea.innerHTML = `
-          <div class="text-slate-900 p-4">
-            <div class="flex justify-between items-end border-b-2 border-slate-900 pb-2 mb-4">
-              <div>
-                <h2 class="text-xl font-black">${year}년 ${quarter} 세종 조이 안식일학교 출석 결산 보고서</h2>
-                <p class="text-xs text-slate-600 font-bold mt-1">소속반: ${classNameLabel} | 재적인원: ${targetMembers.length}명 | 출력일시: ${new Date().toLocaleDateString()}</p>
-              </div>
-              <div class="border border-slate-700 text-center text-xs">
-                <table class="border-collapse">
-                  <tr>
-                    <td class="border border-slate-700 px-2 py-0.5 bg-slate-100 font-bold">담당 리더</td>
-                    <td class="border border-slate-700 px-2 py-0.5 bg-slate-100 font-bold">안교장</td>
-                    <td class="border border-slate-700 px-2 py-0.5 bg-slate-100 font-bold">담임목사</td>
-                  </tr>
-                  <tr style="height: 35px;">
-                    <td class="border border-slate-700"></td>
-                    <td class="border border-slate-700"></td>
-                    <td class="border border-slate-700"></td>
-                  </tr>
-                </table>
-              </div>
-            </div>
-
-            <table class="w-full border-collapse border border-slate-700">
-              <thead><tr>${tableHeaderCols}</tr></thead>
-              <tbody>${tableRows}</tbody>
-            </table>
-          </div>
-        `;
-
-        printArea.classList.remove('hidden');
-        window.print();
-        printArea.classList.add('hidden');
       }
 
       openMemberDetailModal(memberId) {
@@ -1890,10 +1686,12 @@
             if (r.status === '출석') {
               memberStatsMap[r.memberId].present++;
               memberStatsMap[r.memberId].score += 1.0;
+              totalScore += 1.0;
             } else if (r.status === '지각') {
               memberStatsMap[r.memberId].late++;
               memberStatsMap[r.memberId].score += 0.5;
-            } else {
+              totalScore += 0.5;
+            } else if (r.status === '결석') {
               memberStatsMap[r.memberId].absent++;
             }
           }
@@ -2012,7 +1810,7 @@
                     '<div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">' +
                       '<div>' +
                         '<span class="font-black text-slate-900 text-xs sm:text-sm">제' + (idx + 1) + '회차 예배 (' + dateStr + ')</span>' +
-                        '<p class="text-[11px] text-slate-500 font-bold mt-0.5">총 ${dayRecords.length}명 기록 완료</p>' +
+                        '<p class="text-[11px] text-slate-500 font-bold mt-0.5">총 ' + dayRecords.length + '명 기록 완료</p>' +
                       '</div>' +
                       '<div class="flex items-center space-x-1.5 text-xs font-black">' +
                         '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">출석 ' + pCount + '</span>' +
@@ -2131,13 +1929,40 @@
         if (!tbody) return;
         tbody.innerHTML = '';
 
+        const isAdmin = !!(this.currentUser && this.currentUser.isAdmin);
+
+        // 반 변경 드롭다운용 유효 반 목록
+        const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
+
         this.rawMembers.forEach(m => {
           const cleanPhone = (m.phone || '').replace(/[^0-9]/g, '');
           const tr = document.createElement('tr');
           tr.className = 'hover:bg-slate-50 transition font-bold';
+
+          let classCellHtml = '';
+          if (isAdmin) {
+            let optionsHtml = activeClasses.map(c => {
+              const isSelected = c.classId === m.classId ? 'selected' : '';
+              return `<option value="${c.classId}" ${isSelected}>${c.className} (${c.classId})</option>`;
+            }).join('');
+
+            // 혹시 목록에 없는 반 ID인 경우 보존
+            if (!activeClasses.some(c => c.classId === m.classId)) {
+              optionsHtml = `<option value="${m.classId}" selected>${m.classId}</option>` + optionsHtml;
+            }
+
+            classCellHtml = 
+              `<select onchange="window.appInstance.updateMemberClass('${m.memberId}', this.value, '${m.name}')" class="px-2 py-1 bg-amber-50 border border-amber-300 rounded-lg text-xs font-black text-amber-900 focus:ring-2 focus:ring-amber-500 focus:outline-none transition shadow-2xs">` +
+                optionsHtml +
+              `</select>`;
+          } else {
+            classCellHtml = `<span class="px-2 py-0.5 rounded text-xs font-black bg-slate-100 text-slate-700 border border-slate-200">${m.classId}</span>`;
+          }
+
           tr.innerHTML = 
             '<td class="py-2.5 px-3 font-mono text-xs text-slate-400">' + m.memberId + '</td>' +
             '<td class="py-2.5 px-3 font-black text-slate-900">' + m.name + '</td>' +
+            '<td class="py-2.5 px-3">' + classCellHtml + '</td>' +
             '<td class="py-2.5 px-3 text-slate-600">' + (m.role || '-') + '</td>' +
             '<td class="py-2.5 px-3">' +
               (cleanPhone ? '<a href="tel:' + cleanPhone + '" class="text-emerald-700 hover:underline">📞 ' + m.phone + '</a>' : '<span class="text-slate-400">-</span>') +
@@ -2155,6 +1980,67 @@
 
           tbody.appendChild(tr);
         });
+      }
+
+      // [기능 추가] 웹앱에서 교인 소속반 실시간 변경 및 시트 동기화
+      async updateMemberClass(memberId, newClassId, memberName) {
+        if (!confirm(`${memberName} 성도님의 소속반을 [${newClassId}] 반으로 변경하시겠습니까?`)) {
+          this.renderMemberDirectory(); // 취소 시 원래 값 복원
+          return;
+        }
+
+        this.showLoading(`${memberName} 성도님의 반을 이동하는 중...`);
+
+        try {
+          const payload = {
+            action: 'updateMemberClass',
+            memberId: memberId,
+            newClassId: newClassId
+          };
+
+          const res = await fetch(SHEETS_API_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+          const json = await res.json();
+
+          this.hideLoading();
+
+          if (json.success) {
+            // 로컬 메모리 즉시 반영
+            const targetMember = this.rawMembers.find(m => m.memberId === memberId);
+            if (targetMember) targetMember.classId = newClassId;
+
+            // 로컬 캐시 업데이트
+            if (this.currentUser) {
+              const cacheKey = `church_cache_${this.currentUser.classId}`;
+              const cachedStr = localStorage.getItem(cacheKey);
+              if (cachedStr) {
+                try {
+                  const cached = JSON.parse(cachedStr);
+                  cached.members = this.rawMembers;
+                  localStorage.setItem(cacheKey, JSON.stringify(cached));
+                } catch(e) {}
+              }
+            }
+
+            this.showToast(`✨ ${memberName} 성도님의 반이 [${newClassId}] 반으로 이동되었습니다.`, 'success');
+            this.renderMemberDirectory();
+            this.renderAttendanceList();
+            
+            const statsContent = document.getElementById('tabContent-stats');
+            if (statsContent && !statsContent.classList.contains('hidden')) {
+              this.calculateAndRenderStatistics();
+            }
+          } else {
+            this.showToast(json.message || '반 변경에 실패했습니다.', 'error');
+            this.renderMemberDirectory();
+          }
+        } catch (err) {
+          this.hideLoading();
+          this.showToast('서버 통신 중 오류가 발생했습니다. 네트워크를 확인하세요.', 'error');
+          this.renderMemberDirectory();
+        }
       }
 
       filterMemberList() {
@@ -2217,10 +2103,9 @@
 
       getMockMembers(classId) {
         return [
-          { memberId: 'M0001', name: '고윤호', classId: classId, role: '성도', phone: '010-1234-5678', birthDate: '1990-04-20', address: '세종시 다정북로 42', status: '활동' },
-          { memberId: 'M0002', name: '김지현', classId: classId, role: '성도', phone: '010-2345-6789', birthDate: '1992-05-01', address: '세종시 예정, 매립', status: '활동' },
-          { memberId: 'M0003', name: '최변근', classId: classId, role: '집사', phone: '010-4567-8901', birthDate: '1985-08-15', address: '세종시 호병골길 20-7', status: '활동' },
-          { memberId: 'M0004', name: '문희숙', classId: classId, role: '성도', phone: '010-5678-9012', birthDate: '1988-11-03', address: '세종시 자택', status: '활동' }
+          { memberId: 'M0001', name: '홍길동', classId: classId, role: '청년', phone: '010-1234-5678', birthDate: '1999-03-12', address: '세종시 한누리대로 100', status: '활동' },
+          { memberId: 'M0002', name: '김영수', classId: classId, role: '청년', phone: '010-2345-6789', birthDate: '2001-08-20', address: '세종시 다정중앙로 20', status: '새가족' },
+          { memberId: 'M0004', name: '박준호', classId: classId, role: '청년', phone: '010-4567-8901', birthDate: '2000-01-30', address: '세종시 보듬3로 55', status: '활동' }
         ];
       }
     }

@@ -167,10 +167,9 @@
       <!-- TAB 1: ATTENDANCE CHECK VIEW -->
       <div id="tabContent-check" class="space-y-2.5">
         
-        <!-- Controls Card (1줄 연도/분기/안식일 컴팩트 배치 & 스마트 클라우드 상태) -->
+        <!-- Controls Card -->
         <div class="bg-white rounded-xl border border-slate-200 p-2.5 sm:p-3 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-2">
           <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
-            <!-- 1줄 셀렉터 그룹 -->
             <div class="flex items-center space-x-1">
               <select id="yearSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-1.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs sm:text-sm font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                 <option value="2025">2025년</option>
@@ -195,7 +194,7 @@
             </div>
           </div>
 
-          <!-- Quick Action & Smart Cloud Status (수동버튼 대체) -->
+          <!-- Quick Action & Smart Cloud Status -->
           <div class="flex items-center justify-between sm:justify-end space-x-2.5">
             <div id="syncStatusBadge" class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition">
               <span id="syncStatusIcon">☁️</span>
@@ -533,7 +532,7 @@
         });
       }
 
-      // 구글 닥스/노션 스타일 스마트 클라우드 상태 표시기 업데이트
+      // 스마트 클라우드 상태 표시기 업데이트
       updateCloudStatusBadge(state, customText = '') {
         const badge = document.getElementById('syncStatusBadge');
         const icon = document.getElementById('syncStatusIcon');
@@ -642,6 +641,11 @@
         const quarter = document.getElementById('quarterSelect')?.value || '1기';
         this.generateSabbathOptions(year, quarter);
         this.onSabbathSelectChange();
+
+        const statsContent = document.getElementById('tabContent-stats');
+        if (statsContent && !statsContent.classList.contains('hidden')) {
+          this.calculateAndRenderStatistics();
+        }
       }
 
       onSabbathSelectChange() {
@@ -852,7 +856,7 @@
 
         this.rawMembers.forEach(member => {
           const memberRecs = this.rawRecords
-            .filter(r => r.memberId === member.memberId && r.date)
+            .filter(r => r.memberId === member.memberId && r.date && (r.status === '출석' || r.status === '지각' || r.status === '결석'))
             .sort((a, b) => b.date.localeCompare(a.date));
 
           let consecutiveCount = 0;
@@ -1136,13 +1140,12 @@
 
         this.rawMembers.forEach(m => {
           const found = dateRecords.find(r => r.memberId === m.memberId);
-          if (found) {
+          if (found && (found.status === '출석' || found.status === '지각' || found.status === '결석')) {
             this.currentAttendance[m.memberId] = {
               status: found.status,
               reason: found.reason || ''
             };
           } else {
-            // 기록이 없는 미래 또는 미체크 주차: 기본값을 null로 설정하여 미체크 대기 상태 유지
             this.currentAttendance[m.memberId] = {
               status: null,
               reason: ''
@@ -1240,7 +1243,7 @@
         this.updateAttendanceSummary();
       }
 
-      // [수정] 출석 상태 지정 및 원터치 토글 취소(초기화) 로직
+      // 출석 상태 지정 및 원터치 토글 취소(초기화) 로직
       async setStatus(memberId, status) {
         if (!this.currentAttendance[memberId]) {
           this.currentAttendance[memberId] = { status: null, reason: '' };
@@ -1254,7 +1257,6 @@
 
         const recordId = `${targetDate}_${memberId}`;
 
-        // [핵심 로직: 원터치 토글 취소/초기화] 이미 선택된 상태를 다시 누르면 null(미체크)로 리셋
         const isCancelling = (currentStatus === status);
         const finalStatus = isCancelling ? null : status;
         this.currentAttendance[memberId].status = finalStatus;
@@ -1262,10 +1264,8 @@
         const idx = this.rawRecords.findIndex(r => r.date === targetDate && r.memberId === memberId);
 
         if (isCancelling) {
-          // 상태 취소(초기화) 시 로컬 기록에서 제거
           if (idx >= 0) this.rawRecords.splice(idx, 1);
 
-          // Firestore 문서 삭제 (초기화)
           if (isFirebaseReady && db && navigator.onLine) {
             try {
               const docRef = doc(db, 'attendance_records', recordId);
@@ -1275,7 +1275,6 @@
             }
           }
         } else {
-          // 신규 선택 또는 상태 변경 시
           const score = finalStatus === '출석' ? 1.0 : (finalStatus === '지각' ? 0.5 : 0.0);
           const recordData = {
             recordId: recordId,
@@ -1293,7 +1292,6 @@
           if (idx >= 0) this.rawRecords[idx] = recordData;
           else this.rawRecords.push(recordData);
 
-          // 출석/지각 시 연속 결석 해제
           if (finalStatus === '출석' || finalStatus === '지각') {
             delete this.absentAlertMap[memberId];
             delete this.careNotesMap[memberId];
@@ -1304,7 +1302,6 @@
             }
           }
 
-          // 🚨 결석을 눌러 3주 연속 결석이 된 경우 즉시 긴급 알림 모달 팝업
           if (finalStatus === '결석') {
             this.calculateConsecutiveAbsentees();
             if (this.absentAlertMap[memberId] && !this.careNotesMap[memberId]) {
@@ -1314,7 +1311,6 @@
             }
           }
 
-          // Firestore 실시간 저장
           if (isFirebaseReady && db && navigator.onLine) {
             try {
               const docRef = doc(db, 'attendance_records', recordId);
@@ -1327,11 +1323,9 @@
           this.enqueueOfflineRecord(recordData);
         }
 
-        // 실시간 연속 결석 판별 재계산 및 배너 업데이트
         this.calculateConsecutiveAbsentees();
         this.updateAbsentBanner();
 
-        // 버튼 UI 즉시 반영
         ['출석', '지각', '결석'].forEach(st => {
           const btn = document.querySelector(`.status-btn-${memberId}-${st}`);
           if (btn) {
@@ -1343,8 +1337,6 @@
 
         this.updateAttendanceSummary();
         this.renderAttendanceList();
-
-        // 자동 시트 동기화 실행
         this.triggerAutoSheetSync();
       }
 
@@ -1373,7 +1365,7 @@
         }, 1200);
       }
 
-      // 오프라인 대기열 일괄 전송 (Auto-Drain)
+      // 오프라인 대기열 일괄 전송
       async processOfflineQueue() {
         if (this.isSyncing) return;
         if (!navigator.onLine) {
@@ -1483,17 +1475,28 @@
         if (aEl) aEl.textContent = absent;
       }
 
+      // [핵심 교정 로직] 선택된 분기 한정 + 유효 상태(출석/지각/결석)만 엄격히 카운트하여 미체크 성도 배제
       calculateAndRenderStatistics() {
         const totalMembers = this.rawMembers.length;
         const totMemEl = document.getElementById('statTotalMembers');
         if (totMemEl) totMemEl.textContent = `${totalMembers}명`;
 
-        const uniqueDates = [...new Set(this.rawRecords.map(r => r.date))].sort();
+        const curQuarter = document.getElementById('quarterSelect')?.value || '3기';
+
+        // 1) 현재 선택된 분기의 유효한 출석 기록(출석, 지각, 결석)만 엄격히 필터링
+        const validRecords = this.rawRecords.filter(r => {
+          const isQuarterMatch = !r.quarter || r.quarter === curQuarter;
+          const isValidStatus = r.status === '출석' || r.status === '지각' || r.status === '결석';
+          return isQuarterMatch && isValidStatus;
+        });
+
+        // 2) 실제 체크가 이루어진 고유 날짜 추출
+        const uniqueDates = [...new Set(validRecords.map(r => r.date))].sort();
         const totSabEl = document.getElementById('statTotalSabbaths');
         if (totSabEl) totSabEl.textContent = `${uniqueDates.length}회`;
 
         let totalScore = 0;
-        let totalPossible = uniqueDates.length * totalMembers;
+        let totalCheckedCount = 0;
 
         const memberStatsMap = {};
         this.rawMembers.forEach(m => {
@@ -1504,12 +1507,16 @@
             present: 0,
             late: 0,
             absent: 0,
-            score: 0
+            score: 0,
+            checkedCount: 0 // 실제 기록된 횟수
           };
         });
 
-        this.rawRecords.forEach(r => {
+        validRecords.forEach(r => {
           if (memberStatsMap[r.memberId]) {
+            memberStatsMap[r.memberId].checkedCount++;
+            totalCheckedCount++;
+
             if (r.status === '출석') {
               memberStatsMap[r.memberId].present++;
               memberStatsMap[r.memberId].score += 1.0;
@@ -1524,14 +1531,18 @@
           }
         });
 
-        const avgRate = totalPossible > 0 ? ((totalScore / totalPossible) * 100).toFixed(1) : 0;
+        // 전체 평균 출석률: 체크된 기록이 전혀 없으면 0.0%
+        const avgRate = totalCheckedCount > 0 ? ((totalScore / totalCheckedCount) * 100).toFixed(1) : '0.0';
         const avgRateEl = document.getElementById('statAvgRate');
         if (avgRateEl) avgRateEl.textContent = `${avgRate}%`;
 
+        // 관심/심방 대상: 반드시 체크 이력이 '2회 이상' 있으면서 출석률이 60% 미만인 성도만 카운트 (미체크 성도는 0% 처리 안 됨)
         let careCount = 0;
         Object.values(memberStatsMap).forEach(ms => {
-          const mRate = uniqueDates.length > 0 ? (ms.score / uniqueDates.length) * 100 : 100;
-          if (mRate < 60) careCount++;
+          if (ms.checkedCount >= 2) {
+            const mRate = (ms.score / ms.checkedCount) * 100;
+            if (mRate < 60) careCount++;
+          }
         });
         const careEl = document.getElementById('statCareCount');
         if (careEl) careEl.textContent = `${careCount}명`;
@@ -1540,17 +1551,24 @@
         this.renderWeeklyTrendChart(uniqueDates);
       }
 
+      // 개인별 실제 체크 횟수 기준 렌더링
       renderMemberStatsTable(statsMap, totalWeeks) {
         const tbody = document.getElementById('memberStatsTableBody');
         if (!tbody) return;
         tbody.innerHTML = '';
 
         const list = Object.values(statsMap);
-        list.sort((a, b) => b.score - a.score);
+        list.sort((a, b) => {
+          const rateA = a.checkedCount > 0 ? (a.score / a.checkedCount) : -1;
+          const rateB = b.checkedCount > 0 ? (b.score / b.checkedCount) : -1;
+          if (rateB !== rateA) return rateB - rateA;
+          return b.checkedCount - a.checkedCount;
+        });
 
         list.forEach(item => {
-          const rate = totalWeeks > 0 ? ((item.score / totalWeeks) * 100).toFixed(1) : '100.0';
-          const isPerfect = totalWeeks > 0 && parseFloat(rate) === 100.0;
+          const hasRecord = item.checkedCount > 0;
+          const rate = hasRecord ? ((item.score / item.checkedCount) * 100).toFixed(1) : '-';
+          const isPerfect = hasRecord && parseFloat(rate) === 100.0 && item.checkedCount >= 3;
 
           const tr = document.createElement('tr');
           tr.className = 'hover:bg-slate-50 transition cursor-pointer group';
@@ -1570,12 +1588,14 @@
             '<td class="py-2.5 px-3 text-center font-black text-amber-600 text-sm sm:text-base">' + item.late + '</td>' +
             '<td class="py-2.5 px-3 text-center font-black text-red-500 text-sm sm:text-base">' + item.absent + '</td>' +
             '<td class="py-2.5 px-3 text-right">' +
-              '<span class="inline-block px-2 py-0.5 rounded-full text-xs font-black ' +
-                (rate >= 90 ? 'bg-emerald-100 text-emerald-800' :
-                rate >= 70 ? 'bg-blue-100 text-blue-800' :
-                rate >= 50 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800') + '">' +
-                rate + '%' +
-              '</span>' +
+              (hasRecord ? 
+                '<span class="inline-block px-2 py-0.5 rounded-full text-xs font-black ' +
+                  (parseFloat(rate) >= 90 ? 'bg-emerald-100 text-emerald-800' :
+                  parseFloat(rate) >= 70 ? 'bg-blue-100 text-blue-800' :
+                  parseFloat(rate) >= 50 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800') + '">' +
+                  rate + '%' +
+                '</span>' 
+                : '<span class="text-xs font-bold text-slate-300">미기록</span>') +
             '</td>';
 
           tbody.appendChild(tr);
@@ -1587,7 +1607,7 @@
         if (!member) return;
 
         const year = parseInt(document.getElementById('yearSelect')?.value || '2026', 10);
-        const quarter = document.getElementById('quarterSelect')?.value || '1기';
+        const quarter = document.getElementById('quarterSelect')?.value || '3기';
 
         const nameEl = document.getElementById('modalMemberName');
         const subEl = document.getElementById('modalMemberSub');
@@ -1680,7 +1700,7 @@
         if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
       }
 
-      // [수정 및 복구] 상단 4개 통계 카드 모달 열기 함수 완벽 복원
+      // 모달 내부 통계도 실제 체크된 기록만 기준으로 분석
       openStatDetailModal(type) {
         const modal = document.getElementById('statDetailModal');
         const box = document.getElementById('statModalBox');
@@ -1692,8 +1712,15 @@
 
         if (!modal || !box || !bodyEl) return;
 
-        const uniqueDates = [...new Set(this.rawRecords.map(r => r.date))].sort();
-        const totalWeeks = uniqueDates.length;
+        const curQuarter = document.getElementById('quarterSelect')?.value || '3기';
+
+        const validRecords = this.rawRecords.filter(r => {
+          const isQuarterMatch = !r.quarter || r.quarter === curQuarter;
+          const isValidStatus = r.status === '출석' || r.status === '지각' || r.status === '결석';
+          return isQuarterMatch && isValidStatus;
+        });
+
+        const uniqueDates = [...new Set(validRecords.map(r => r.date))].sort();
 
         const memberStatsMap = {};
         this.rawMembers.forEach(m => {
@@ -1707,12 +1734,14 @@
             present: 0,
             late: 0,
             absent: 0,
-            score: 0
+            score: 0,
+            checkedCount: 0
           };
         });
 
-        this.rawRecords.forEach(r => {
+        validRecords.forEach(r => {
           if (memberStatsMap[r.memberId]) {
+            memberStatsMap[r.memberId].checkedCount++;
             if (r.status === '출석') {
               memberStatsMap[r.memberId].present++;
               memberStatsMap[r.memberId].score += 1.0;
@@ -1764,18 +1793,22 @@
         } else if (type === 'rate') {
           iconEl.textContent = '📈';
           titleEl.textContent = '출석률 분석 및 등급 분포';
-          subEl.textContent = '분기 누적 예배 기준 성도 출석 성실도 분포';
+          subEl.textContent = `${curQuarter} 실제 체크 성도 기준 출석 분포`;
 
-          let excellent = 0, good = 0, warning = 0, danger = 0;
+          let excellent = 0, good = 0, warning = 0, danger = 0, unrecorded = 0;
           list.forEach(m => {
-            const rate = totalWeeks > 0 ? (m.score / totalWeeks) * 100 : 100;
-            if (rate >= 90) excellent++;
-            else if (rate >= 70) good++;
-            else if (rate >= 50) warning++;
-            else danger++;
+            if (m.checkedCount === 0) {
+              unrecorded++;
+            } else {
+              const rate = (m.score / m.checkedCount) * 100;
+              if (rate >= 90) excellent++;
+              else if (rate >= 70) good++;
+              else if (rate >= 50) warning++;
+              else danger++;
+            }
           });
 
-          if (footerEl) footerEl.textContent = '가중치: 출석 1.0 / 지각 0.5 / 결석 0';
+          if (footerEl) footerEl.textContent = `가중치: 출석 1.0 / 지각 0.5 / 결석 0 (미기록 ${unrecorded}명 제외)`;
 
           bodyEl.innerHTML = 
             '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">' +
@@ -1797,39 +1830,41 @@
               '</div>' +
             '</div>' +
             '<div class="mt-3 pt-3 border-t border-slate-100">' +
-              '<h4 class="text-xs font-black text-slate-700 mb-2">성도별 출석 랭킹 순위</h4>' +
+              '<h4 class="text-xs font-black text-slate-700 mb-2">성도별 출석 랭킹 순위 (체크 성도 기준)</h4>' +
               '<div class="space-y-1 max-h-48 overflow-y-auto custom-scrollbar">' +
-                list.sort((a,b) => b.score - a.score).map((item, idx) => {
-                  const rate = totalWeeks > 0 ? ((item.score / totalWeeks) * 100).toFixed(1) : '100.0';
-                  return (
-                    '<div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200/60 text-xs font-bold">' +
-                      '<div class="flex items-center space-x-1.5">' +
-                        '<span class="text-slate-400 w-4">' + (idx + 1) + '</span>' +
-                        '<span class="text-slate-900 font-black">' + item.name + '</span>' +
-                        '<span class="text-[10px] text-slate-400">(' + item.classId + ')</span>' +
-                      '</div>' +
-                      '<div class="flex items-center space-x-2">' +
-                        '<span class="text-[11px] text-slate-500">출 ' + item.present + ' · 지 ' + item.late + ' · 결 ' + item.absent + '</span>' +
-                        '<span class="font-black ' + (rate >= 70 ? 'text-emerald-600' : 'text-red-500') + '">' + rate + '%</span>' +
-                      '</div>' +
-                    '</div>'
-                  );
-                }).join('') +
+                list.filter(item => item.checkedCount > 0)
+                  .sort((a,b) => (b.score / b.checkedCount) - (a.score / a.checkedCount))
+                  .map((item, idx) => {
+                    const rate = ((item.score / item.checkedCount) * 100).toFixed(1);
+                    return (
+                      '<div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200/60 text-xs font-bold">' +
+                        '<div class="flex items-center space-x-1.5">' +
+                          '<span class="text-slate-400 w-4">' + (idx + 1) + '</span>' +
+                          '<span class="text-slate-900 font-black">' + item.name + '</span>' +
+                          '<span class="text-[10px] text-slate-400">(' + item.classId + ')</span>' +
+                        '</div>' +
+                        '<div class="flex items-center space-x-2">' +
+                          '<span class="text-[11px] text-slate-500">출 ' + item.present + ' · 지 ' + item.late + ' · 결 ' + item.absent + ' (총 ' + item.checkedCount + '회)</span>' +
+                          '<span class="font-black ' + (parseFloat(rate) >= 70 ? 'text-emerald-600' : 'text-red-500') + '">' + rate + '%</span>' +
+                        '</div>' +
+                      '</div>'
+                    );
+                  }).join('') +
               '</div>' +
             '</div>';
         } else if (type === 'sabbaths') {
           iconEl.textContent = '⛪';
-          titleEl.textContent = `누적 안식일 예배 현황 (총 ${totalWeeks}회)`;
-          subEl.textContent = '기록된 모든 안식일 일자별 출석 집계';
+          titleEl.textContent = `누적 안식일 예배 현황 (총 ${uniqueDates.length}회)`;
+          subEl.textContent = `${curQuarter} 실제 출석 체크된 예배 일자별 집계`;
           if (footerEl) footerEl.textContent = `최근 예배일: ${uniqueDates[uniqueDates.length - 1] || '없음'}`;
 
-          if (totalWeeks === 0) {
+          if (uniqueDates.length === 0) {
             bodyEl.innerHTML = '<div class="p-6 text-center text-slate-400 text-xs font-bold">아직 기록된 안식일 예배가 없습니다.</div>';
           } else {
             bodyEl.innerHTML = 
               '<div class="space-y-2">' +
                 uniqueDates.map((dateStr, idx) => {
-                  const dayRecords = this.rawRecords.filter(r => r.date === dateStr);
+                  const dayRecords = validRecords.filter(r => r.date === dateStr);
                   const pCount = dayRecords.filter(r => r.status === '출석').length;
                   const lCount = dayRecords.filter(r => r.status === '지각').length;
                   const aCount = dayRecords.filter(r => r.status === '결석').length;
@@ -1853,27 +1888,29 @@
         } else if (type === 'care') {
           iconEl.textContent = '🚨';
           titleEl.textContent = '관심 및 심방 권장 대상 성도';
-          subEl.textContent = '출석률 60% 미만 성도 목록 (원터치 안부 전화 권장)';
+          subEl.textContent = `${curQuarter} 최소 2회 이상 체크 성도 중 출석률 60% 미만 (미체크 교인 제외)`;
 
+          // [핵심 필터링] 유효 체크가 2회 이상이며 출석률 60% 미만인 성도만 정확히 필터링
           const careList = list.filter(m => {
-            const rate = totalWeeks > 0 ? (m.score / totalWeeks) * 100 : 100;
+            if (m.checkedCount < 2) return false;
+            const rate = (m.score / m.checkedCount) * 100;
             return rate < 60;
           });
 
-          if (footerEl) footerEl.textContent = `돌봄 대상 총 ${careList.length}명`;
+          if (footerEl) footerEl.textContent = `실제 돌봄 대상 성도 총 ${careList.length}명`;
 
           if (careList.length === 0) {
             bodyEl.innerHTML = 
               '<div class="p-6 text-center text-emerald-600 space-y-1 font-bold">' +
                 '<span class="text-3xl">🎉</span>' +
                 '<p class="text-sm text-slate-800 font-black">관심/심방 대상 성도가 없습니다!</p>' +
-                '<p class="text-xs text-slate-400">모든 성도님들의 출석률이 60% 이상으로 성실합니다.</p>' +
+                '<p class="text-xs text-slate-400">출석 체크를 시작한 모든 성도님들의 출석률이 양호합니다.</p>' +
               '</div>';
           } else {
             bodyEl.innerHTML = 
               '<div class="space-y-2">' +
                 careList.map(m => {
-                  const rate = totalWeeks > 0 ? ((m.score / totalWeeks) * 100).toFixed(1) : '0.0';
+                  const rate = ((m.score / m.checkedCount) * 100).toFixed(1);
                   const cleanPhone = (m.phone || '').replace(/[^0-9]/g, '');
 
                   return (
@@ -1885,7 +1922,7 @@
                           '<span class="text-[10px] text-slate-500 bg-white border border-slate-200 px-1 py-0.5 rounded font-bold">' + m.role + '</span>' +
                         '</div>' +
                         '<p class="text-xs text-slate-600 font-bold mt-0.5">' +
-                          '총 ' + totalWeeks + '주 중 <strong class="text-red-600">결석 ' + m.absent + '회</strong> (출석 ' + m.present + ' · 지각 ' + m.late + ')' +
+                          '총 ' + m.checkedCount + '회 기록 중 <strong class="text-red-600">결석 ' + m.absent + '회</strong> (출석 ' + m.present + ' · 지각 ' + m.late + ')' +
                         '</p>' +
                         '<p class="text-xs text-slate-400 font-bold mt-0.5">📞 ' + (m.phone || '연락처 없음') + '</p>' +
                       '</div>' +
@@ -1959,7 +1996,6 @@
 
         const isAdmin = !!(this.currentUser && this.currentUser.isAdmin);
 
-        // 반 변경 드롭다운용 유효 반 목록
         const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
 
         this.rawMembers.forEach(m => {

@@ -79,7 +79,7 @@
         </div>
       </div>
 
-      <!-- User Badge & Clean Sync Status Area -->
+      <!-- User Badge & Sync Status Area -->
       <div id="userBadgeArea" class="hidden flex items-center space-x-2.5">
         <div class="text-right hidden sm:block">
           <span id="headerClassName" class="text-xs font-black text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">반명</span>
@@ -115,7 +115,8 @@
 
           <div>
             <label class="block text-xs sm:text-sm font-black text-slate-700 mb-1.5">접속 비밀번호 (PIN)</label>
-            <input type="password" id="pinInput" placeholder="비밀번호 입력 (예: 1001)" autocomplete="current-password" inputmode="numeric" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-lg font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none tracking-wider transition">
+            <!-- 영문 및 특수문자 입력 지원을 위해 inputmode 제한 해제 -->
+            <input type="password" id="pinInput" placeholder="비밀번호 입력 (예: joy2026!)" autocomplete="current-password" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-base sm:text-lg font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none tracking-wider transition">
           </div>
 
           <button type="submit" id="loginSubmitBtn" class="w-full py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-base sm:text-lg font-black tracking-tight rounded-xl shadow-lg shadow-emerald-200 transition flex items-center justify-center space-x-2">
@@ -300,7 +301,7 @@
         </div>
       </div>
 
-      <!-- TAB 3: MEMBER DIRECTORY VIEW -->
+      <!-- TAB 3: MEMBER DIRECTORY VIEW (개인정보 보호 강화: 주소, 생년월일, 특이사항 제거) -->
       <div id="tabContent-members" class="hidden space-y-3">
         <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-3.5 sm:p-4">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pb-3 border-b border-slate-100">
@@ -320,10 +321,7 @@
                   <th class="py-2.5 px-3">소속반 변경</th>
                   <th class="py-2.5 px-3">직분</th>
                   <th class="py-2.5 px-3">연락처</th>
-                  <th class="py-2.5 px-3">생년월일</th>
-                  <th class="py-2.5 px-3">주소</th>
                   <th class="py-2.5 px-3">상태</th>
-                  <th class="py-2.5 px-3">특이사항</th>
                 </tr>
               </thead>
               <tbody id="memberDirectoryBody" class="divide-y divide-slate-100"></tbody>
@@ -495,8 +493,8 @@
         this.rawMembers = [];
         this.rawRecords = [];
         this.currentAttendance = {};
-        this.absentAlertMap = {}; // State 1: 3주 연속 결석자
-        this.careNotesMap = {};   // State 2: 심방 완료 데이터
+        this.absentAlertMap = {};
+        this.careNotesMap = {};
         this.unsubscribeRecords = null;
         this.unsubscribeCareNotes = null;
         this.weeklyChartInstance = null;
@@ -516,7 +514,6 @@
         });
       }
 
-      // 오프라인 대기열 및 네트워크 감지 리스너
       setupNetworkListeners() {
         window.addEventListener('online', () => {
           this.isOnline = true;
@@ -532,7 +529,6 @@
         });
       }
 
-      // 스마트 클라우드 상태 표시기 업데이트
       updateCloudStatusBadge(state, customText = '') {
         const badge = document.getElementById('syncStatusBadge');
         const icon = document.getElementById('syncStatusIcon');
@@ -554,7 +550,6 @@
         }
       }
 
-      // 오늘 날짜 기준 해당 연도/분기 자동 선택 및 토요일 목록 생성
       initCurrentYearAndQuarter() {
         const today = new Date();
         const year = today.getFullYear();
@@ -710,7 +705,6 @@
         if (curVal) select.value = curVal;
       }
 
-      // SWR(Stale-While-Revalidate) 초고속 로그인 로직
       async handleLogin(savedClassId = null, savedPin = null) {
         const classId = savedClassId || document.getElementById('classSelect')?.value;
         const pinCode = savedPin || document.getElementById('pinInput')?.value?.trim();
@@ -850,7 +844,6 @@
         }
       }
 
-      // 실시간 3주 연속 결석자 자동 계산 엔진
       calculateConsecutiveAbsentees() {
         if (!this.rawMembers || !this.rawRecords) return;
 
@@ -893,7 +886,6 @@
         }
       }
 
-      // Realtime Firestore 구독
       subscribeRealtimeRecords() {
         if (!isFirebaseReady || !db) return;
         if (this.unsubscribeRecords) {
@@ -937,7 +929,6 @@
         }
       }
 
-      // 심방 완료 노트 실시간 구독 (State 2)
       subscribeCareNotes() {
         if (!isFirebaseReady || !db) return;
         if (this.unsubscribeCareNotes) {
@@ -1021,7 +1012,6 @@
           alerts.forEach(item => {
             const cleanPhone = (item.phone || '').replace(/[^0-9]/g, '');
             const careNote = this.careNotesMap[item.memberId];
-            const memberInfo = this.rawMembers.find(m => m.memberId === item.memberId);
 
             const div = document.createElement('div');
             div.className = 'p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 ' +
@@ -1030,10 +1020,6 @@
             let badgeHtml = careNote 
               ? '<span class="text-[11px] font-black bg-blue-600 text-white px-2 py-0.5 rounded">💬 심방완료</span>'
               : '<span class="text-[11px] font-black bg-red-600 text-white px-2 py-0.5 rounded animate-pulse">🚨 ' + (item.consecutiveWeeks || 3) + '주 결석</span>';
-
-            let addressHtml = (memberInfo && memberInfo.address) 
-              ? '<p class="text-xs text-slate-600 font-bold mt-0.5">📍 ' + memberInfo.address + '</p>' 
-              : '';
 
             let reasonHtml = careNote 
               ? '<p class="text-xs text-blue-700 font-bold mt-0.5">사유: ' + careNote.reason + '</p>' 
@@ -1053,7 +1039,6 @@
                   badgeHtml +
                 '</div>' +
                 '<p class="text-xs text-slate-500 font-bold mt-0.5">📞 ' + (item.phone || '연락처 없음') + '</p>' +
-                addressHtml +
                 reasonHtml +
               '</div>' +
               '<div class="flex items-center space-x-1 self-end sm:self-center">' +
@@ -1156,7 +1141,6 @@
         this.renderAttendanceList();
       }
 
-      // 출석 체크 카드 렌더링
       renderAttendanceList() {
         const container = document.getElementById('attendanceList');
         const adminFilter = document.getElementById('adminClassFilter')?.value || 'ALL';
@@ -1181,8 +1165,8 @@
           const state = this.currentAttendance[member.memberId] || { status: null, reason: '' };
           const is3WeekAbsent = !!this.absentAlertMap[member.memberId];
           const careNote = this.careNotesMap[member.memberId];
-          const isCareHandled = is3WeekAbsent && !!careNote; // State 2
-          const isUrgentActive = is3WeekAbsent && !careNote;  // State 1
+          const isCareHandled = is3WeekAbsent && !!careNote;
+          const isUrgentActive = is3WeekAbsent && !careNote;
           const isNewFamily = member.status === '새가족';
 
           const row = document.createElement('div');
@@ -1243,7 +1227,6 @@
         this.updateAttendanceSummary();
       }
 
-      // 출석 상태 지정 및 원터치 토글 취소(초기화) 로직
       async setStatus(memberId, status) {
         if (!this.currentAttendance[memberId]) {
           this.currentAttendance[memberId] = { status: null, reason: '' };
@@ -1365,7 +1348,6 @@
         }, 1200);
       }
 
-      // 오프라인 대기열 일괄 전송
       async processOfflineQueue() {
         if (this.isSyncing) return;
         if (!navigator.onLine) {
@@ -1475,7 +1457,6 @@
         if (aEl) aEl.textContent = absent;
       }
 
-      // [핵심 교정 로직] 선택된 분기 한정 + 유효 상태(출석/지각/결석)만 엄격히 카운트하여 미체크 성도 배제
       calculateAndRenderStatistics() {
         const totalMembers = this.rawMembers.length;
         const totMemEl = document.getElementById('statTotalMembers');
@@ -1483,14 +1464,12 @@
 
         const curQuarter = document.getElementById('quarterSelect')?.value || '3기';
 
-        // 1) 현재 선택된 분기의 유효한 출석 기록(출석, 지각, 결석)만 엄격히 필터링
         const validRecords = this.rawRecords.filter(r => {
           const isQuarterMatch = !r.quarter || r.quarter === curQuarter;
           const isValidStatus = r.status === '출석' || r.status === '지각' || r.status === '결석';
           return isQuarterMatch && isValidStatus;
         });
 
-        // 2) 실제 체크가 이루어진 고유 날짜 추출
         const uniqueDates = [...new Set(validRecords.map(r => r.date))].sort();
         const totSabEl = document.getElementById('statTotalSabbaths');
         if (totSabEl) totSabEl.textContent = `${uniqueDates.length}회`;
@@ -1508,7 +1487,7 @@
             late: 0,
             absent: 0,
             score: 0,
-            checkedCount: 0 // 실제 기록된 횟수
+            checkedCount: 0
           };
         });
 
@@ -1531,12 +1510,10 @@
           }
         });
 
-        // 전체 평균 출석률: 체크된 기록이 전혀 없으면 0.0%
         const avgRate = totalCheckedCount > 0 ? ((totalScore / totalCheckedCount) * 100).toFixed(1) : '0.0';
         const avgRateEl = document.getElementById('statAvgRate');
         if (avgRateEl) avgRateEl.textContent = `${avgRate}%`;
 
-        // 관심/심방 대상: 반드시 체크 이력이 '2회 이상' 있으면서 출석률이 60% 미만인 성도만 카운트 (미체크 성도는 0% 처리 안 됨)
         let careCount = 0;
         Object.values(memberStatsMap).forEach(ms => {
           if (ms.checkedCount >= 2) {
@@ -1551,7 +1528,6 @@
         this.renderWeeklyTrendChart(uniqueDates);
       }
 
-      // 개인별 실제 체크 횟수 기준 렌더링
       renderMemberStatsTable(statsMap, totalWeeks) {
         const tbody = document.getElementById('memberStatsTableBody');
         if (!tbody) return;
@@ -1700,7 +1676,6 @@
         if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
       }
 
-      // 모달 내부 통계도 실제 체크된 기록만 기준으로 분석
       openStatDetailModal(type) {
         const modal = document.getElementById('statDetailModal');
         const box = document.getElementById('statModalBox');
@@ -1890,7 +1865,6 @@
           titleEl.textContent = '관심 및 심방 권장 대상 성도';
           subEl.textContent = `${curQuarter} 최소 2회 이상 체크 성도 중 출석률 60% 미만 (미체크 교인 제외)`;
 
-          // [핵심 필터링] 유효 체크가 2회 이상이며 출석률 60% 미만인 성도만 정확히 필터링
           const careList = list.filter(m => {
             if (m.checkedCount < 2) return false;
             const rate = (m.score / m.checkedCount) * 100;
@@ -1989,13 +1963,13 @@
         });
       }
 
+      // [개인정보 보호 강화] 불필요한 주소, 생년월일, 특이사항을 제외하고 렌더링
       renderMemberDirectory() {
         const tbody = document.getElementById('memberDirectoryBody');
         if (!tbody) return;
         tbody.innerHTML = '';
 
         const isAdmin = !!(this.currentUser && this.currentUser.isAdmin);
-
         const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
 
         this.rawMembers.forEach(m => {
@@ -2028,18 +2002,15 @@
             '<td class="py-2.5 px-3">' + classCellHtml + '</td>' +
             '<td class="py-2.5 px-3 text-slate-600">' + (m.role || '-') + '</td>' +
             '<td class="py-2.5 px-3">' +
-              (cleanPhone ? '<a href="tel:' + cleanPhone + '" class="text-emerald-700 hover:underline">📞 ' + m.phone + '</a>' : '<span class="text-slate-400">-</span>') +
+              (cleanPhone ? '<a href="tel:' + cleanPhone + '" class="text-emerald-700 hover:underline font-bold">📞 ' + m.phone + '</a>' : '<span class="text-slate-400">-</span>') +
             '</td>' +
-            '<td class="py-2.5 px-3 text-slate-500">' + (m.birthDate || '-') + '</td>' +
-            '<td class="py-2.5 px-3 text-slate-600 text-xs">' + (m.address || '-') + '</td>' +
             '<td class="py-2.5 px-3">' +
               '<span class="px-2 py-0.5 rounded text-[11px] font-black ' +
                 (m.status === '활동' ? 'bg-emerald-100 text-emerald-800' :
                 m.status === '새가족' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600') + '">' +
                 m.status +
               '</span>' +
-            '</td>' +
-            '<td class="py-2.5 px-3 text-slate-400 text-xs">' + (m.notes || '-') + '</td>';
+            '</td>';
 
           tbody.appendChild(tr);
         });
@@ -2163,9 +2134,9 @@
 
       getMockMembers(classId) {
         return [
-          { memberId: 'M0001', name: '홍길동', classId: classId, role: '청년', phone: '010-1234-5678', birthDate: '1999-03-12', address: '세종시 한누리대로 100', status: '활동' },
-          { memberId: 'M0002', name: '김영수', classId: classId, role: '청년', phone: '010-2345-6789', birthDate: '2001-08-20', address: '세종시 다정중앙로 20', status: '새가족' },
-          { memberId: 'M0004', name: '박준호', classId: classId, role: '청년', phone: '010-4567-8901', birthDate: '2000-01-30', address: '세종시 보듬3로 55', status: '활동' }
+          { memberId: 'M0001', name: '홍길동', classId: classId, role: '성도', phone: '010-1234-5678', status: '활동' },
+          { memberId: 'M0002', name: '김영수', classId: classId, role: '성도', phone: '010-2345-6789', status: '새가족' },
+          { memberId: 'M0004', name: '박준호', classId: classId, role: '성도', phone: '010-4567-8901', status: '활동' }
         ];
       }
     }

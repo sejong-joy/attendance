@@ -232,29 +232,29 @@
 
       <!-- TAB 2: STATISTICS DASHBOARD VIEW -->
       <div id="tabContent-stats" class="hidden space-y-4">
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:grid-cols-4 gap-2 sm:gap-3">
-          <div onclick="window.appInstance.openStatDetailModal('members')" class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-400 transition cursor-pointer group">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+          <div onclick="window.appInstance.openStatDetailModal('members')" class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-400 transition cursor-pointer group select-none">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-500 group-hover:text-emerald-700">총 등록 교인</span>
               <span class="text-[10px] text-slate-400">🔍</span>
             </div>
             <p id="statTotalMembers" class="text-2xl font-black text-slate-900 mt-0.5">0명</p>
           </div>
-          <div onclick="window.appInstance.openStatDetailModal('rate')" class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-400 transition cursor-pointer group">
+          <div onclick="window.appInstance.openStatDetailModal('rate')" class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-400 transition cursor-pointer group select-none">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-500 group-hover:text-emerald-700">평균 출석률</span>
               <span class="text-[10px] text-slate-400">🔍</span>
             </div>
             <p id="statAvgRate" class="text-2xl font-black text-emerald-600 mt-0.5">0%</p>
           </div>
-          <div onclick="window.appInstance.openStatDetailModal('sabbaths')" class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-400 transition cursor-pointer group">
+          <div onclick="window.appInstance.openStatDetailModal('sabbaths')" class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-400 transition cursor-pointer group select-none">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-500 group-hover:text-emerald-700">분기 누적 예배 수</span>
               <span class="text-[10px] text-slate-400">🔍</span>
             </div>
             <p id="statTotalSabbaths" class="text-2xl font-black text-slate-900 mt-0.5">0회</p>
           </div>
-          <div onclick="window.appInstance.openStatDetailModal('care')" class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs hover:border-red-400 transition cursor-pointer group">
+          <div onclick="window.appInstance.openStatDetailModal('care')" class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs hover:border-red-400 transition cursor-pointer group select-none">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-red-600">관심/심방 대상</span>
               <span class="text-[10px] text-red-400 font-bold animate-pulse">🚨</span>
@@ -421,7 +421,7 @@
       </div>
     </div>
 
-    <!-- 4. Stat Card Detail Modal -->
+    <!-- 4. Stat Card Detail Modal (상단 4대 핵심 통계 세부 팝업창) -->
     <div id="statDetailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-xl overflow-hidden transform scale-95 transition-transform duration-200" id="statModalBox">
         <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
@@ -463,7 +463,7 @@
   <!-- Firebase v11 Module Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // Apps Script API URL (Google Sheet DB)
     const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzn2kkDIqszr-dMUbYPHffHlubtBjXb-mYUWApYeU9ot3lYkvrhVl_KPsNL9Y72-ZhK/exec";
@@ -902,12 +902,14 @@
           this.unsubscribeRecords = onSnapshot(recordsCol, (snapshot) => {
             snapshot.docChanges().forEach((change) => {
               const data = change.doc.data();
-              if (!data) return;
+              const recordId = change.doc.id;
 
-              const idx = this.rawRecords.findIndex(r => r.recordId === change.doc.id || (r.date === data.date && r.memberId === data.memberId));
+              const idx = this.rawRecords.findIndex(r => r.recordId === recordId || (data && r.date === data.date && r.memberId === data.memberId));
               if (change.type === "added" || change.type === "modified") {
-                if (idx >= 0) this.rawRecords[idx] = data;
-                else this.rawRecords.push(data);
+                if (data) {
+                  if (idx >= 0) this.rawRecords[idx] = data;
+                  else this.rawRecords.push(data);
+                }
               } else if (change.type === "removed" && idx >= 0) {
                 this.rawRecords.splice(idx, 1);
               }
@@ -1238,64 +1240,102 @@
         this.updateAttendanceSummary();
       }
 
-      // 출석 상태 지정 및 자동 백그라운드 오프라인 큐 처리
+      // [수정] 출석 상태 지정 및 원터치 토글 취소(초기화) 로직
       async setStatus(memberId, status) {
         if (!this.currentAttendance[memberId]) {
           this.currentAttendance[memberId] = { status: null, reason: '' };
         }
-        this.currentAttendance[memberId].status = status;
 
+        const currentStatus = this.currentAttendance[memberId].status;
         const targetDate = document.getElementById('sabbathSelect')?.value;
         const quarter = document.getElementById('quarterSelect')?.value;
         const member = this.rawMembers.find(m => m.memberId === memberId);
         if (!member || !targetDate) return;
 
         const recordId = `${targetDate}_${memberId}`;
-        const score = status === '출석' ? 1.0 : (status === '지각' ? 0.5 : 0.0);
-        const recordData = {
-          recordId: recordId,
-          date: targetDate,
-          quarter: quarter || '1기',
-          memberId: memberId,
-          classId: member.classId,
-          status: status,
-          score: score,
-          reason: this.currentAttendance[memberId].reason || '',
-          checkedBy: this.currentUser?.leaderName || '리더',
-          updatedAt: new Date().toISOString()
-        };
+
+        // [핵심 로직: 원터치 토글 취소/초기화] 이미 선택된 상태를 다시 누르면 null(미체크)로 리셋
+        const isCancelling = (currentStatus === status);
+        const finalStatus = isCancelling ? null : status;
+        this.currentAttendance[memberId].status = finalStatus;
 
         const idx = this.rawRecords.findIndex(r => r.date === targetDate && r.memberId === memberId);
-        if (idx >= 0) this.rawRecords[idx] = recordData;
-        else this.rawRecords.push(recordData);
 
-        // 출석/지각 시 연속 결석 해제, 결석 시 연속 결석 즉시 재계산
-        if (status === '출석' || status === '지각') {
-          delete this.absentAlertMap[memberId];
-          delete this.careNotesMap[memberId];
-          if (isFirebaseReady && db) {
+        if (isCancelling) {
+          // 상태 취소(초기화) 시 로컬 기록에서 제거
+          if (idx >= 0) this.rawRecords.splice(idx, 1);
+
+          // Firestore 문서 삭제 (초기화)
+          if (isFirebaseReady && db && navigator.onLine) {
             try {
-              setDoc(doc(db, 'care_notes', memberId), { active: false, resetAt: new Date().toISOString() }, { merge: true });
-            } catch(e) {}
+              const docRef = doc(db, 'attendance_records', recordId);
+              await deleteDoc(docRef);
+            } catch (e) {
+              console.error("Firestore 초기화 오류:", e);
+            }
           }
+        } else {
+          // 신규 선택 또는 상태 변경 시
+          const score = finalStatus === '출석' ? 1.0 : (finalStatus === '지각' ? 0.5 : 0.0);
+          const recordData = {
+            recordId: recordId,
+            date: targetDate,
+            quarter: quarter || '1기',
+            memberId: memberId,
+            classId: member.classId,
+            status: finalStatus,
+            score: score,
+            reason: this.currentAttendance[memberId].reason || '',
+            checkedBy: this.currentUser?.leaderName || '리더',
+            updatedAt: new Date().toISOString()
+          };
+
+          if (idx >= 0) this.rawRecords[idx] = recordData;
+          else this.rawRecords.push(recordData);
+
+          // 출석/지각 시 연속 결석 해제
+          if (finalStatus === '출석' || finalStatus === '지각') {
+            delete this.absentAlertMap[memberId];
+            delete this.careNotesMap[memberId];
+            if (isFirebaseReady && db) {
+              try {
+                setDoc(doc(db, 'care_notes', memberId), { active: false, resetAt: new Date().toISOString() }, { merge: true });
+              } catch(e) {}
+            }
+          }
+
+          // 🚨 결석을 눌러 3주 연속 결석이 된 경우 즉시 긴급 알림 모달 팝업
+          if (finalStatus === '결석') {
+            this.calculateConsecutiveAbsentees();
+            if (this.absentAlertMap[memberId] && !this.careNotesMap[memberId]) {
+              setTimeout(() => {
+                this.openUrgentModal();
+              }, 150);
+            }
+          }
+
+          // Firestore 실시간 저장
+          if (isFirebaseReady && db && navigator.onLine) {
+            try {
+              const docRef = doc(db, 'attendance_records', recordId);
+              await setDoc(docRef, recordData);
+            } catch (e) {
+              console.error("Firestore 실시간 저장 오류:", e);
+            }
+          }
+
+          this.enqueueOfflineRecord(recordData);
         }
 
-        // 실시간 연속 결석 판별 실행
+        // 실시간 연속 결석 판별 재계산 및 배너 업데이트
         this.calculateConsecutiveAbsentees();
         this.updateAbsentBanner();
-
-        // 🚨 결석을 눌러 3주 연속 결석이 된 경우 즉시 긴급 알림 모달 팝업
-        if (status === '결석' && this.absentAlertMap[memberId] && !this.careNotesMap[memberId]) {
-          setTimeout(() => {
-            this.openUrgentModal();
-          }, 150);
-        }
 
         // 버튼 UI 즉시 반영
         ['출석', '지각', '결석'].forEach(st => {
           const btn = document.querySelector(`.status-btn-${memberId}-${st}`);
           if (btn) {
-            btn.className = (st === status)
+            btn.className = (st === finalStatus)
               ? `status-btn-${memberId}-${st} px-2.5 py-1 text-sm sm:text-base font-black tracking-tight whitespace-nowrap rounded-lg transition ${st === '출석' ? 'bg-emerald-600 text-white shadow-sm' : st === '지각' ? 'bg-amber-500 text-white shadow-sm' : 'bg-red-500 text-white shadow-sm'}`
               : `status-btn-${memberId}-${st} px-2.5 py-1 text-sm sm:text-base font-black tracking-tight whitespace-nowrap rounded-lg transition text-slate-600 hover:text-slate-900`;
           }
@@ -1304,18 +1344,7 @@
         this.updateAttendanceSummary();
         this.renderAttendanceList();
 
-        // Firebase 0.05초 초고속 기록
-        if (isFirebaseReady && db && navigator.onLine) {
-          try {
-            const docRef = doc(db, 'attendance_records', recordId);
-            await setDoc(docRef, recordData);
-          } catch (e) {
-            console.error("Firestore 실시간 저장 오류:", e);
-          }
-        }
-
-        // 로컬 오프라인 큐에 데이터 기록 후 자동 백그라운드 시트 동기화 실행
-        this.enqueueOfflineRecord(recordData);
+        // 자동 시트 동기화 실행
         this.triggerAutoSheetSync();
       }
 
@@ -1651,6 +1680,7 @@
         if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
       }
 
+      // [수정 및 복구] 상단 4개 통계 카드 모달 열기 함수 완벽 복원
       openStatDetailModal(type) {
         const modal = document.getElementById('statDetailModal');
         const box = document.getElementById('statModalBox');
@@ -1686,11 +1716,9 @@
             if (r.status === '출석') {
               memberStatsMap[r.memberId].present++;
               memberStatsMap[r.memberId].score += 1.0;
-              totalScore += 1.0;
             } else if (r.status === '지각') {
               memberStatsMap[r.memberId].late++;
               memberStatsMap[r.memberId].score += 0.5;
-              totalScore += 0.5;
             } else if (r.status === '결석') {
               memberStatsMap[r.memberId].absent++;
             }
@@ -1946,7 +1974,6 @@
               return `<option value="${c.classId}" ${isSelected}>${c.className} (${c.classId})</option>`;
             }).join('');
 
-            // 혹시 목록에 없는 반 ID인 경우 보존
             if (!activeClasses.some(c => c.classId === m.classId)) {
               optionsHtml = `<option value="${m.classId}" selected>${m.classId}</option>` + optionsHtml;
             }
@@ -1982,10 +2009,9 @@
         });
       }
 
-      // [기능 추가] 웹앱에서 교인 소속반 실시간 변경 및 시트 동기화
       async updateMemberClass(memberId, newClassId, memberName) {
         if (!confirm(`${memberName} 성도님의 소속반을 [${newClassId}] 반으로 변경하시겠습니까?`)) {
-          this.renderMemberDirectory(); // 취소 시 원래 값 복원
+          this.renderMemberDirectory();
           return;
         }
 
@@ -2007,11 +2033,9 @@
           this.hideLoading();
 
           if (json.success) {
-            // 로컬 메모리 즉시 반영
             const targetMember = this.rawMembers.find(m => m.memberId === memberId);
             if (targetMember) targetMember.classId = newClassId;
 
-            // 로컬 캐시 업데이트
             if (this.currentUser) {
               const cacheKey = `church_cache_${this.currentUser.classId}`;
               const cachedStr = localStorage.getItem(cacheKey);

@@ -165,7 +165,7 @@
         </div>
       </div>
 
-      <!-- Navigation Tabs: 큼직하고 시원시원한 버튼 크기 -->
+      <!-- Navigation Tabs -->
       <div class="flex items-center space-x-1 bg-slate-200/90 p-1.5 rounded-2xl w-full sm:w-max shadow-inner">
         <button onclick="window.appInstance.switchTab('check')" id="tabBtn-check" class="tab-btn flex-1 sm:flex-initial px-3.5 py-2 rounded-xl text-sm sm:text-base font-black tracking-tight whitespace-nowrap bg-white text-emerald-800 shadow-sm transition">
           ✍️ 출석 체크 (실시간)
@@ -181,13 +181,16 @@
       <!-- TAB 1: ATTENDANCE CHECK VIEW -->
       <div id="tabContent-check" class="space-y-2.5">
         
-        <!-- [관리자 전용] 상단 실시간 반별 실제 출석 현황 바 -->
-        <div id="adminClassStatusBarWrap" class="hidden bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
-          <div class="text-[11px] font-black text-slate-400 mb-1 flex items-center justify-between">
-            <span>⚡ 오늘 예배 실시간 출석 현황 (실제 참석 / 재적)</span>
-            <span class="text-[10px] text-slate-400">터치 시 해당 반으로 전환</span>
+        <!-- 💡 [관리자 전용] 2배 크기로 큼직해진 오늘 예배 실시간 출석 현황 바 -->
+        <div id="adminClassStatusBarWrap" class="hidden bg-white p-3.5 sm:p-4 rounded-2xl border-2 border-emerald-200 shadow-sm space-y-2">
+          <div class="text-xs sm:text-sm font-black text-slate-700 flex items-center justify-between">
+            <span class="flex items-center space-x-1.5">
+              <span class="text-emerald-600 font-black">⚡ 오늘 예배 실시간 출석 현황</span>
+              <span class="text-slate-400 text-xs">(실제 참석 / 재적)</span>
+            </span>
+            <span class="text-xs text-slate-400 font-bold">터치 시 해당 반 필터링</span>
           </div>
-          <div id="classChipsContainer" class="flex items-center space-x-1.5 overflow-x-auto custom-scrollbar pb-0.5"></div>
+          <div id="classChipsContainer" class="flex items-center space-x-2.5 overflow-x-auto custom-scrollbar pb-1"></div>
         </div>
 
         <!-- Controls Card: 2단 최적화 레이아웃 -->
@@ -209,7 +212,7 @@
               </select>
             </div>
 
-            <!-- 💡 [위치 조정] 3기와 자동 저장됨 사이에 위치한 설교 예배 체크 버튼 -->
+            <!-- 설교 예배 체크 버튼 (3기와 자동저장됨 사이) -->
             <div class="flex-1 flex justify-center min-w-0">
               <button id="adminWorshipCheckBtn" onclick="window.appInstance.openWorshipCheckModal()" class="hidden px-2.5 sm:px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition flex items-center space-x-1 shadow-2xs">
                 <span>⛪</span>
@@ -224,7 +227,7 @@
             </div>
           </div>
 
-          <!-- 2단 (아랫줄): 큼직한 제O과 O월O일 (좌측) / 반 필터 / ✨ 전원 출석 (우측) -->
+          <!-- 2단 (아랫줄): 큼직한 제O과 O월O일 (좌측) / 반 필터 / 🔄 최신 동기화(새로고침) (우측) -->
           <div class="flex items-center justify-between gap-1.5 sm:gap-2">
             <div class="flex-1 flex items-center space-x-1.5 sm:space-x-2 min-w-0">
               <select id="sabbathSelect" onchange="window.appInstance.onSabbathSelectChange()" class="flex-1 px-3 py-1.5 sm:py-2 bg-emerald-50 border border-emerald-300 rounded-xl text-sm sm:text-base font-black text-emerald-950 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-xs truncate"></select>
@@ -236,9 +239,10 @@
               </div>
             </div>
 
-            <!-- 전원 출석 버튼 -->
-            <button onclick="window.appInstance.markAllPresent()" class="px-3 sm:px-3.5 py-1.5 sm:py-2 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-200 flex items-center space-x-1 shadow-2xs flex-shrink-0">
-              <span>✨ 전원 출석</span>
+            <!-- 💡 [신설] 전원 출석 대신 완벽한 수동 최신 동기화(새로고침) 버튼 배치 -->
+            <button onclick="window.appInstance.forceSyncLatestData()" title="서버 최신 출석 데이터 즉시 동기화" class="px-3 sm:px-3.5 py-1.5 sm:py-2 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-200 flex items-center space-x-1 shadow-2xs flex-shrink-0">
+              <span id="refreshBtnIcon">🔄</span>
+              <span>새로고침</span>
             </button>
           </div>
 
@@ -312,7 +316,7 @@
           </div>
         </div>
 
-        <!-- 슬림화된 주차별 그래프 (h-36 sm:h-44) -->
+        <!-- 슬림화된 주차별 그래프 -->
         <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-xs">
           <h3 class="text-xs sm:text-sm font-black text-slate-900 mb-2 flex items-center justify-between">
             <span>📈 주차별 출석 인원 추이</span>
@@ -382,7 +386,7 @@
 
     </section>
 
-    <!-- [2부 설교 예배 출석 체크 모달] (관리자 전용) -->
+    <!-- 💡 [설교 예배 출석 체크 모달] (직관적인 + 예배 참석 버튼 탑재) -->
     <div id="worshipCheckModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3.5 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border border-indigo-200 w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-200" id="worshipCheckModalBox">
         <div class="px-5 py-3.5 bg-indigo-50 border-b border-indigo-100 flex items-center justify-between">
@@ -399,11 +403,11 @@
         <div class="p-4 space-y-3">
           <div class="flex items-center justify-between gap-2">
             <input type="text" id="worshipSearchInput" oninput="window.appInstance.filterWorshipList()" placeholder="안교 결석자 이름 검색..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:outline-none transition">
-            <span id="worshipCountBadge" class="text-xs bg-indigo-100 text-indigo-800 font-black px-2.5 py-2 rounded-xl whitespace-nowrap">0명</span>
+            <span id="worshipCountBadge" class="text-xs bg-indigo-100 text-indigo-800 font-black px-2.5 py-2 rounded-xl whitespace-nowrap">0명 대상</span>
           </div>
 
           <div class="bg-indigo-50/60 p-2.5 rounded-xl border border-indigo-100 text-xs text-indigo-900 font-bold leading-relaxed">
-            💡 오늘 1부 안교에 <b>출석/지각한 성도는 목록에서 자동 제외</b>되었습니다. 설교 시간에 참석한 성도 옆의 [⛪ 설교 참석 완료] 버튼을 누르시면 <b>긴급 결석 알림에서 자동 제외</b>됩니다.
+            💡 오늘 1부 안교에 <b>출석/지각한 성도는 목록에서 자동 제외</b>되었습니다. 설교 시간에 오신 성도 옆의 <b>[+ 예배 참석]</b>을 누르면 즉시 참석 완료로 전환됩니다.
           </div>
 
           <div id="worshipListContainer" class="p-1 max-h-[55vh] overflow-y-auto custom-scrollbar space-y-2"></div>
@@ -1317,6 +1321,7 @@
         this.renderClassMonitoringBar();
       }
 
+      // 💡 [2배 크기로 확대된 실시간 출석 현황 바]
       renderClassMonitoringBar() {
         if (!this.currentUser || !this.currentUser.isAdmin) return;
         const container = document.getElementById('classChipsContainer');
@@ -1332,14 +1337,16 @@
           return r && (r.status === '출석' || r.status === '지각');
         }).length;
 
+        // 전체 반 칩 (2배 크기)
         const allBtn = document.createElement('button');
-        allBtn.className = `px-2.5 py-1 rounded-lg text-xs font-black whitespace-nowrap transition flex items-center space-x-1 ${
-          this.selectedFilterClass === 'ALL' ? 'bg-emerald-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+        allBtn.className = `px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black whitespace-nowrap transition flex items-center space-x-2 ${
+          this.selectedFilterClass === 'ALL' ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
         }`;
-        allBtn.innerHTML = `<span>✨ 전체 반</span> <span class="px-1.5 py-0.2 rounded-full text-[10px] ${this.selectedFilterClass === 'ALL' ? 'bg-white/20' : 'bg-emerald-100 text-emerald-800'}">출석 ${totalPresent} / ${this.rawMembers.length}명</span>`;
+        allBtn.innerHTML = `<span>✨ 전체 반</span> <span class="px-2 py-0.5 rounded-lg text-xs font-black ${this.selectedFilterClass === 'ALL' ? 'bg-white/20' : 'bg-emerald-100 text-emerald-800'}">출석 ${totalPresent} / ${this.rawMembers.length}명</span>`;
         allBtn.onclick = () => this.selectMonitoringClass('ALL');
         container.appendChild(allBtn);
 
+        // 각 반별 칩 (2배 크기)
         activeClasses.forEach(c => {
           const classMembers = this.rawMembers.filter(m => m.classId === c.classId);
           const presentCount = classMembers.filter(m => {
@@ -1350,15 +1357,15 @@
           const isSelected = this.selectedFilterClass === c.classId;
 
           const btn = document.createElement('button');
-          btn.className = `px-2.5 py-1 rounded-lg text-xs font-black whitespace-nowrap transition flex items-center space-x-1 ${
+          btn.className = `px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black whitespace-nowrap transition flex items-center space-x-2 ${
             isSelected 
-              ? 'bg-emerald-700 text-white shadow-2xs' 
-              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              ? 'bg-emerald-700 text-white shadow-md' 
+              : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/80'
           }`;
 
           btn.innerHTML = `
             <span>${c.className}</span>
-            <span class="text-[10px] px-1.5 py-0.2 rounded-full ${isSelected ? 'bg-white/20' : (presentCount > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200')}">
+            <span class="text-xs font-black px-2 py-0.5 rounded-lg ${isSelected ? 'bg-white/20' : (presentCount > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600')}">
               ${presentCount} / ${classMembers.length}명
             </span>
           `;
@@ -1779,6 +1786,59 @@ ${className} ${leaderName} 리더입니다.
         this.triggerAutoSheetSync();
       }
 
+      // 💡 [수동 최신 동기화(새로고침) 실행 함수]
+      async forceSyncLatestData() {
+        if (!this.currentUser) return;
+        
+        const refreshIcon = document.getElementById('refreshBtnIcon');
+        if (refreshIcon) refreshIcon.classList.add('animate-spin');
+
+        this.showToast('🔄 서버에서 최신 출석 데이터를 불러오는 중...', 'info');
+
+        try {
+          const classId = this.currentUser.classId;
+          const authData = localStorage.getItem('church_auth');
+          let pinCode = '';
+          if (authData) {
+            try { pinCode = JSON.parse(authData).pinCode; } catch(e){}
+          }
+
+          const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}`;
+          const res = await fetch(url);
+          const json = await res.json();
+
+          if (json.success) {
+            this.rawMembers = json.members || [];
+            this.rawRecords = json.records || [];
+            this.updateAbsentAlertMap(json.absentAlerts || []);
+            this.calculateConsecutiveAbsentees();
+
+            const cacheKey = `church_cache_${classId}`;
+            localStorage.setItem(cacheKey, JSON.stringify(json));
+
+            const curDate = document.getElementById('sabbathSelect')?.value;
+            if (curDate) this.loadAttendanceForSelectedDate(curDate);
+            this.renderMemberDirectory();
+            this.renderClassMonitoringBar();
+            this.updateAbsentBanner();
+
+            const statsContent = document.getElementById('tabContent-stats');
+            if (statsContent && !statsContent.classList.contains('hidden')) {
+              this.calculateAndRenderStatistics();
+            }
+
+            this.showToast('⚡ 최신 데이터로 동기화되었습니다.', 'success');
+          } else {
+            this.showToast('동기화 실패: ' + (json.message || '서버 응답 없음'), 'error');
+          }
+        } catch(err) {
+          this.showToast('네트워크 오류로 동기화에 실패했습니다.', 'error');
+        } finally {
+          if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+        }
+      }
+
+      // 💡 [관리자 전용: 설교 예배 출석 체크 팝업]
       openWorshipCheckModal() {
         if (!this.currentUser || !this.currentUser.isAdmin) return;
         const modal = document.getElementById('worshipCheckModal');
@@ -1802,6 +1862,7 @@ ${className} ${leaderName} 리더입니다.
         if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
       }
 
+      // 💡 [+ 예배 참석] vs [⛪ 예배 참석 완료] 버튼으로 직관적 표시
       renderWorshipCheckList() {
         const container = document.getElementById('worshipListContainer');
         const countBadge = document.getElementById('worshipCountBadge');
@@ -1813,7 +1874,7 @@ ${className} ${leaderName} 리더입니다.
         const candidates = this.rawMembers.filter(m => {
           const rec = this.rawRecords.find(r => r.date === curDate && r.memberId === m.memberId);
           if (rec && (rec.status === '출석' || rec.status === '지각')) {
-            return false;
+            return false; // 안교 출석/지각자는 제외
           }
           return true;
         });
@@ -1833,25 +1894,24 @@ ${className} ${leaderName} 리더입니다.
           const isAttended = rec ? !!rec.worshipAttended : false;
 
           const div = document.createElement('div');
-          div.className = `worship-row-item p-2.5 rounded-xl border flex items-center justify-between gap-2 transition ${
-            isAttended ? 'bg-indigo-50 border-indigo-300' : 'bg-slate-50 border-slate-200'
+          div.className = `worship-row-item p-2.5 sm:p-3 rounded-xl border flex items-center justify-between gap-2 transition ${
+            isAttended ? 'bg-indigo-50/70 border-indigo-300' : 'bg-slate-50 border-slate-200'
           }`;
+
+          // 버튼: 미참석 상태는 [+ 예배 참석], 참석 상태는 [⛪ 예배 참석 완료]
+          const btnHtml = isAttended
+            ? `<button onclick="window.appInstance.toggleWorshipAttendance('${member.memberId}')" class="px-3 py-1.5 rounded-xl text-xs font-black tracking-tight whitespace-nowrap bg-indigo-600 text-white shadow-xs transition flex items-center space-x-1"><span>⛪ 예배 참석 완료</span></button>`
+            : `<button onclick="window.appInstance.toggleWorshipAttendance('${member.memberId}')" class="px-3 py-1.5 rounded-xl text-xs font-black tracking-tight whitespace-nowrap bg-white border border-slate-300 text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300 transition flex items-center space-x-1"><span>+ 예배 참석</span></button>`;
 
           div.innerHTML = `
             <div class="min-w-0">
-              <div class="flex items-center space-x-1.5">
+              <div class="flex items-center space-x-1.5 flex-wrap">
                 <span class="font-black text-slate-900 text-sm sm:text-base">${member.name}</span>
                 <span class="text-[11px] font-bold text-slate-600 bg-white border border-slate-200 px-1.5 py-0.2 rounded">${member.role || '성도'}</span>
                 <span class="text-[11px] text-slate-500 font-bold">(${this.getClassName(member.classId)})</span>
               </div>
             </div>
-            <button onclick="window.appInstance.toggleWorshipAttendance('${member.memberId}')" class="px-3 py-1.5 rounded-lg text-xs font-black tracking-tight whitespace-nowrap transition flex items-center space-x-1 ${
-              isAttended 
-                ? 'bg-indigo-600 text-white shadow-2xs' 
-                : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
-            }">
-              <span>${isAttended ? '⛪ 설교 참석 완료' : '예배 미참석'}</span>
-            </button>
+            <div>${btnHtml}</div>
           `;
 
           container.appendChild(div);
@@ -2041,13 +2101,6 @@ ${className} ${leaderName} 리더입니다.
         }
         
         this.triggerAutoSheetSync();
-      }
-
-      markAllPresent() {
-        this.rawMembers.forEach(m => {
-          this.setStatus(m.memberId, '출석');
-        });
-        this.showToast('⚡ 전원 출석 완료되었습니다.', 'success');
       }
 
       updateAttendanceSummary() {
@@ -2520,7 +2573,7 @@ ${className} ${leaderName} 리더입니다.
                       '<div>' +
                         '<div class="flex items-center space-x-1.5 flex-wrap">' +
                           '<span class="font-black text-slate-900 text-sm sm:text-base">' + m.name + '</span>' +
-                          '<span class="text-xs font-bold text-slate-600 bg-white border border-slate-200 px-1.5 py-0.5 rounded">' + (m.role || '성도') + '</span>' +
+                          '<span class="text-xs font-bold text-slate-600 bg-white border border-slate-200 px-1.5 py-0.5 rounded">' + (member.role || '성도') + '</span>' +
                           '<span class="text-[11px] font-black bg-red-100 text-red-700 px-1.5 py-0.5 rounded">' + rate + '%</span>' +
                         '</div>' +
                         '<p class="text-xs text-slate-600 font-bold mt-0.5">' +
@@ -3444,7 +3497,7 @@ ${className} ${leaderName} 리더입니다.
           });
 
           const ws = XLSX.utils.aoa_to_sheet(sheetData);
-          ws['!cols'] = [{ wch: 12 }, { wch: 14 }, { wch: 10 }, ...sabbaths.map(() => ({ wch: 13 })), { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 12 }];
+          ws['!cols'] = [{ wch: 12 }, { wch: 14 }, { wch: 10 }, ...sabbaths.map(() => ({ wch: 13 })), { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 12 }];
 
           XLSX.utils.book_append_sheet(wb, ws, `${quarter} 출석부`);
           XLSX.writeFile(wb, `${year}_${quarter}_${className}_출석부.xlsx`);
@@ -3576,7 +3629,7 @@ ${className} ${leaderName} 리더입니다.
                 { v: c.leaderName, s: styleNormalCenter },
                 { v: `${cMembers.length}명`, s: styleNormalCenter },
                 ...qCells,
-                { v: yrRate, s: { font: { bold: true, color: { rgb: "059669" } }, alignment: { horizontal: "center" } } }
+                { v: yrRate, s: { font: { bold: true, color: { rgb: "059669" } }, alignment: { horizontal: "center" }, fill: { fgColor: { rgb: "F0FDF4" } } } }
               ]);
             });
 

@@ -13,7 +13,7 @@
   <meta name="theme-color" content="#047857">
   <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/church.png">
   <link rel="icon" href="https://img.icons8.com/color/96/church.png" type="image/png">
-  <link rel="manifest" href="data:application/manifest+json;utf-8,%7B%22name%22%3A%22%EC%84%B8%EC%A2%85%20%EC%A1%B0%EC%9D%B4%20%EC%B6%9C%EC%84%9D%EB%B6%80%22%2C%22short_name%22%3A%22%EC%A1%B0%EC%9D%B4%EC%B6%9C%EC%84%9D%EB%B6%80%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f8fafc%22%2C%22theme_color%22%3A%22%23047857%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fimg.icons8.com%2Fcolor%2F192%2Fchurch.png%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
+  <link rel="manifest" href="data:application/manifest+json;utf-8,%7B%22name%22%3A%22%EC%84%B8%EC%A2%85%20%EC%A1%B0%EC%9D%B4%20%EC%B6%9C%EC%84%9D%EB%B6%80%22%2C%22short_name%22%3A%22%EC%A1%B0%EC%9D%B4%EC%B6%9C%EC%84%9D%EB%B6%80%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background-color%22%3A%22%23f8fafc%22%2C%22theme_color%22%3A%22%23047857%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fimg.icons8.com%2Fcolor%2F192%2Fchurch.png%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -181,16 +181,23 @@
       <!-- TAB 1: ATTENDANCE CHECK VIEW -->
       <div id="tabContent-check" class="space-y-2.5">
         
-        <!-- 💡 [관리자 전용] 2배 크기로 큼직해진 오늘 예배 실시간 출석 현황 바 -->
-        <div id="adminClassStatusBarWrap" class="hidden bg-white p-3.5 sm:p-4 rounded-2xl border-2 border-emerald-200 shadow-sm space-y-2">
-          <div class="text-xs sm:text-sm font-black text-slate-700 flex items-center justify-between">
-            <span class="flex items-center space-x-1.5">
-              <span class="text-emerald-600 font-black">⚡ 오늘 예배 실시간 출석 현황</span>
-              <span class="text-slate-400 text-xs">(실제 참석 / 재적)</span>
-            </span>
-            <span class="text-xs text-slate-400 font-bold">터치 시 해당 반 필터링</span>
+        <!-- 💡 [관리자 전용] 전체 반 종합 모니터링 그리드 대시보드 (한눈에 전체 반 파악) -->
+        <div id="adminClassStatusBarWrap" class="hidden bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-xs space-y-2.5">
+          <div class="flex items-center justify-between pb-1 border-b border-slate-100">
+            <div class="flex items-center space-x-2">
+              <span class="text-sm font-black text-slate-900 flex items-center space-x-1.5">
+                <span class="text-emerald-600">⚡</span>
+                <span>오늘 예배 전체 반 실시간 출석 현황</span>
+              </span>
+              <span id="adminTotalStatusBadge" class="text-xs bg-emerald-100 text-emerald-800 font-black px-2 py-0.5 rounded-md">
+                전체 0 / 0명 (0%)
+              </span>
+            </div>
+            <span class="text-[11px] text-slate-400 font-bold">반 카드 터치 시 명단 필터링</span>
           </div>
-          <div id="classChipsContainer" class="flex items-center space-x-2.5 overflow-x-auto custom-scrollbar pb-1"></div>
+
+          <!-- 그리드 컨테이너: 모바일 2열, PC/태블릿 4열 -->
+          <div id="classChipsContainer" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
         </div>
 
         <!-- Controls Card: 2단 최적화 레이아웃 -->
@@ -239,7 +246,7 @@
               </div>
             </div>
 
-            <!-- 💡 [신설] 전원 출석 대신 완벽한 수동 최신 동기화(새로고침) 버튼 배치 -->
+            <!-- 🔄 최신 동기화(새로고침) 버튼 -->
             <button onclick="window.appInstance.forceSyncLatestData()" title="서버 최신 출석 데이터 즉시 동기화" class="px-3 sm:px-3.5 py-1.5 sm:py-2 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-200 flex items-center space-x-1 shadow-2xs flex-shrink-0">
               <span id="refreshBtnIcon">🔄</span>
               <span>새로고침</span>
@@ -248,7 +255,7 @@
 
         </div>
 
-        <!-- 💡 4칸 독립 요약 대시보드 박스 (총원 / 출석 / 지각 / 결석) -->
+        <!-- 4칸 독립 요약 대시보드 박스 (총원 / 출석 / 지각 / 결석) -->
         <div class="grid grid-cols-4 gap-2">
           <div class="bg-white rounded-xl border border-slate-200 p-2 sm:p-2.5 text-center shadow-2xs">
             <span class="text-[11px] sm:text-xs font-black text-slate-500 block">총원</span>
@@ -386,7 +393,7 @@
 
     </section>
 
-    <!-- 💡 [설교 예배 출석 체크 모달] (직관적인 + 예배 참석 버튼 탑재) -->
+    <!-- 💡 [설교 예배 출석 체크 모달] (다중 선택 후 일괄 저장 완료) -->
     <div id="worshipCheckModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3.5 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border border-indigo-200 w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-200" id="worshipCheckModalBox">
         <div class="px-5 py-3.5 bg-indigo-50 border-b border-indigo-100 flex items-center justify-between">
@@ -407,15 +414,16 @@
           </div>
 
           <div class="bg-indigo-50/60 p-2.5 rounded-xl border border-indigo-100 text-xs text-indigo-900 font-bold leading-relaxed">
-            💡 오늘 1부 안교에 <b>출석/지각한 성도는 목록에서 자동 제외</b>되었습니다. 설교 시간에 오신 성도 옆의 <b>[+ 예배 참석]</b>을 누르면 즉시 참석 완료로 전환됩니다.
+            💡 참석한 성도들을 <b>여러 명 연속으로 선택</b>한 후, 맨 아래 <b>[체크 완료]</b> 버튼을 누르면 한 번에 일괄 저장됩니다.
           </div>
 
-          <div id="worshipListContainer" class="p-1 max-h-[55vh] overflow-y-auto custom-scrollbar space-y-2"></div>
+          <div id="worshipListContainer" class="p-1 max-h-[50vh] overflow-y-auto custom-scrollbar space-y-2"></div>
         </div>
 
         <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 text-right">
-          <button onclick="window.appInstance.closeWorshipCheckModal()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm rounded-xl transition shadow-xs">
-            설교 예배 체크 완료
+          <button id="worshipSubmitBtn" onclick="window.appInstance.saveWorshipBatchAttendance()" class="w-full py-2.5 sm:py-3 bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white font-black text-sm sm:text-base rounded-xl transition shadow-md flex items-center justify-center space-x-2">
+            <span>✨</span>
+            <span id="worshipSubmitBtnText">설교 예배 체크 완료</span>
           </button>
         </div>
       </div>
@@ -805,6 +813,7 @@
         this.isSyncing = false;
         this.selectedFilterClass = 'ALL';
         this.pendingResetType = null;
+        this.worshipPendingSet = new Set(); // 💡 설교 예배 다중 선택 임시 버퍼
       }
 
       async init() {
@@ -1239,11 +1248,6 @@
             if (statsContent && !statsContent.classList.contains('hidden')) {
               this.calculateAndRenderStatistics();
             }
-
-            const wModal = document.getElementById('worshipCheckModal');
-            if (wModal && !wModal.classList.contains('pointer-events-none')) {
-              this.renderWorshipCheckList();
-            }
           }, (error) => {
             console.warn("Firestore 실시간 수신 알림:", error);
           });
@@ -1321,10 +1325,11 @@
         this.renderClassMonitoringBar();
       }
 
-      // 💡 [2배 크기로 확대된 실시간 출석 현황 바]
+      // 💡 [2배 크기로 확대된 전체 반 종합 모니터링 그리드 보드]
       renderClassMonitoringBar() {
         if (!this.currentUser || !this.currentUser.isAdmin) return;
         const container = document.getElementById('classChipsContainer');
+        const totalBadge = document.getElementById('adminTotalStatusBadge');
         if (!container) return;
 
         const curDate = document.getElementById('sabbathSelect')?.value;
@@ -1337,40 +1342,80 @@
           return r && (r.status === '출석' || r.status === '지각');
         }).length;
 
-        // 전체 반 칩 (2배 크기)
-        const allBtn = document.createElement('button');
-        allBtn.className = `px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black whitespace-nowrap transition flex items-center space-x-2 ${
-          this.selectedFilterClass === 'ALL' ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-        }`;
-        allBtn.innerHTML = `<span>✨ 전체 반</span> <span class="px-2 py-0.5 rounded-lg text-xs font-black ${this.selectedFilterClass === 'ALL' ? 'bg-white/20' : 'bg-emerald-100 text-emerald-800'}">출석 ${totalPresent} / ${this.rawMembers.length}명</span>`;
-        allBtn.onclick = () => this.selectMonitoringClass('ALL');
-        container.appendChild(allBtn);
+        const totalPercent = this.rawMembers.length > 0 ? ((totalPresent / this.rawMembers.length) * 100).toFixed(0) : '0';
+        if (totalBadge) totalBadge.textContent = `전체 출석 ${totalPresent} / ${this.rawMembers.length}명 (${totalPercent}%)`;
 
-        // 각 반별 칩 (2배 크기)
+        // 1) 전체 반 마스터 카드
+        const isAllSelected = this.selectedFilterClass === 'ALL';
+        const allCard = document.createElement('div');
+        allCard.className = `p-3 rounded-xl border transition cursor-pointer select-none flex flex-col justify-between shadow-2xs ${
+          isAllSelected ? 'bg-emerald-600 text-white border-emerald-700 ring-2 ring-emerald-400' : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-800'
+        }`;
+        allCard.onclick = () => this.selectMonitoringClass('ALL');
+        allCard.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="font-black text-xs sm:text-sm">✨ 전체 반 종합</span>
+            <span class="text-[10px] font-black px-1.5 py-0.2 rounded ${isAllSelected ? 'bg-white/20' : 'bg-emerald-100 text-emerald-800'}">${totalPercent}%</span>
+          </div>
+          <div class="my-1">
+            <span class="text-base sm:text-lg font-black">${totalPresent}</span>
+            <span class="text-xs font-bold ${isAllSelected ? 'text-emerald-100' : 'text-slate-400'}">/ ${this.rawMembers.length}명</span>
+          </div>
+          <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+            <div class="bg-emerald-500 h-full rounded-full transition-all duration-300" style="width: ${totalPercent}%"></div>
+          </div>
+        `;
+        container.appendChild(allCard);
+
+        // 2) 각 교과반별 상세 카드
         activeClasses.forEach(c => {
           const classMembers = this.rawMembers.filter(m => m.classId === c.classId);
-          const presentCount = classMembers.filter(m => {
-            const r = this.rawRecords.find(rec => rec.date === curDate && rec.memberId === m.memberId);
-            return r && (r.status === '출석' || r.status === '지각');
-          }).length;
+          let presentCount = 0;
+          let checkedCount = 0;
 
+          classMembers.forEach(m => {
+            const r = this.rawRecords.find(rec => rec.date === curDate && rec.memberId === m.memberId);
+            if (r && (r.status === '출석' || r.status === '지각')) presentCount++;
+            if (r && r.status) checkedCount++;
+          });
+
+          const uncheckCount = classMembers.length - checkedCount;
+          const rate = classMembers.length > 0 ? ((presentCount / classMembers.length) * 100).toFixed(0) : '0';
           const isSelected = this.selectedFilterClass === c.classId;
 
-          const btn = document.createElement('button');
-          btn.className = `px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black whitespace-nowrap transition flex items-center space-x-2 ${
+          const card = document.createElement('div');
+          card.className = `p-3 rounded-xl border transition cursor-pointer select-none flex flex-col justify-between shadow-2xs ${
             isSelected 
-              ? 'bg-emerald-700 text-white shadow-md' 
-              : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/80'
+              ? 'bg-emerald-700 text-white border-emerald-800 ring-2 ring-emerald-400' 
+              : 'bg-white hover:border-emerald-300 border-slate-200 text-slate-800'
           }`;
+          card.onclick = () => this.selectMonitoringClass(c.classId);
 
-          btn.innerHTML = `
-            <span>${c.className}</span>
-            <span class="text-xs font-black px-2 py-0.5 rounded-lg ${isSelected ? 'bg-white/20' : (presentCount > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600')}">
-              ${presentCount} / ${classMembers.length}명
-            </span>
+          let statusBadgeHtml = '';
+          if (uncheckCount === 0 && classMembers.length > 0) {
+            statusBadgeHtml = `<span class="text-[10px] font-black px-1.5 py-0.2 rounded ${isSelected ? 'bg-white/20' : 'bg-emerald-100 text-emerald-800'}">완료</span>`;
+          } else {
+            statusBadgeHtml = `<span class="text-[10px] font-black px-1.5 py-0.2 rounded ${isSelected ? 'bg-amber-400 text-amber-950' : 'bg-amber-100 text-amber-800'}">${uncheckCount}명 미체크</span>`;
+          }
+
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <span class="font-black text-xs sm:text-sm truncate">${c.className}</span>
+              ${statusBadgeHtml}
+            </div>
+            <div class="flex items-baseline justify-between my-1">
+              <div>
+                <span class="text-base sm:text-lg font-black ${isSelected ? 'text-white' : 'text-emerald-600'}">${presentCount}</span>
+                <span class="text-xs font-bold ${isSelected ? 'text-emerald-100' : 'text-slate-400'}">/ ${classMembers.length}명</span>
+              </div>
+              <span class="text-xs font-black ${isSelected ? 'text-emerald-200' : 'text-slate-500'}">${rate}%</span>
+            </div>
+            <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+              <div class="bg-emerald-500 h-full rounded-full transition-all duration-300" style="width: ${rate}%"></div>
+            </div>
           `;
-          btn.onclick = () => this.selectMonitoringClass(c.classId);
-          container.appendChild(btn);
+
+          container.appendChild(card);
         });
       }
 
@@ -1786,7 +1831,7 @@ ${className} ${leaderName} 리더입니다.
         this.triggerAutoSheetSync();
       }
 
-      // 💡 [수동 최신 동기화(새로고침) 실행 함수]
+      // 💡 [수동 최신 동기화(새로고침) 실행]
       async forceSyncLatestData() {
         if (!this.currentUser) return;
         
@@ -1838,13 +1883,24 @@ ${className} ${leaderName} 리더입니다.
         }
       }
 
-      // 💡 [관리자 전용: 설교 예배 출석 체크 팝업]
+      // 💡 [관리자 전용: 설교 예배 출석 체크 팝업 오픈]
       openWorshipCheckModal() {
         if (!this.currentUser || !this.currentUser.isAdmin) return;
         const modal = document.getElementById('worshipCheckModal');
         const box = document.getElementById('worshipCheckModalBox');
         const searchInput = document.getElementById('worshipSearchInput');
         if (searchInput) searchInput.value = '';
+
+        const curDate = document.getElementById('sabbathSelect')?.value;
+        if (!curDate) return;
+
+        // 현재 이미 예배참석으로 등록된 성도들을 버퍼 세트에 초기 탑재
+        this.worshipPendingSet = new Set();
+        this.rawRecords.forEach(r => {
+          if (r.date === curDate && r.worshipAttended) {
+            this.worshipPendingSet.add(r.memberId);
+          }
+        });
 
         this.renderWorshipCheckList();
 
@@ -1860,9 +1916,10 @@ ${className} ${leaderName} 리더입니다.
         const box = document.getElementById('worshipCheckModalBox');
         if (box) { box.classList.remove('scale-100'); box.classList.add('scale-95'); }
         if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
+        this.worshipPendingSet.clear();
       }
 
-      // 💡 [+ 예배 참석] vs [⛪ 예배 참석 완료] 버튼으로 직관적 표시
+      // 💡 [다중 선택 방식의 가벼운 렌더링]
       renderWorshipCheckList() {
         const container = document.getElementById('worshipListContainer');
         const countBadge = document.getElementById('worshipCountBadge');
@@ -1871,10 +1928,11 @@ ${className} ${leaderName} 리더입니다.
         const curDate = document.getElementById('sabbathSelect')?.value;
         if (!curDate) return;
 
+        // 안교 출석/지각자는 명단에서 제외 (순수 미참석/결석자만 필터)
         const candidates = this.rawMembers.filter(m => {
           const rec = this.rawRecords.find(r => r.date === curDate && r.memberId === m.memberId);
           if (rec && (rec.status === '출석' || rec.status === '지각')) {
-            return false; // 안교 출석/지각자는 제외
+            return false;
           }
           return true;
         });
@@ -1886,22 +1944,18 @@ ${className} ${leaderName} 리더입니다.
 
         if (candidates.length === 0) {
           container.innerHTML = '<div class="p-6 text-center text-slate-400 font-bold text-xs">오늘 안교에 전원 참석하였거나 대상자가 없습니다. 🎉</div>';
+          this.updateWorshipSubmitButtonText();
           return;
         }
 
         candidates.forEach(member => {
-          const rec = this.rawRecords.find(r => r.date === curDate && r.memberId === m.memberId);
-          const isAttended = rec ? !!rec.worshipAttended : false;
+          const isSelected = this.worshipPendingSet.has(member.memberId);
 
           const div = document.createElement('div');
+          div.id = `worship-card-${member.memberId}`;
           div.className = `worship-row-item p-2.5 sm:p-3 rounded-xl border flex items-center justify-between gap-2 transition ${
-            isAttended ? 'bg-indigo-50/70 border-indigo-300' : 'bg-slate-50 border-slate-200'
+            isSelected ? 'bg-indigo-50 border-indigo-300' : 'bg-slate-50 border-slate-200'
           }`;
-
-          // 버튼: 미참석 상태는 [+ 예배 참석], 참석 상태는 [⛪ 예배 참석 완료]
-          const btnHtml = isAttended
-            ? `<button onclick="window.appInstance.toggleWorshipAttendance('${member.memberId}')" class="px-3 py-1.5 rounded-xl text-xs font-black tracking-tight whitespace-nowrap bg-indigo-600 text-white shadow-xs transition flex items-center space-x-1"><span>⛪ 예배 참석 완료</span></button>`
-            : `<button onclick="window.appInstance.toggleWorshipAttendance('${member.memberId}')" class="px-3 py-1.5 rounded-xl text-xs font-black tracking-tight whitespace-nowrap bg-white border border-slate-300 text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300 transition flex items-center space-x-1"><span>+ 예배 참석</span></button>`;
 
           div.innerHTML = `
             <div class="min-w-0">
@@ -1911,11 +1965,62 @@ ${className} ${leaderName} 리더입니다.
                 <span class="text-[11px] text-slate-500 font-bold">(${this.getClassName(member.classId)})</span>
               </div>
             </div>
-            <div>${btnHtml}</div>
+            <div>
+              <button type="button" onclick="window.appInstance.toggleWorshipSelection('${member.memberId}')" class="worship-toggle-btn-${member.memberId} px-3 py-1.5 rounded-xl text-xs font-black tracking-tight whitespace-nowrap transition flex items-center space-x-1 ${
+                isSelected 
+                  ? 'bg-indigo-600 text-white shadow-xs' 
+                  : 'bg-white border border-slate-300 text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300'
+              }">
+                <span>${isSelected ? '✓ 참석 선택됨' : '+ 예배 참석'}</span>
+              </button>
+            </div>
           `;
 
           container.appendChild(div);
         });
+
+        this.updateWorshipSubmitButtonText();
+      }
+
+      // 💡 [화면 깜빡임 없이 즉시 버튼만 토글하는 함수]
+      toggleWorshipSelection(memberId) {
+        if (this.worshipPendingSet.has(memberId)) {
+          this.worshipPendingSet.delete(memberId);
+        } else {
+          this.worshipPendingSet.add(memberId);
+        }
+
+        const isSelected = this.worshipPendingSet.has(memberId);
+        const card = document.getElementById(`worship-card-${memberId}`);
+        const btn = document.querySelector(`.worship-toggle-btn-${memberId}`);
+
+        if (card) {
+          card.className = `worship-row-item p-2.5 sm:p-3 rounded-xl border flex items-center justify-between gap-2 transition ${
+            isSelected ? 'bg-indigo-50 border-indigo-300' : 'bg-slate-50 border-slate-200'
+          }`;
+        }
+
+        if (btn) {
+          btn.className = `worship-toggle-btn-${memberId} px-3 py-1.5 rounded-xl text-xs font-black tracking-tight whitespace-nowrap transition flex items-center space-x-1 ${
+            isSelected 
+              ? 'bg-indigo-600 text-white shadow-xs' 
+              : 'bg-white border border-slate-300 text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300'
+          }`;
+          btn.innerHTML = `<span>${isSelected ? '✓ 참석 선택됨' : '+ 예배 참석'}</span>`;
+        }
+
+        this.updateWorshipSubmitButtonText();
+      }
+
+      updateWorshipSubmitButtonText() {
+        const textEl = document.getElementById('worshipSubmitBtnText');
+        if (!textEl) return;
+        const count = this.worshipPendingSet.size;
+        if (count > 0) {
+          textEl.textContent = `${count}명 설교 예배 체크 완료`;
+        } else {
+          textEl.textContent = `설교 예배 체크 완료`;
+        }
       }
 
       filterWorshipList() {
@@ -1927,61 +2032,99 @@ ${className} ${leaderName} 리더입니다.
         });
       }
 
-      async toggleWorshipAttendance(memberId) {
+      // 💡 [다중 선택된 성도들을 단 한 번에 일괄 저장하는 Batch 로직]
+      async saveWorshipBatchAttendance() {
         const targetDate = document.getElementById('sabbathSelect')?.value;
         const quarter = document.getElementById('quarterSelect')?.value;
-        const member = this.rawMembers.find(m => m.memberId === memberId);
-        if (!member || !targetDate) return;
+        if (!targetDate) return;
 
-        const recordId = `${targetDate}_${memberId}`;
-        let rec = this.rawRecords.find(r => r.date === targetDate && r.memberId === memberId);
-        
-        const nextState = rec ? !rec.worshipAttended : true;
+        this.showLoading('설교 예배 출석 기록 일괄 저장 중...');
 
-        if (!rec) {
-          rec = {
-            recordId: recordId,
-            date: targetDate,
-            quarter: quarter || '1기',
-            memberId: memberId,
-            classId: member.classId,
-            status: '결석',
-            score: 0.0,
-            reason: '설교 예배 참석',
-            worshipAttended: true,
-            checkedBy: this.currentUser?.leaderName || '관리자',
-            updatedAt: new Date().toISOString()
-          };
-          this.rawRecords.push(rec);
-        } else {
-          rec.worshipAttended = nextState;
-          if (nextState && !rec.reason) rec.reason = '설교 예배 참석';
-          rec.updatedAt = new Date().toISOString();
-        }
+        try {
+          const batch = (isFirebaseReady && db && navigator.onLine) ? writeBatch(db) : null;
+          const candidates = this.rawMembers.filter(m => {
+            const rec = this.rawRecords.find(r => r.date === targetDate && r.memberId === m.memberId);
+            return !(rec && (rec.status === '출석' || rec.status === '지각'));
+          });
 
-        if (this.currentAttendance[memberId]) {
-          this.currentAttendance[memberId].worshipAttended = nextState;
-          this.currentAttendance[memberId].status = rec.status;
-        }
+          candidates.forEach(member => {
+            const memberId = member.memberId;
+            const isAttended = this.worshipPendingSet.has(memberId);
+            const recordId = `${targetDate}_${memberId}`;
+            let rec = this.rawRecords.find(r => r.date === targetDate && r.memberId === memberId);
 
-        this.calculateConsecutiveAbsentees();
-        this.updateAbsentBanner();
+            if (isAttended) {
+              if (!rec) {
+                rec = {
+                  recordId: recordId,
+                  date: targetDate,
+                  quarter: quarter || '1기',
+                  memberId: memberId,
+                  classId: member.classId,
+                  status: '결석',
+                  score: 0.0,
+                  reason: '설교 예배 참석',
+                  worshipAttended: true,
+                  checkedBy: this.currentUser?.leaderName || '관리자',
+                  updatedAt: new Date().toISOString()
+                };
+                this.rawRecords.push(rec);
+              } else {
+                rec.worshipAttended = true;
+                if (!rec.reason) rec.reason = '설교 예배 참석';
+                rec.updatedAt = new Date().toISOString();
+              }
 
-        if (isFirebaseReady && db && navigator.onLine) {
-          try {
-            const docRef = doc(db, 'attendance_records', recordId);
-            await setDoc(docRef, rec);
-          } catch(e) {
-            console.error("Firestore 설교 예배 체크 오류:", e);
+              if (this.currentAttendance[memberId]) {
+                this.currentAttendance[memberId].worshipAttended = true;
+                this.currentAttendance[memberId].status = rec.status;
+              }
+
+              if (batch) {
+                const docRef = doc(db, 'attendance_records', recordId);
+                batch.set(docRef, rec);
+              }
+              this.enqueueOfflineRecord(rec);
+
+            } else {
+              // 선택 해제된 경우
+              if (rec && rec.worshipAttended) {
+                rec.worshipAttended = false;
+                if (rec.reason === '설교 예배 참석') rec.reason = '';
+                rec.updatedAt = new Date().toISOString();
+
+                if (this.currentAttendance[memberId]) {
+                  this.currentAttendance[memberId].worshipAttended = false;
+                }
+
+                if (batch) {
+                  const docRef = doc(db, 'attendance_records', recordId);
+                  batch.set(docRef, rec);
+                }
+                this.enqueueOfflineRecord(rec);
+              }
+            }
+          });
+
+          if (batch) {
+            await batch.commit();
           }
+
+          this.calculateConsecutiveAbsentees();
+          this.updateAbsentBanner();
+          this.renderAttendanceList();
+          this.renderClassMonitoringBar();
+          this.triggerAutoSheetSync();
+
+          this.hideLoading();
+          this.closeWorshipCheckModal();
+          this.showToast(`✨ 설교 예배 출석(${this.worshipPendingSet.size}명)이 성공적으로 반영되었습니다.`, 'success');
+
+        } catch (err) {
+          this.hideLoading();
+          console.error("설교 예배 일괄 저장 오류:", err);
+          this.showToast('저장 중 오류가 발생했습니다.', 'error');
         }
-
-        this.enqueueOfflineRecord(rec);
-        this.triggerAutoSheetSync();
-
-        this.renderWorshipCheckList();
-        this.renderAttendanceList();
-        this.showToast(`✨ ${member.name} 성도 설교 예배 출석 ${nextState ? '확인' : '취소'}되었습니다.`, 'success');
       }
 
       enqueueOfflineRecord(recordData) {
@@ -3483,7 +3626,7 @@ ${className} ${leaderName} 리더입니다.
 
             const totChecked = p + l + a;
             const score = (p * 1.0) + (l * 0.5);
-            const rate = totChecked > 0 ? ((score / totChecked) * 100).toFixed(1) + '%' : '-';
+            const rate = totChecked > 0 ? ((score / totChecked) * 100).toFixed(0) + '%' : '-';
 
             rowCells.push(
               { v: p, s: { font: { bold: true, color: { rgb: "059669" } }, alignment: { horizontal: "center" } } },
@@ -3497,7 +3640,7 @@ ${className} ${leaderName} 리더입니다.
           });
 
           const ws = XLSX.utils.aoa_to_sheet(sheetData);
-          ws['!cols'] = [{ wch: 12 }, { wch: 14 }, { wch: 10 }, ...sabbaths.map(() => ({ wch: 13 })), { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 12 }];
+          ws['!cols'] = [{ wch: 12 }, { wch: 14 }, { wch: 10 }, ...sabbaths.map(() => ({ wch: 13 })), { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 12 }];
 
           XLSX.utils.book_append_sheet(wb, ws, `${quarter} 출석부`);
           XLSX.writeFile(wb, `${year}_${quarter}_${className}_출석부.xlsx`);

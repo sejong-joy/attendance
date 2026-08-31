@@ -347,7 +347,6 @@
             
             <div class="flex items-center space-x-2 w-full sm:w-auto">
               <input type="text" id="memberSearchInput" oninput="window.appInstance.filterMemberList()" placeholder="이름 또는 직분 검색..." class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs sm:text-sm font-bold focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition sm:w-48">
-              <!-- 관리자 전용 등록 버튼: setupLoggedInUI에서 권한에 따라 노출 제어 -->
               <button id="adminNewMemberBtn" onclick="window.appInstance.openNewMemberModal()" class="hidden px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-lg transition shadow-xs whitespace-nowrap flex items-center space-x-1">
                 <span>➕</span>
                 <span>새가족/방문자 등록</span>
@@ -543,7 +542,7 @@
 
     <!-- Urgent Absentee 3-Week Modal -->
     <div id="urgentAlertModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 transition-opacity duration-200 opacity-0 pointer-events-none">
-      <div class="bg-white rounded-2xl shadow-2xl border-2 border-red-400 w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200" id="urgentModalBox">
+      <div class="bg-white rounded-2xl shadow-2xl border-2 border-red-400 w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-200" id="urgentModalBox">
         <div class="px-4 py-3 bg-red-50 border-b border-red-100 flex items-center justify-between">
           <div class="flex items-center space-x-2">
             <span class="text-xl animate-bounce">🚨</span>
@@ -685,7 +684,6 @@
             <div>
               <label class="block text-xs font-black text-slate-700 mb-1">배정할 반 *</label>
               <select id="newMemberClassSelect" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                <!-- 동적으로 반 목록 추가됨 -->
               </select>
             </div>
           </div>
@@ -1120,7 +1118,6 @@
         if (!this.rawMembers || !this.rawRecords) return;
 
         this.rawMembers.forEach(member => {
-          // 단순 방문자는 장기 결석 알림 계산에서 완전히 제외
           if (member.status === '방문자') return;
 
           const memberRecs = this.rawRecords
@@ -1255,12 +1252,12 @@
           filterWrap?.classList.remove('hidden');
           statusBarWrap?.classList.remove('hidden');
           adminResetSec?.classList.remove('hidden');
-          adminNewMemberBtn?.classList.remove('hidden'); // 관리자 전용 등록 버튼 노출
+          adminNewMemberBtn?.classList.remove('hidden');
         } else {
           filterWrap?.classList.add('hidden');
           statusBarWrap?.classList.add('hidden');
           adminResetSec?.classList.add('hidden');
-          adminNewMemberBtn?.classList.add('hidden'); // 일반 리더는 숨김 처리
+          adminNewMemberBtn?.classList.add('hidden');
         }
 
         this.calculateConsecutiveAbsentees();
@@ -1342,6 +1339,40 @@
         }
       }
 
+      // 💡 [카카오톡 심방 안부 템플릿 복사 함수]
+      copyKakaoCareMessage(memberId, consecutiveWeeks = 3) {
+        const member = this.rawMembers.find(m => m.memberId === memberId);
+        if (!member) return;
+
+        const leaderName = this.currentUser?.leaderName || '리더';
+        const className = this.getClassName(member.classId);
+
+        const template = `[세종 조이 안식일학교 안부 심방]
+${member.name} 성도님, 평안하신지요?
+${className} ${leaderName} 리더입니다.
+
+최근 안식일 예배 때 뵙지 못해 염려되고 보고 싶은 마음에 안부 여쭙니다. 
+별일 없이 건강히 잘 지내고 계신지요?
+
+어려운 일이나 기도가 필요한 부분이 있으시면 언제든 편히 나눠주세요. 
+기도 중에 늘 기억하고 있습니다. 
+
+이번 안식일에는 기쁜 얼굴로 꼭 뵐 수 있기를 소망합니다. 주님의 평안이 늘 함께하시길 기도합니다! 🙏`;
+
+        navigator.clipboard.writeText(template).then(() => {
+          this.showToast(`💬 ${member.name} 성도님께 보낼 카톡 심방 문구가 복사되었습니다!`, 'success');
+        }).catch(() => {
+          // 클립보드 복사 대체 로직
+          const tArea = document.createElement('textarea');
+          tArea.value = template;
+          document.body.appendChild(tArea);
+          tArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(tArea);
+          this.showToast(`💬 ${member.name} 성도님께 보낼 카톡 심방 문구가 복사되었습니다!`, 'success');
+        });
+      }
+
       openUrgentModal() {
         const modal = document.getElementById('urgentAlertModal');
         const box = document.getElementById('urgentModalBox');
@@ -1359,7 +1390,7 @@
             const careNote = this.careNotesMap[item.memberId];
 
             const div = document.createElement('div');
-            div.className = 'p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 ' +
+            div.className = 'p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ' +
               (careNote ? 'bg-blue-50 border-blue-200' : 'bg-red-50 border-red-200');
 
             let badgeHtml = careNote 
@@ -1370,9 +1401,12 @@
               ? '<p class="text-xs text-blue-700 font-bold mt-0.5">사유: ' + careNote.reason + '</p>' 
               : '';
 
+            // 카카오톡 템플릿 복사 버튼
+            let kakaoBtnHtml = `<button onclick="window.appInstance.copyKakaoCareMessage('${item.memberId}', ${item.consecutiveWeeks || 3})" class="px-2 py-1 bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-xs sm:text-sm tracking-tight whitespace-nowrap rounded-lg transition shadow-2xs flex items-center space-x-0.5"><span>💬</span><span>카톡</span></button>`;
+
             let phoneButtonsHtml = cleanPhone 
               ? '<a href="tel:' + cleanPhone + '" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm tracking-tight whitespace-nowrap rounded-lg transition shadow-xs">📞 통화</a>' +
-                '<a href="sms:' + cleanPhone + '" class="px-2 py-1 bg-white border border-slate-300 text-slate-700 font-black text-xs sm:text-sm tracking-tight whitespace-nowrap rounded-lg transition">💬 문자</a>'
+                '<a href="sms:' + cleanPhone + '" class="px-2 py-1 bg-white border border-slate-300 text-slate-700 font-black text-xs sm:text-sm tracking-tight whitespace-nowrap rounded-lg transition">문자</a>'
               : '';
 
             let careBtnText = careNote ? '사유 수정' : '심방 완료';
@@ -1386,8 +1420,9 @@
                 '<p class="text-xs text-slate-500 font-bold mt-0.5">📞 ' + (item.phone || '연락처 없음') + '</p>' +
                 reasonHtml +
               '</div>' +
-              '<div class="flex items-center space-x-1 self-end sm:self-center">' +
+              '<div class="flex flex-wrap items-center gap-1 self-end sm:self-center">' +
                 phoneButtonsHtml +
+                kakaoBtnHtml +
                 '<button onclick="window.appInstance.openCareModal(\'' + item.memberId + '\')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs sm:text-sm tracking-tight whitespace-nowrap rounded-lg transition shadow-xs">' +
                   careBtnText +
                 '</button>' +
@@ -1536,6 +1571,9 @@
           let careBadgeHtml = isCareHandled ? '<span class="text-[11px] font-black text-blue-800 bg-blue-100 border border-blue-300 px-2 py-0.5 rounded">💬 심방완료: ' + careNote.reason + '</span>' : '';
           let urgentCareBtnHtml = isUrgentActive ? '<button onclick="window.appInstance.openCareModal(\'' + member.memberId + '\')" class="text-[11px] font-black text-red-700 bg-white border border-red-300 px-1.5 py-0.5 rounded hover:bg-red-50 transition">✍️ 심방완료 처리</button>' : '';
 
+          // 출석 체크 리스트 내 카톡 복사 버튼 (3주 연속 결석자일 경우 표시)
+          let quickKakaoBtnHtml = isUrgentActive ? `<button onclick="window.appInstance.copyKakaoCareMessage('${member.memberId}', 3)" title="카톡 심방 안부 문구 복사" class="text-[11px] font-black text-amber-900 bg-amber-200 hover:bg-amber-300 px-1.5 py-0.5 rounded transition flex items-center space-x-0.5"><span>💬</span><span>카톡복사</span></button>` : '';
+
           row.innerHTML = 
             '<div class="flex items-start sm:items-center space-x-2.5">' +
               '<div class="w-10 h-10 rounded-xl ' + avatarClass + ' flex items-center justify-center font-black text-base flex-shrink-0 shadow-xs">' +
@@ -1550,9 +1588,10 @@
                   urgentBadgeHtml +
                   careBadgeHtml +
                 '</div>' +
-                '<div class="flex items-center space-x-2 mt-0.5">' +
+                '<div class="flex items-center space-x-2 mt-0.5 flex-wrap">' +
                   '<p class="text-xs text-slate-500 font-bold">' + (member.phone || '연락처 미기재') + '</p>' +
                   urgentCareBtnHtml +
+                  quickKakaoBtnHtml +
                 '</div>' +
               '</div>' +
             '</div>' +
@@ -2249,11 +2288,12 @@
                         '</p>' +
                         '<p class="text-xs text-slate-400 font-bold mt-0.5">📞 ' + (m.phone || '연락처 없음') + '</p>' +
                       '</div>' +
-                      (cleanPhone ? 
-                        '<div class="flex items-center space-x-1">' +
+                      '<div class="flex items-center space-x-1">' +
+                        `<button onclick="window.appInstance.copyKakaoCareMessage('${m.memberId}', 3)" title="카톡 심방 안부 문구 복사" class="px-2.5 py-1 bg-amber-400 hover:bg-amber-500 text-amber-950 rounded-lg text-xs font-black tracking-tight whitespace-nowrap shadow-2xs transition">💬 카톡복사</button>` +
+                        (cleanPhone ? 
                           '<a href="tel:' + cleanPhone + '" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-black tracking-tight whitespace-nowrap shadow-xs transition">📞 전화</a>' +
-                          '<a href="sms:' + cleanPhone + '" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-black tracking-tight whitespace-nowrap transition">💬 문자</a>' +
-                        '</div>' : '') +
+                          '<a href="sms:' + cleanPhone + '" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-black tracking-tight whitespace-nowrap transition">문자</a>' : '') +
+                      '</div>' +
                     '</div>'
                   );
                 }).join('') +
@@ -2585,7 +2625,6 @@
         }
       }
 
-      // 새가족 / 방문자 모달 오픈 (관리자 검증 및 반 목록 동적 생성)
       openNewMemberModal() {
         if (!this.currentUser || !this.currentUser.isAdmin) {
           this.showToast('새가족 및 방문자 등록은 관리자(교역자)만 가능합니다.', 'error');
@@ -2601,7 +2640,6 @@
         document.getElementById('newMemberStatus').value = '새가족';
         this.onNewMemberTypeChange();
 
-        // 팝업 내부 반 목록 드롭다운 세팅
         if (classSelect) {
           classSelect.innerHTML = '';
           const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
@@ -2627,7 +2665,6 @@
         if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
       }
 
-      // 새가족 vs 단순 방문자 모달 안내 문구 전환
       onNewMemberTypeChange() {
         const type = document.getElementById('newMemberStatus')?.value;
         const notice = document.getElementById('newMemberNotice');
@@ -2642,7 +2679,6 @@
         }
       }
 
-      // 새가족 / 방문자 서버 등록 처리
       async submitNewMember() {
         const name = document.getElementById('newMemberName')?.value?.trim();
         const phone = document.getElementById('newMemberPhone')?.value?.trim();
@@ -2687,7 +2723,6 @@
             
             this.rawMembers.push(newMember);
             
-            // 캐시 동기화
             if (this.currentUser) {
               const cacheKey = `church_cache_${this.currentUser.classId}`;
               const cachedStr = localStorage.getItem(cacheKey);

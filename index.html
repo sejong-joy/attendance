@@ -193,15 +193,15 @@
         <!-- Controls Card: 2단 최적화 레이아웃 -->
         <div class="bg-white rounded-xl border border-slate-200 p-2.5 sm:p-3.5 shadow-xs space-y-2 sm:space-y-2.5">
           
-          <!-- 1단 (윗줄): 년도 + 기수 (좌측) / ☁️ 자동 저장됨 (우측) -->
-          <div class="flex items-center justify-between gap-2">
-            <div class="flex items-center space-x-1.5 sm:space-x-2">
-              <select id="yearSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-2xs">
+          <!-- 1단 (윗줄): 년도 + 기수 (좌측) / ⛪ 설교 예배 체크 (중간) / ☁️ 자동 저장됨 (우측) -->
+          <div class="flex items-center justify-between gap-1.5 sm:gap-2">
+            <div class="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0">
+              <select id="yearSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-2 sm:px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-2xs">
                 <option value="2025">2025년</option>
                 <option value="2026" selected>2026년</option>
                 <option value="2027">2027년</option>
               </select>
-              <select id="quarterSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-black text-emerald-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-2xs">
+              <select id="quarterSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-2 sm:px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-black text-emerald-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-2xs">
                 <option value="1기">1기</option>
                 <option value="2기">2기</option>
                 <option value="3기">3기</option>
@@ -209,14 +209,22 @@
               </select>
             </div>
 
+            <!-- 💡 [위치 조정] 3기와 자동 저장됨 사이에 위치한 설교 예배 체크 버튼 -->
+            <div class="flex-1 flex justify-center min-w-0">
+              <button id="adminWorshipCheckBtn" onclick="window.appInstance.openWorshipCheckModal()" class="hidden px-2.5 sm:px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition flex items-center space-x-1 shadow-2xs">
+                <span>⛪</span>
+                <span>설교 예배 체크</span>
+              </button>
+            </div>
+
             <!-- 자동 저장됨 배지 -->
-            <div id="syncStatusBadge" class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition shadow-2xs">
+            <div id="syncStatusBadge" class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition shadow-2xs flex-shrink-0">
               <span id="syncStatusIcon">☁️</span>
               <span id="syncStatusText">자동 저장됨</span>
             </div>
           </div>
 
-          <!-- 2단 (아랫줄): 큼직한 제O과 O월O일 (좌측) / ⛪ 2부 예배 체크 (관리자) / ✨ 전원 출석 (우측) -->
+          <!-- 2단 (아랫줄): 큼직한 제O과 O월O일 (좌측) / 반 필터 / ✨ 전원 출석 (우측) -->
           <div class="flex items-center justify-between gap-1.5 sm:gap-2">
             <div class="flex-1 flex items-center space-x-1.5 sm:space-x-2 min-w-0">
               <select id="sabbathSelect" onchange="window.appInstance.onSabbathSelectChange()" class="flex-1 px-3 py-1.5 sm:py-2 bg-emerald-50 border border-emerald-300 rounded-xl text-sm sm:text-base font-black text-emerald-950 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-xs truncate"></select>
@@ -228,18 +236,10 @@
               </div>
             </div>
 
-            <div class="flex items-center space-x-1.5 flex-shrink-0">
-              <!-- 💡 [신설] 관리자 전용 2부 대예배(설교) 출석 체크 모달 버튼 -->
-              <button id="adminWorshipCheckBtn" onclick="window.appInstance.openWorshipCheckModal()" class="hidden px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition flex items-center space-x-1 shadow-2xs">
-                <span>⛪</span>
-                <span>2부 예배 체크</span>
-              </button>
-
-              <!-- 전원 출석 버튼 -->
-              <button onclick="window.appInstance.markAllPresent()" class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-200 flex items-center space-x-1 shadow-2xs">
-                <span>✨ 전원 출석</span>
-              </button>
-            </div>
+            <!-- 전원 출석 버튼 -->
+            <button onclick="window.appInstance.markAllPresent()" class="px-3 sm:px-3.5 py-1.5 sm:py-2 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-200 flex items-center space-x-1 shadow-2xs flex-shrink-0">
+              <span>✨ 전원 출석</span>
+            </button>
           </div>
 
         </div>
@@ -382,15 +382,15 @@
 
     </section>
 
-    <!-- [2부 대예배(설교) 출석 체크 모달] (관리자 전용) -->
+    <!-- [2부 설교 예배 출석 체크 모달] (관리자 전용) -->
     <div id="worshipCheckModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3.5 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border border-indigo-200 w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-200" id="worshipCheckModalBox">
         <div class="px-5 py-3.5 bg-indigo-50 border-b border-indigo-100 flex items-center justify-between">
           <div class="flex items-center space-x-2">
             <span class="text-xl">⛪</span>
             <div>
-              <h3 class="text-base sm:text-lg font-black text-indigo-950 leading-tight">2부 대예배(설교) 출석 체크</h3>
-              <p class="text-xs text-indigo-700 font-bold">안교 미참석 성도 대상 예배 출석 확인</p>
+              <h3 class="text-base sm:text-lg font-black text-indigo-950 leading-tight">설교 예배 출석 체크</h3>
+              <p class="text-xs text-indigo-700 font-bold">안교 미참석 성도 대상 설교 예배 출석 확인</p>
             </div>
           </div>
           <button onclick="window.appInstance.closeWorshipCheckModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg p-1">✕</button>
@@ -403,7 +403,7 @@
           </div>
 
           <div class="bg-indigo-50/60 p-2.5 rounded-xl border border-indigo-100 text-xs text-indigo-900 font-bold leading-relaxed">
-            💡 오늘 1부 안교에 <b>출석/지각한 성도는 목록에서 자동 제외</b>되었습니다. 설교 시간에 참석한 성도 옆의 [⛪ 대예배 참석] 버튼을 누르시면 <b>긴급 결석 알림에서 자동 제외</b>됩니다.
+            💡 오늘 1부 안교에 <b>출석/지각한 성도는 목록에서 자동 제외</b>되었습니다. 설교 시간에 참석한 성도 옆의 [⛪ 설교 참석 완료] 버튼을 누르시면 <b>긴급 결석 알림에서 자동 제외</b>됩니다.
           </div>
 
           <div id="worshipListContainer" class="p-1 max-h-[55vh] overflow-y-auto custom-scrollbar space-y-2"></div>
@@ -411,7 +411,7 @@
 
         <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 text-right">
           <button onclick="window.appInstance.closeWorshipCheckModal()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm rounded-xl transition shadow-xs">
-            대예배 체크 완료
+            설교 예배 체크 완료
           </button>
         </div>
       </div>
@@ -441,7 +441,7 @@
               </span>
               <span class="text-[10px] font-black bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">A4 가로 권장</span>
             </div>
-            <p class="text-xs text-slate-500 font-bold mb-3">상단 결재란과 1~13주차 기호(⭕/△/⛪/❌), 대예배 분리 집계 및 안교 출석률이 반영된 분기 출석부입니다.</p>
+            <p class="text-xs text-slate-500 font-bold mb-3">상단 결재란과 1~13주차 기호(⭕/△/⛪/❌), 설교 예배 분리 집계 및 안교 출석률이 반영된 분기 출석부입니다.</p>
             <div class="flex space-x-2">
               <button onclick="window.appInstance.printReport(1)" class="w-1/2 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
                 <span>🖨️ A4 가로 인쇄</span>
@@ -622,7 +622,7 @@
             <input type="text" id="careReasonInput" required placeholder="예: 해외 출장, 입원 치료, 시험 준비 등" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none">
           </div>
           <div class="bg-blue-50 p-2.5 rounded-xl border border-blue-200 text-xs font-bold text-blue-900 leading-relaxed">
-            💡 <b>하이브리드 돌봄:</b> 사유를 기록하면 긴급 배너에서 제외되며, 성도가 다음 안식일에 <b>출석</b>하거나 대예배에 참석하면 경고 상태가 자동으로 리셋됩니다.
+            💡 <b>하이브리드 돌봄:</b> 사유를 기록하면 긴급 배너에서 제외되며, 성도가 다음 안식일에 <b>출석</b>하거나 설교 예배에 참석하면 경고 상태가 자동으로 리셋됩니다.
           </div>
           <div class="flex space-x-2 pt-1">
             <button type="button" onclick="window.appInstance.closeCareModal()" class="w-1/2 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black text-xs sm:text-sm tracking-tight rounded-xl transition">취소</button>
@@ -843,15 +843,15 @@
         if (!badge || !icon || !text) return;
 
         if (state === 'saved') {
-          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition shadow-2xs';
+          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition shadow-2xs flex-shrink-0';
           icon.textContent = '☁️';
           text.textContent = customText || '자동 저장됨';
         } else if (state === 'syncing') {
-          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-blue-50 text-blue-800 border border-blue-200 transition shadow-2xs';
+          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-blue-50 text-blue-800 border border-blue-200 transition shadow-2xs flex-shrink-0';
           icon.textContent = '🔄';
           text.textContent = customText || '저장 중...';
         } else if (state === 'offline') {
-          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-amber-50 text-amber-800 border border-amber-300 transition animate-pulse shadow-2xs';
+          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-amber-50 text-amber-800 border border-amber-300 transition animate-pulse shadow-2xs flex-shrink-0';
           icon.textContent = '⚠️';
           text.textContent = customText || '오프라인';
         }
@@ -981,7 +981,7 @@
           if (!this.classList.length) {
             this.classList = [
               { classId: 'ADMIN', className: '관리자 (교역자/전체)', leaderName: '교역자', isAdmin: true },
-              { classId: 'C01', className: '사랑반', leaderName: '최세원', isAdmin: false },
+              { classId: 'C01', className: '사랑반', leaderName: '최변근', isAdmin: false },
               { classId: 'C02', className: '기쁨반', leaderName: '서종헌', isAdmin: false },
               { classId: 'C03', className: '은혜반', leaderName: '김수희', isAdmin: false }
             ];
@@ -1167,7 +1167,6 @@
 
           let consecutiveCount = 0;
           for (let i = 0; i < memberRecs.length; i++) {
-            // 대예배에 참석한 경우(worshipAttended: true)는 교회에 온 것이므로 연속 결석 카운트 리셋
             if (memberRecs[i].status === '결석' && !memberRecs[i].worshipAttended) {
               consecutiveCount++;
             } else {
@@ -1237,7 +1236,6 @@
               this.calculateAndRenderStatistics();
             }
 
-            // 대예배 모달이 열려 있다면 목록 실시간 갱신
             const wModal = document.getElementById('worshipCheckModal');
             if (wModal && !wModal.classList.contains('pointer-events-none')) {
               this.renderWorshipCheckList();
@@ -1390,7 +1388,6 @@
         }
       }
 
-      // 💡 직분(장로님, 집사님, 성도님 등) 자동 반영 카톡 심방 문구
       copyKakaoCareMessage(memberId, consecutiveWeeks = 3) {
         const member = this.rawMembers.find(m => m.memberId === memberId);
         if (!member) return;
@@ -1578,7 +1575,6 @@ ${className} ${leaderName} 리더입니다.
         this.renderAttendanceList();
       }
 
-      // 💡 [2단 풀사이즈 왕버튼 구조 + 꽉 찬 글씨 크기]
       renderAttendanceList() {
         const container = document.getElementById('attendanceList');
         if (!container) return;
@@ -1635,7 +1631,7 @@ ${className} ${leaderName} 리더입니다.
             : '';
           
           let worshipBadgeHtml = isWorshipOnly
-            ? '<span class="text-xs font-black text-indigo-800 bg-indigo-100 border border-indigo-200 px-2 py-0.5 rounded-md">⛪ 2부예배 참석</span>'
+            ? '<span class="text-xs font-black text-indigo-800 bg-indigo-100 border border-indigo-200 px-2 py-0.5 rounded-md">⛪ 설교예배 참석</span>'
             : '';
 
           let urgentCareBtnHtml = isUrgentActive ? '<button onclick="window.appInstance.openCareModal(\'' + member.memberId + '\')" class="text-xs font-black text-red-700 bg-white border border-red-300 px-2 py-0.5 rounded-md hover:bg-red-50 transition">✍️ 심방완료</button>' : '';
@@ -1783,7 +1779,6 @@ ${className} ${leaderName} 리더입니다.
         this.triggerAutoSheetSync();
       }
 
-      // 💡 [관리자 전용: 2부 대예배 출석 체크 기능]
       openWorshipCheckModal() {
         if (!this.currentUser || !this.currentUser.isAdmin) return;
         const modal = document.getElementById('worshipCheckModal');
@@ -1815,16 +1810,14 @@ ${className} ${leaderName} 리더입니다.
         const curDate = document.getElementById('sabbathSelect')?.value;
         if (!curDate) return;
 
-        // 안교에 이미 '출석' 또는 '지각'한 사람은 자동 제외 -> '결석'이거나 '미체크'인 성도만 필터링
         const candidates = this.rawMembers.filter(m => {
           const rec = this.rawRecords.find(r => r.date === curDate && r.memberId === m.memberId);
           if (rec && (rec.status === '출석' || rec.status === '지각')) {
-            return false; // 안교 출석/지각자는 제외
+            return false;
           }
           return true;
         });
 
-        // 가나다순 정렬
         candidates.sort((a, b) => a.name.localeCompare(b.name, 'ko-KR'));
 
         if (countBadge) countBadge.textContent = `${candidates.length}명 대상`;
@@ -1857,7 +1850,7 @@ ${className} ${leaderName} 리더입니다.
                 ? 'bg-indigo-600 text-white shadow-2xs' 
                 : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100'
             }">
-              <span>${isAttended ? '⛪ 대예배 참석 완료' : '예배 미참석'}</span>
+              <span>${isAttended ? '⛪ 설교 참석 완료' : '예배 미참석'}</span>
             </button>
           `;
 
@@ -1886,7 +1879,6 @@ ${className} ${leaderName} 리더입니다.
         const nextState = rec ? !rec.worshipAttended : true;
 
         if (!rec) {
-          // 안교 레코드가 아예 없던 경우 -> status: "결석", score: 0.0, worshipAttended: true 로 신규 생성
           rec = {
             recordId: recordId,
             date: targetDate,
@@ -1895,7 +1887,7 @@ ${className} ${leaderName} 리더입니다.
             classId: member.classId,
             status: '결석',
             score: 0.0,
-            reason: '2부 대예배 참석',
+            reason: '설교 예배 참석',
             worshipAttended: true,
             checkedBy: this.currentUser?.leaderName || '관리자',
             updatedAt: new Date().toISOString()
@@ -1903,7 +1895,7 @@ ${className} ${leaderName} 리더입니다.
           this.rawRecords.push(rec);
         } else {
           rec.worshipAttended = nextState;
-          if (nextState && !rec.reason) rec.reason = '2부 대예배 참석';
+          if (nextState && !rec.reason) rec.reason = '설교 예배 참석';
           rec.updatedAt = new Date().toISOString();
         }
 
@@ -1912,7 +1904,6 @@ ${className} ${leaderName} 리더입니다.
           this.currentAttendance[memberId].status = rec.status;
         }
 
-        // 대예배 참석 시 결석 연속 카운트에서 안전하게 제외
         this.calculateConsecutiveAbsentees();
         this.updateAbsentBanner();
 
@@ -1921,7 +1912,7 @@ ${className} ${leaderName} 리더입니다.
             const docRef = doc(db, 'attendance_records', recordId);
             await setDoc(docRef, rec);
           } catch(e) {
-            console.error("Firestore 대예배 체크 오류:", e);
+            console.error("Firestore 설교 예배 체크 오류:", e);
           }
         }
 
@@ -1930,7 +1921,7 @@ ${className} ${leaderName} 리더입니다.
 
         this.renderWorshipCheckList();
         this.renderAttendanceList();
-        this.showToast(`✨ ${member.name} 성도 대예배 출석 ${nextState ? '확인' : '취소'}되었습니다.`, 'success');
+        this.showToast(`✨ ${member.name} 성도 설교 예배 출석 ${nextState ? '확인' : '취소'}되었습니다.`, 'success');
       }
 
       enqueueOfflineRecord(recordData) {
@@ -2252,7 +2243,7 @@ ${className} ${leaderName} 리더입니다.
               late++;
             } else if (rec.status === '결석') {
               if (rec.worshipAttended) {
-                iconHtml = '<span class="text-indigo-600 font-black text-lg" title="2부 대예배 참석">⛪</span>';
+                iconHtml = '<span class="text-indigo-600 font-black text-lg" title="설교 예배 참석">⛪</span>';
                 borderClass = 'border-indigo-200 bg-indigo-50/50';
                 worshipOnly++;
               } else {
@@ -2476,7 +2467,7 @@ ${className} ${leaderName} 리더입니다.
                     '<div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs">' +
                       '<div>' +
                         '<span class="font-black text-slate-900 text-sm">제' + (idx + 1) + '회차 (' + dateStr + ')</span>' +
-                        '<p class="text-[11px] text-slate-500 font-bold mt-0.5">총 ' + dayRecords.length + '명 기록 (대예배 추가 참석: ' + wCount + '명)</p>' +
+                        '<p class="text-[11px] text-slate-500 font-bold mt-0.5">총 ' + dayRecords.length + '명 기록 (설교 예배 추가 참석: ' + wCount + '명)</p>' +
                       '</div>' +
                       '<div class="flex items-center space-x-1.5 font-black text-xs">' +
                         '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">출석 ' + pCount + '</span>' +
@@ -2489,7 +2480,6 @@ ${className} ${leaderName} 리더입니다.
               '</div>';
           }
         } else if (type === 'care') {
-          // 💡 [심방 대상 팝업] 1:1:1 비율의 전화 / 문자 / 카톡 삼총사 버튼 탑재
           iconEl.textContent = '🚨';
           titleEl.textContent = '관심 및 심방 권장 대상';
           subEl.textContent = `${curQuarter} 안교 출석률 60% 미만 성도`;
@@ -2534,7 +2524,7 @@ ${className} ${leaderName} 리더입니다.
                           '<span class="text-[11px] font-black bg-red-100 text-red-700 px-1.5 py-0.5 rounded">' + rate + '%</span>' +
                         '</div>' +
                         '<p class="text-xs text-slate-600 font-bold mt-0.5">' +
-                          this.getClassName(m.classId) + ' · 결석 ' + m.absent + '회 (대예배 참석: ' + m.worshipOnly + '회)' +
+                          this.getClassName(m.classId) + ' · 결석 ' + m.absent + '회 (설교 예배 참석: ' + m.worshipOnly + '회)' +
                         '</p>' +
                       '</div>' +
                       '<div class="flex items-center gap-1.5 w-full sm:w-auto min-w-[210px]">' +
@@ -3405,7 +3395,7 @@ ${className} ${leaderName} 리더입니다.
         };
 
         if (type === 1) {
-          const headers = ['성명', '소속반', '직분', ...sabbaths.map((s, i) => `제${i+1}과(${s.monthNum}/${s.dayNum})`), '출석', '지각', '대예배', '결석', '출석률'];
+          const headers = ['성명', '소속반', '직분', ...sabbaths.map((s, i) => `제${i+1}과(${s.monthNum}/${s.dayNum})`), '출석', '지각', '설교예배', '결석', '출석률'];
           const sheetData = [];
           sheetData.push(headers.map(h => ({ v: h, s: styleHeader })));
 
@@ -3586,7 +3576,7 @@ ${className} ${leaderName} 리더입니다.
                 { v: c.leaderName, s: styleNormalCenter },
                 { v: `${cMembers.length}명`, s: styleNormalCenter },
                 ...qCells,
-                { v: yrRate, s: { font: { bold: true, color: { rgb: "059669" } }, alignment: { horizontal: "center" }, fill: { fgColor: { rgb: "F0FDF4" } } } }
+                { v: yrRate, s: { font: { bold: true, color: { rgb: "059669" } }, alignment: { horizontal: "center" } } }
               ]);
             });
 

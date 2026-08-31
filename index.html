@@ -32,8 +32,8 @@
       -webkit-tap-highlight-color: transparent;
     }
     .custom-scrollbar::-webkit-scrollbar {
-      width: 4px;
-      height: 4px;
+      width: 5px;
+      height: 5px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
       background-color: #cbd5e1;
@@ -44,7 +44,7 @@
     }
     @keyframes alert-pulse {
       0%, 100% { border-color: rgba(239, 68, 68, 1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-      50% { border-color: rgba(220, 38, 38, 0.6); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
+      50% { border-color: rgba(220, 38, 38, 0.6); box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); }
     }
     .pulse-danger {
       animation: alert-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -75,133 +75,133 @@
     }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white pb-4">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white pb-6">
 
   <!-- Top Navigation Bar -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-2xs backdrop-blur-md bg-white/95">
-    <div class="max-w-6xl mx-auto px-3 sm:px-6 h-13 sm:h-16 flex items-center justify-between">
-      <div class="flex items-center space-x-2">
-        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-base sm:text-xl shadow-md shadow-emerald-200 flex-shrink-0">
+    <div class="max-w-6xl mx-auto px-3.5 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-lg sm:text-xl shadow-md shadow-emerald-200 flex-shrink-0">
           ⛪
         </div>
         <div>
           <h1 class="text-base sm:text-lg font-black text-slate-900 leading-tight whitespace-nowrap">세종 조이 안식일학교</h1>
-          <p class="text-[10px] sm:text-xs text-slate-500 font-bold">스마트 출석 및 교인 돌봄 시스템</p>
+          <p class="text-[11px] sm:text-xs text-slate-500 font-bold">스마트 출석 및 교인 돌봄 시스템</p>
         </div>
       </div>
 
       <!-- User Badge & Actions -->
       <div id="userBadgeArea" class="hidden flex items-center space-x-1.5 sm:space-x-2">
-        <button onclick="window.appInstance.openExportModal()" class="px-2 sm:px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs sm:text-sm font-black rounded-lg border border-slate-300 transition flex items-center space-x-1 shadow-2xs">
+        <button onclick="window.appInstance.openExportModal()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs sm:text-sm font-black rounded-lg border border-slate-300 transition flex items-center space-x-1 shadow-2xs">
           <span>🖨️ 인쇄/엑셀</span>
         </button>
         <div class="text-right hidden sm:block">
           <span id="headerClassName" class="text-xs font-black text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">반명</span>
           <p id="headerLeaderName" class="text-xs text-slate-700 font-bold mt-0.5">리더님</p>
         </div>
-        <button id="logoutBtn" class="px-2 py-1.5 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg border border-slate-200 transition">
+        <button id="logoutBtn" class="px-2.5 py-1.5 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg border border-slate-200 transition">
           로그아웃
         </button>
       </div>
     </div>
   </header>
 
-  <main class="flex-1 max-w-6xl w-full mx-auto p-2 sm:p-4">
+  <main class="flex-1 max-w-6xl w-full mx-auto p-2.5 sm:p-5">
 
     <!-- 1. LOGIN SCREEN -->
-    <section id="loginSection" class="max-w-md mx-auto my-6 sm:my-10">
+    <section id="loginSection" class="max-w-md mx-auto my-6 sm:my-12">
       <div class="bg-white rounded-2xl shadow-xl border border-slate-100 p-5 sm:p-7">
-        <div class="text-center mb-5">
-          <div class="inline-flex items-center justify-center w-12 h-12 bg-emerald-100 text-emerald-700 rounded-2xl text-2xl mb-2 shadow-inner">
+        <div class="text-center mb-6">
+          <div class="inline-flex items-center justify-center w-14 h-14 bg-emerald-100 text-emerald-700 rounded-2xl text-2xl mb-2.5 shadow-inner">
             🔐
           </div>
           <h2 class="text-xl sm:text-2xl font-black text-slate-900">반별 간편 로그인</h2>
           <p class="text-xs sm:text-sm text-slate-500 mt-1 font-bold">담당 교과반을 선택하고 접속 비밀번호(PIN)를 입력하세요.</p>
         </div>
 
-        <form id="loginForm" class="space-y-3.5" onsubmit="event.preventDefault(); window.appInstance.handleLogin();">
+        <form id="loginForm" class="space-y-4" onsubmit="event.preventDefault(); window.appInstance.handleLogin();">
           <div>
-            <label class="block text-xs sm:text-sm font-black text-slate-700 mb-1">교과반 선택</label>
+            <label class="block text-xs sm:text-sm font-black text-slate-700 mb-1.5">교과반 선택</label>
             <select id="classSelect" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-base font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">
               <option value="">반 목록을 불러오는 중...</option>
             </select>
           </div>
 
           <div>
-            <label class="block text-xs sm:text-sm font-black text-slate-700 mb-1">접속 비밀번호 (PIN)</label>
+            <label class="block text-xs sm:text-sm font-black text-slate-700 mb-1.5">접속 비밀번호 (PIN)</label>
             <input type="password" id="pinInput" placeholder="비밀번호 입력 (예: joy2026!)" autocomplete="current-password" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-base sm:text-lg font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none tracking-wider transition">
           </div>
 
-          <button type="submit" id="loginSubmitBtn" class="w-full py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-base sm:text-lg font-black tracking-tight rounded-xl shadow-md shadow-emerald-200 transition flex items-center justify-center space-x-2">
+          <button type="submit" id="loginSubmitBtn" class="w-full py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-base sm:text-lg font-black tracking-tight rounded-xl shadow-lg shadow-emerald-200 transition flex items-center justify-center space-x-2">
             <span>출석부 접속하기</span>
             <span class="text-lg">➔</span>
           </button>
         </form>
 
-        <div class="mt-4 pt-3 border-t border-slate-100 text-center">
-          <p class="text-[11px] text-slate-400 font-bold">💡 실시간 동기화로 체크 즉시 모든 리더/교역자 화면에 0.05초 만에 반영됩니다.</p>
+        <div class="mt-5 pt-4 border-t border-slate-100 text-center">
+          <p class="text-xs text-slate-400 font-bold">💡 실시간 동기화로 체크 즉시 모든 리더/교역자 화면에 0.05초 만에 반영됩니다.</p>
         </div>
       </div>
     </section>
 
     <!-- 2. MAIN APP DASHBOARD -->
-    <section id="appSection" class="hidden space-y-2.5">
+    <section id="appSection" class="hidden space-y-3 sm:space-y-3.5">
 
       <!-- 🚨 3주 연속 결석자 긴급 알림 배너 -->
-      <div id="absentAlertBanner" class="hidden bg-gradient-to-r from-red-50 to-amber-50 border-l-4 border-red-500 rounded-xl p-2.5 sm:p-3 shadow-2xs">
+      <div id="absentAlertBanner" class="hidden bg-gradient-to-r from-red-50 to-amber-50 border-l-4 border-red-500 rounded-xl p-3 sm:p-4 shadow-sm">
         <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-2">
-            <div class="p-1 bg-red-100 text-red-600 rounded-lg text-sm pulse-danger">🚨</div>
+          <div class="flex items-center space-x-2.5">
+            <div class="p-1.5 bg-red-100 text-red-600 rounded-lg text-base pulse-danger">🚨</div>
             <div>
-              <h3 class="text-xs sm:text-sm font-black text-red-900">
+              <h3 class="text-sm sm:text-base font-black text-red-900">
                 긴급 심방 필요 성도 (<span id="alertCount">0</span>명)
               </h3>
-              <p class="text-[10px] sm:text-xs text-red-700 font-bold">3주 이상 연속 결석 성도입니다. 안부 확인 후 심방완료 처리를 진행하세요.</p>
+              <p class="text-xs text-red-700 font-bold">3주 이상 연속 결석 성도입니다. 안부 확인 후 심방완료 처리를 진행하세요.</p>
             </div>
           </div>
-          <button onclick="window.appInstance.openUrgentModal()" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white font-black text-xs tracking-tight whitespace-nowrap rounded-lg transition shadow-2xs">
+          <button onclick="window.appInstance.openUrgentModal()" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-black text-xs sm:text-sm tracking-tight whitespace-nowrap rounded-lg transition shadow-xs">
             명단 및 심방
           </button>
         </div>
       </div>
 
-      <!-- Navigation Tabs -->
-      <div class="flex items-center space-x-1 bg-slate-200/90 p-1 rounded-xl w-full sm:w-max">
-        <button onclick="window.appInstance.switchTab('check')" id="tabBtn-check" class="tab-btn flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs sm:text-sm font-black tracking-tight whitespace-nowrap bg-white text-emerald-800 shadow-2xs transition">
+      <!-- Navigation Tabs: 큼직하고 시원시원한 버튼 크기 복원 -->
+      <div class="flex items-center space-x-1 bg-slate-200/90 p-1.5 rounded-2xl w-full sm:w-max shadow-inner">
+        <button onclick="window.appInstance.switchTab('check')" id="tabBtn-check" class="tab-btn flex-1 sm:flex-initial px-3.5 py-2 rounded-xl text-sm sm:text-base font-black tracking-tight whitespace-nowrap bg-white text-emerald-800 shadow-sm transition">
           ✍️ 출석 체크 (실시간)
         </button>
-        <button onclick="window.appInstance.switchTab('stats')" id="tabBtn-stats" class="tab-btn flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs sm:text-sm font-black tracking-tight whitespace-nowrap text-slate-600 hover:text-slate-900 transition">
+        <button onclick="window.appInstance.switchTab('stats')" id="tabBtn-stats" class="tab-btn flex-1 sm:flex-initial px-3.5 py-2 rounded-xl text-sm sm:text-base font-black tracking-tight whitespace-nowrap text-slate-600 hover:text-slate-900 transition">
           📊 출석 통계
         </button>
-        <button onclick="window.appInstance.switchTab('members')" id="tabBtn-members" class="tab-btn flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs sm:text-sm font-black tracking-tight whitespace-nowrap text-slate-600 hover:text-slate-900 transition">
+        <button onclick="window.appInstance.switchTab('members')" id="tabBtn-members" class="tab-btn flex-1 sm:flex-initial px-3.5 py-2 rounded-xl text-sm sm:text-base font-black tracking-tight whitespace-nowrap text-slate-600 hover:text-slate-900 transition">
           👥 교인 명부
         </button>
       </div>
 
       <!-- TAB 1: ATTENDANCE CHECK VIEW -->
-      <div id="tabContent-check" class="space-y-2">
+      <div id="tabContent-check" class="space-y-2.5">
         
         <!-- [관리자 전용] 상단 실시간 반별 실제 출석 현황 바 -->
-        <div id="adminClassStatusBarWrap" class="hidden bg-white p-2 rounded-xl border border-slate-200 shadow-2xs">
-          <div class="text-[10px] font-black text-slate-400 mb-1 flex items-center justify-between">
+        <div id="adminClassStatusBarWrap" class="hidden bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
+          <div class="text-[11px] font-black text-slate-400 mb-1 flex items-center justify-between">
             <span>⚡ 오늘 예배 실시간 출석 현황 (실제 참석 / 재적)</span>
-            <span class="text-[9px] text-slate-400">터치 시 해당 반으로 전환</span>
+            <span class="text-[10px] text-slate-400">터치 시 해당 반으로 전환</span>
           </div>
           <div id="classChipsContainer" class="flex items-center space-x-1.5 overflow-x-auto custom-scrollbar pb-0.5"></div>
         </div>
 
-        <!-- Controls Card: 요청하신 완벽한 2단 재배치 -->
-        <div class="bg-white rounded-xl border border-slate-200 p-2 sm:p-2.5 shadow-2xs space-y-2">
+        <!-- Controls Card: 2단 최적화 레이아웃 + 시원시원한 폰트 크기 -->
+        <div class="bg-white rounded-xl border border-slate-200 p-2.5 sm:p-3.5 shadow-xs space-y-2 sm:space-y-2.5">
           
           <!-- 1단 (윗줄): 년도 + 기수 (좌측) / ☁️ 자동 저장됨 (우측) -->
           <div class="flex items-center justify-between gap-2">
-            <div class="flex items-center space-x-1.5">
-              <select id="yearSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs sm:text-sm font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-2xs">
+            <div class="flex items-center space-x-1.5 sm:space-x-2">
+              <select id="yearSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-2xs">
                 <option value="2025">2025년</option>
                 <option value="2026" selected>2026년</option>
                 <option value="2027">2027년</option>
               </select>
-              <select id="quarterSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs sm:text-sm font-black text-emerald-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-2xs">
+              <select id="quarterSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-black text-emerald-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-2xs">
                 <option value="1기">1기</option>
                 <option value="2기">2기</option>
                 <option value="3기">3기</option>
@@ -209,8 +209,8 @@
               </select>
             </div>
 
-            <!-- 전원출석 버튼 위로 올라간 자동 저장됨 배지 -->
-            <div id="syncStatusBadge" class="inline-flex items-center space-x-1 px-2 py-1 rounded-lg text-[11px] font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition shadow-2xs">
+            <!-- 자동 저장됨 배지 -->
+            <div id="syncStatusBadge" class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition shadow-2xs">
               <span id="syncStatusIcon">☁️</span>
               <span id="syncStatusText">자동 저장됨</span>
             </div>
@@ -218,18 +218,18 @@
 
           <!-- 2단 (아랫줄): 큼직한 제O과 O월O일 (좌측) / ✨ 전원 출석 (우측) -->
           <div class="flex items-center justify-between gap-2">
-            <div class="flex-1 flex items-center space-x-1.5 min-w-0">
-              <select id="sabbathSelect" onchange="window.appInstance.onSabbathSelectChange()" class="flex-1 px-2.5 py-1.5 bg-emerald-50 border border-emerald-300 rounded-lg text-xs sm:text-sm font-black text-emerald-950 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-xs truncate"></select>
+            <div class="flex-1 flex items-center space-x-1.5 sm:space-x-2 min-w-0">
+              <select id="sabbathSelect" onchange="window.appInstance.onSabbathSelectChange()" class="flex-1 px-3 py-1.5 sm:py-2 bg-emerald-50 border border-emerald-300 rounded-xl text-sm sm:text-base font-black text-emerald-950 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-xs truncate"></select>
 
               <div id="adminClassFilterWrap" class="hidden flex-shrink-0">
-                <select id="adminClassFilter" onchange="window.appInstance.renderAttendanceList()" class="px-2 py-1.5 bg-amber-50 border border-amber-300 rounded-lg text-xs font-black text-amber-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                <select id="adminClassFilter" onchange="window.appInstance.renderAttendanceList()" class="px-2.5 py-1.5 sm:py-2 bg-amber-50 border border-amber-300 rounded-xl text-xs sm:text-sm font-black text-amber-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
                   <option value="ALL">전체 반 보기</option>
                 </select>
               </div>
             </div>
 
-            <!-- 자동저장 배지 바로 아래 위치한 전원 출석 버튼 -->
-            <button onclick="window.appInstance.markAllPresent()" class="px-2.5 sm:px-3 py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-lg transition border border-slate-200 flex items-center space-x-1 shadow-2xs flex-shrink-0">
+            <!-- 전원 출석 버튼 -->
+            <button onclick="window.appInstance.markAllPresent()" class="px-3 sm:px-3.5 py-1.5 sm:py-2 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-200 flex items-center space-x-1 shadow-2xs flex-shrink-0">
               <span>✨ 전원 출석</span>
             </button>
           </div>
@@ -237,63 +237,63 @@
         </div>
 
         <!-- Attendance Member List Card -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-2xs p-2 sm:p-3">
-          <div class="pb-2 mb-2 border-b border-slate-100 flex items-center justify-between">
-            <div class="flex items-center space-x-1.5">
-              <span class="text-xs sm:text-sm font-black text-slate-900">출석 명단</span>
-              <span id="memberCountBadge" class="text-[11px] bg-slate-100 text-slate-700 font-black px-1.5 py-0.2 rounded-full border border-slate-200">0명</span>
+        <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-3 sm:p-4">
+          <div class="pb-2.5 mb-2.5 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="text-sm sm:text-base font-black text-slate-900">출석 명단</span>
+              <span id="memberCountBadge" class="text-xs bg-slate-100 text-slate-700 font-black px-2 py-0.5 rounded-full border border-slate-200">0명</span>
             </div>
             <!-- Summary Stats -->
-            <div class="flex items-center space-x-1.5 text-[11px] font-black bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-200">
-              <span class="text-emerald-700">출석 <span id="summaryPresent" class="text-xs font-black">0</span></span>
+            <div class="flex items-center space-x-2 text-xs font-black bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200">
+              <span class="text-emerald-700">출석 <span id="summaryPresent" class="text-sm font-black">0</span></span>
               <span class="text-slate-300">|</span>
-              <span class="text-amber-700">지각 <span id="summaryLate" class="text-xs font-black">0</span></span>
+              <span class="text-amber-700">지각 <span id="summaryLate" class="text-sm font-black">0</span></span>
               <span class="text-slate-300">|</span>
-              <span class="text-red-600">결석 <span id="summaryAbsent" class="text-xs font-black">0</span></span>
+              <span class="text-red-600">결석 <span id="summaryAbsent" class="text-sm font-black">0</span></span>
             </div>
           </div>
 
           <!-- 개별 카드 목록 -->
-          <div id="attendanceList" class="grid grid-cols-1 gap-2"></div>
+          <div id="attendanceList" class="grid grid-cols-1 gap-2.5"></div>
         </div>
       </div>
 
       <!-- TAB 2: STATISTICS DASHBOARD VIEW -->
-      <div id="tabContent-stats" class="hidden space-y-2.5">
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <div onclick="window.appInstance.openStatDetailModal('members')" class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs hover:border-emerald-400 transition cursor-pointer select-none">
+      <div id="tabContent-stats" class="hidden space-y-3">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div onclick="window.appInstance.openStatDetailModal('members')" class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-400 transition cursor-pointer select-none">
             <div class="flex items-center justify-between">
-              <span class="text-[11px] font-bold text-slate-500">총 등록 교인</span>
+              <span class="text-xs font-bold text-slate-500">총 등록 교인</span>
               <span class="text-[10px] text-slate-400">🔍</span>
             </div>
-            <p id="statTotalMembers" class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">0명</p>
+            <p id="statTotalMembers" class="text-2xl font-black text-slate-900 mt-0.5">0명</p>
           </div>
-          <div onclick="window.appInstance.openStatDetailModal('rate')" class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs hover:border-emerald-400 transition cursor-pointer select-none">
+          <div onclick="window.appInstance.openStatDetailModal('rate')" class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-400 transition cursor-pointer select-none">
             <div class="flex items-center justify-between">
-              <span class="text-[11px] font-bold text-slate-500">평균 출석률</span>
+              <span class="text-xs font-bold text-slate-500">평균 출석률</span>
               <span class="text-[10px] text-slate-400">🔍</span>
             </div>
-            <p id="statAvgRate" class="text-xl sm:text-2xl font-black text-emerald-600 mt-0.5">0%</p>
+            <p id="statAvgRate" class="text-2xl font-black text-emerald-600 mt-0.5">0%</p>
           </div>
-          <div onclick="window.appInstance.openStatDetailModal('sabbaths')" class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs hover:border-emerald-400 transition cursor-pointer select-none">
+          <div onclick="window.appInstance.openStatDetailModal('sabbaths')" class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-400 transition cursor-pointer select-none">
             <div class="flex items-center justify-between">
-              <span class="text-[11px] font-bold text-slate-500">누적 예배 수</span>
+              <span class="text-xs font-bold text-slate-500">누적 예배 수</span>
               <span class="text-[10px] text-slate-400">🔍</span>
             </div>
-            <p id="statTotalSabbaths" class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">0회</p>
+            <p id="statTotalSabbaths" class="text-2xl font-black text-slate-900 mt-0.5">0회</p>
           </div>
-          <div onclick="window.appInstance.openStatDetailModal('care')" class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs hover:border-red-400 transition cursor-pointer select-none">
+          <div onclick="window.appInstance.openStatDetailModal('care')" class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs hover:border-red-400 transition cursor-pointer select-none">
             <div class="flex items-center justify-between">
-              <span class="text-[11px] font-bold text-red-600">심방 대상</span>
+              <span class="text-xs font-bold text-red-600">심방 대상</span>
               <span class="text-[10px] text-red-400 font-bold animate-pulse">🚨</span>
             </div>
-            <p id="statCareCount" class="text-xl sm:text-2xl font-black text-red-500 mt-0.5">0명</p>
+            <p id="statCareCount" class="text-2xl font-black text-red-500 mt-0.5">0명</p>
           </div>
         </div>
 
-        <!-- 💡 주차별 출석 추이 그래프: 높이를 아담하게 줄임 (h-36 sm:h-44) -->
-        <div class="bg-white p-2.5 sm:p-3 rounded-xl border border-slate-200 shadow-2xs">
-          <h3 class="text-xs sm:text-sm font-black text-slate-900 mb-1.5 flex items-center justify-between">
+        <!-- 슬림화된 주차별 그래프 (h-36 sm:h-44) -->
+        <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-xs">
+          <h3 class="text-xs sm:text-sm font-black text-slate-900 mb-2 flex items-center justify-between">
             <span>📈 주차별 출석 인원 추이</span>
             <span class="text-[10px] font-bold text-slate-400">실시간 데이터</span>
           </h3>
@@ -303,24 +303,24 @@
         </div>
 
         <!-- 개인별 출석 -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-          <div class="px-3 py-2 border-b border-slate-100 flex items-center justify-between">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+          <div class="px-3.5 py-2.5 border-b border-slate-100 flex items-center justify-between">
             <div>
               <h3 class="text-xs sm:text-sm font-black text-slate-900">개인별 출석</h3>
               <p class="text-[10px] text-slate-400 font-bold">성명을 터치하면 과별 세부 출석 팝업이 표시됩니다.</p>
             </div>
-            <span class="text-[10px] text-slate-500 font-bold bg-slate-100 px-1.5 py-0.5 rounded">출석 1.0 / 지각 0.5 / 결석 0</span>
+            <span class="text-[10px] text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded">출석 1.0 / 지각 0.5 / 결석 0</span>
           </div>
           <div class="overflow-x-auto custom-scrollbar">
-            <table class="w-full text-left text-xs">
+            <table class="w-full text-left text-xs sm:text-sm">
               <thead class="bg-slate-50 text-slate-600 font-black border-b border-slate-100">
                 <tr>
-                  <th class="py-2 px-2.5">성명</th>
-                  <th class="py-2 px-2.5">소속반</th>
-                  <th class="py-2 px-2 text-center text-emerald-700">출석</th>
-                  <th class="py-2 px-2 text-center text-amber-700">지각</th>
-                  <th class="py-2 px-2 text-center text-red-600">결석</th>
-                  <th class="py-2 px-2.5 text-right">출석률</th>
+                  <th class="py-2.5 px-3">성명</th>
+                  <th class="py-2.5 px-3">소속반</th>
+                  <th class="py-2.5 px-2.5 text-center text-emerald-700">출석</th>
+                  <th class="py-2.5 px-2.5 text-center text-amber-700">지각</th>
+                  <th class="py-2.5 px-2.5 text-center text-red-600">결석</th>
+                  <th class="py-2.5 px-3 text-right">출석률</th>
                 </tr>
               </thead>
               <tbody id="memberStatsTableBody" class="divide-y divide-slate-100 font-black"></tbody>
@@ -330,28 +330,27 @@
       </div>
 
       <!-- TAB 3: MEMBER DIRECTORY VIEW -->
-      <div id="tabContent-members" class="hidden space-y-2">
-        <div class="bg-white rounded-xl border border-slate-200 shadow-2xs p-2.5 sm:p-3">
-          <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
-            <input type="text" id="memberSearchInput" oninput="window.appInstance.filterMemberList()" placeholder="이름 또는 직분 검색..." class="flex-1 min-w-0 px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">
+      <div id="tabContent-members" class="hidden space-y-2.5">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-3 sm:p-4">
+          <div class="flex items-center justify-between gap-2.5 pb-2.5 border-b border-slate-100">
+            <input type="text" id="memberSearchInput" oninput="window.appInstance.filterMemberList()" placeholder="이름 또는 직분 검색..." class="flex-1 min-w-0 px-3 py-1.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">
             
-            <!-- 관리자 전용 등록 버튼 -->
-            <button id="adminNewMemberBtn" onclick="window.appInstance.openNewMemberModal()" class="hidden px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-black rounded-lg transition shadow-2xs whitespace-nowrap flex items-center space-x-1 flex-shrink-0">
+            <button id="adminNewMemberBtn" onclick="window.appInstance.openNewMemberModal()" class="hidden px-3 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl transition shadow-xs whitespace-nowrap flex items-center space-x-1 flex-shrink-0">
               <span>➕</span>
               <span>새가족/방문자</span>
             </button>
           </div>
 
-          <!-- 💡 교인 명부 테이블: 이름, 소속반, 직분, 상태 1줄 표시 + 전화번호 2줄 래핑 -->
+          <!-- 교인 명부 테이블: 이름, 소속반, 직분, 상태 1줄 표시 + 전화번호 2줄 쪼개기 -->
           <div class="overflow-x-auto mt-2 custom-scrollbar">
-            <table class="w-full text-left text-xs font-medium">
+            <table class="w-full text-left text-xs sm:text-sm font-medium">
               <thead class="bg-slate-50 text-slate-600 font-black border-b border-slate-100">
                 <tr>
-                  <th class="py-2 px-2 whitespace-nowrap">이름</th>
-                  <th class="py-2 px-2 whitespace-nowrap">소속반</th>
-                  <th class="py-2 px-1.5 whitespace-nowrap">직분</th>
-                  <th class="py-2 px-2 whitespace-nowrap">연락처</th>
-                  <th class="py-2 px-2 text-center whitespace-nowrap">상태</th>
+                  <th class="py-2.5 px-2.5 whitespace-nowrap">이름</th>
+                  <th class="py-2.5 px-2.5 whitespace-nowrap">소속반</th>
+                  <th class="py-2.5 px-2 whitespace-nowrap">직분</th>
+                  <th class="py-2.5 px-2.5 whitespace-nowrap">연락처</th>
+                  <th class="py-2.5 px-2 text-center whitespace-nowrap">상태</th>
                 </tr>
               </thead>
               <tbody id="memberDirectoryBody" class="divide-y divide-slate-100"></tbody>
@@ -363,133 +362,133 @@
     </section>
 
     <!-- [보고서 인쇄 및 엑셀 다운로드 모달] -->
-    <div id="exportModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 transition-opacity duration-200 opacity-0 pointer-events-none">
+    <div id="exportModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3.5 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-xl overflow-hidden transform scale-95 transition-transform duration-200" id="exportModalBox">
-        <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
           <div class="flex items-center space-x-2">
-            <span class="text-lg">🖨️</span>
+            <span class="text-xl">🖨️</span>
             <div>
-              <h3 class="text-sm sm:text-base font-black text-slate-900 leading-tight">보고서 인쇄 및 엑셀 내보내기</h3>
-              <p class="text-[11px] text-slate-500 font-bold">원하는 행정 양식을 선택해 출력하거나 다운로드하세요</p>
+              <h3 class="text-base sm:text-lg font-black text-slate-900 leading-tight">보고서 인쇄 및 엑셀 내보내기</h3>
+              <p class="text-xs text-slate-500 font-bold">원하는 행정 양식을 선택해 출력하거나 다운로드하세요</p>
             </div>
           </div>
           <button onclick="window.appInstance.closeExportModal()" class="text-slate-400 hover:text-slate-800 text-lg font-bold p-1">✕</button>
         </div>
 
-        <div class="p-3.5 space-y-2.5 max-h-[75vh] overflow-y-auto custom-scrollbar">
+        <div class="p-4 space-y-3 max-h-[75vh] overflow-y-auto custom-scrollbar">
           <!-- 서식 1: 반별 13주 종합 출석부 -->
-          <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl hover:border-emerald-400 transition">
-            <div class="flex items-center justify-between mb-1">
-              <span class="font-black text-slate-900 text-xs sm:text-sm flex items-center space-x-1.5">
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl hover:border-emerald-400 transition">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="font-black text-slate-900 text-sm sm:text-base flex items-center space-x-1.5">
                 <span>📄</span>
                 <span>1. 반별 13주 종합 출석부</span>
               </span>
-              <span class="text-[9px] font-black bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded">A4 가로 권장</span>
+              <span class="text-[10px] font-black bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">A4 가로 권장</span>
             </div>
-            <p class="text-[11px] text-slate-500 font-bold mb-2">상단 결재란과 1~13주차 기호(⭕/△/❌), 출석률이 컬러로 반영된 분기 출석부입니다.</p>
+            <p class="text-xs text-slate-500 font-bold mb-3">상단 결재란과 1~13주차 기호(⭕/△/❌), 누적 출석률이 컬러로 반영된 분기 출석부입니다.</p>
             <div class="flex space-x-2">
-              <button onclick="window.appInstance.printReport(1)" class="w-1/2 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
+              <button onclick="window.appInstance.printReport(1)" class="w-1/2 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
                 <span>🖨️ A4 가로 인쇄</span>
               </button>
-              <button onclick="window.appInstance.exportExcel(1)" class="w-1/2 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-black text-xs rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
-                <span>📥 컬러 엑셀 다운</span>
+              <button onclick="window.appInstance.exportExcel(1)" class="w-1/2 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
+                <span>📥 컬러 엑셀 다운로드</span>
               </button>
             </div>
           </div>
 
           <!-- 서식 2: 전체 반 종합 결산 보고서 -->
-          <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl hover:border-blue-400 transition">
-            <div class="flex items-center justify-between mb-1">
-              <span class="font-black text-slate-900 text-xs sm:text-sm flex items-center space-x-1.5">
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl hover:border-blue-400 transition">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="font-black text-slate-900 text-sm sm:text-base flex items-center space-x-1.5">
                 <span>📊</span>
                 <span>2. 전체 반 종합 결산 보고서</span>
               </span>
-              <span class="text-[9px] font-black bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded">A4 세로</span>
+              <span class="text-[10px] font-black bg-blue-100 text-blue-800 px-2 py-0.5 rounded">A4 세로</span>
             </div>
-            <p class="text-[11px] text-slate-500 font-bold mb-2">분기 선택 시 1~13과 출석자 수 매트릭스, 연간 선택 시 1~4기 분기별 비교표가 생성됩니다.</p>
-            <div class="bg-white p-2 rounded-lg border border-slate-200 space-y-1 mb-2 text-xs font-black text-slate-700 flex items-center justify-between">
-              <span>결산 구분:</span>
-              <div class="space-x-2">
+            <p class="text-xs text-slate-500 font-bold mb-2">분기 선택 시 1~13과 출석자 수 매트릭스, 연간 선택 시 1~4기 분기별 비교표가 생성됩니다.</p>
+            <div class="bg-white p-2.5 rounded-lg border border-slate-200 space-y-2 mb-3 text-xs font-black text-slate-700 flex items-center justify-between">
+              <span>결산 양식 구분:</span>
+              <div class="space-x-3">
                 <label class="cursor-pointer inline-flex items-center space-x-1">
                   <input type="radio" name="reportPeriod" value="quarter" checked class="text-blue-600 focus:ring-blue-500">
                   <span>선택 분기 (<span id="modalSelectedQuarter">3기</span>)</span>
                 </label>
                 <label class="cursor-pointer inline-flex items-center space-x-1">
                   <input type="radio" name="reportPeriod" value="year" class="text-blue-600 focus:ring-blue-500">
-                  <span>연간 종합</span>
+                  <span>1개년 종합</span>
                 </label>
               </div>
             </div>
             <div class="flex space-x-2">
-              <button onclick="window.appInstance.printReport(2)" class="w-1/2 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
+              <button onclick="window.appInstance.printReport(2)" class="w-1/2 py-2 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
                 <span>🖨️ 결산 인쇄</span>
               </button>
-              <button onclick="window.appInstance.exportExcel(2)" class="w-1/2 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-black text-xs rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
-                <span>📥 엑셀 다운</span>
+              <button onclick="window.appInstance.exportExcel(2)" class="w-1/2 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
+                <span>📥 컬러 엑셀 다운로드</span>
               </button>
             </div>
           </div>
 
           <!-- 서식 3: 주간 현장 수기 체크표 -->
-          <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl hover:border-amber-400 transition">
-            <div class="flex items-center justify-between mb-1">
-              <span class="font-black text-slate-900 text-xs sm:text-sm flex items-center space-x-1.5">
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl hover:border-amber-400 transition">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="font-black text-slate-900 text-sm sm:text-base flex items-center space-x-1.5">
                 <span>📝</span>
                 <span>3. 당일 현장 수기 출석 체크표</span>
               </span>
-              <span class="text-[9px] font-black bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded">현장 비치용</span>
+              <span class="text-[10px] font-black bg-amber-100 text-amber-800 px-2 py-0.5 rounded">현장 비치용</span>
             </div>
-            <p class="text-[11px] text-slate-500 font-bold mb-2">스마트폰 사용이 익숙지 않은 리더를 위해 현장에서 볼펜으로 체크할 수 있는 인쇄물입니다.</p>
-            <button onclick="window.appInstance.printReport(3)" class="w-full py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-black text-xs rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
+            <p class="text-xs text-slate-500 font-bold mb-3">스마트폰 사용이 익숙지 않은 리더를 위해 현장에서 손으로 체크할 수 있는 인쇄물입니다.</p>
+            <button onclick="window.appInstance.printReport(3)" class="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
               <span>🖨️ 수기 체크표 인쇄하기</span>
             </button>
           </div>
 
           <!-- 서식 4: 심방 및 돌봄 대상자 명부 -->
-          <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl hover:border-red-400 transition">
-            <div class="flex items-center justify-between mb-1">
-              <span class="font-black text-slate-900 text-xs sm:text-sm flex items-center space-x-1.5">
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl hover:border-red-400 transition">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="font-black text-slate-900 text-sm sm:text-base flex items-center space-x-1.5">
                 <span>🚨</span>
                 <span>4. 심방 및 돌봄 대상자 명부</span>
               </span>
-              <span class="text-[9px] font-black bg-red-100 text-red-800 px-1.5 py-0.2 rounded">목회/심방용</span>
+              <span class="text-[10px] font-black bg-red-100 text-red-800 px-2 py-0.5 rounded">목회/심방용</span>
             </div>
-            <p class="text-[11px] text-slate-500 font-bold mb-2">3주 연속 결석자 및 출석률 60% 미만 성도 명단과 사유 메모가 정리된 서식입니다.</p>
+            <p class="text-xs text-slate-500 font-bold mb-3">3주 연속 결석자 및 출석률 60% 미만 성도 명단과 사유 메모가 정리된 서식입니다.</p>
             <div class="flex space-x-2">
-              <button onclick="window.appInstance.printReport(4)" class="w-1/2 py-1.5 bg-red-600 hover:bg-red-700 text-white font-black text-xs rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
+              <button onclick="window.appInstance.printReport(4)" class="w-1/2 py-2 bg-red-600 hover:bg-red-700 text-white font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
                 <span>🖨️ 바로 인쇄</span>
               </button>
-              <button onclick="window.appInstance.exportExcel(4)" class="w-1/2 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-black text-xs rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
-                <span>📥 엑셀 다운</span>
+              <button onclick="window.appInstance.exportExcel(4)" class="w-1/2 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-black text-xs sm:text-sm rounded-lg transition flex items-center justify-center space-x-1 shadow-2xs">
+                <span>📥 엑셀 다운로드</span>
               </button>
             </div>
           </div>
 
-          <!-- 관리자 전용 테스트 데이터 초기화 -->
-          <div id="adminResetSection" class="hidden p-3 bg-red-50 border border-red-300 rounded-xl space-y-1.5">
+          <!-- 관리자 전용 데이터 초기화 -->
+          <div id="adminResetSection" class="hidden p-3.5 bg-red-50 border border-red-300 rounded-xl space-y-2">
             <div class="flex items-center justify-between">
-              <span class="font-black text-red-900 text-xs flex items-center space-x-1">
+              <span class="font-black text-red-900 text-xs sm:text-sm flex items-center space-x-1.5">
                 <span>⚠️</span>
-                <span>관리자: 출석 데이터 초기화 (Reset)</span>
+                <span>관리자 전용: 출석 데이터 초기화 (Reset)</span>
               </span>
-              <span class="text-[9px] font-black bg-red-200 text-red-900 px-1.5 py-0.2 rounded">교역자/교장 전용</span>
+              <span class="text-[10px] font-black bg-red-200 text-red-900 px-2 py-0.5 rounded">교역자/교장 전용</span>
             </div>
-            <p class="text-[10px] text-red-700 font-bold">
+            <p class="text-[11px] text-red-700 font-bold leading-relaxed">
               테스트 중 입력된 출석 데이터를 안전하게 백지화합니다.
             </p>
-            <div class="flex space-x-2 pt-0.5">
-              <button onclick="window.appInstance.openResetConfirmModal('quarter')" class="w-1/2 py-1.5 bg-white border border-red-300 hover:bg-red-100 text-red-700 font-black text-xs rounded-lg transition">
+            <div class="flex space-x-2 pt-1">
+              <button onclick="window.appInstance.openResetConfirmModal('quarter')" class="w-1/2 py-2 bg-white border border-red-300 hover:bg-red-100 text-red-700 font-black text-xs rounded-lg transition shadow-2xs">
                 선택 분기 초기화
               </button>
-              <button onclick="window.appInstance.openResetConfirmModal('all')" class="w-1/2 py-1.5 bg-red-600 hover:bg-red-700 text-white font-black text-xs rounded-lg transition shadow-2xs">
+              <button onclick="window.appInstance.openResetConfirmModal('all')" class="w-1/2 py-2 bg-red-600 hover:bg-red-700 text-white font-black text-xs rounded-lg transition shadow-2xs">
                 전체 초기화
               </button>
             </div>
           </div>
         </div>
 
-        <div class="px-4 py-2.5 bg-slate-50 border-t border-slate-200 text-right">
-          <button onclick="window.appInstance.closeExportModal()" class="px-3.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black text-xs rounded-lg transition">
+        <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 text-right">
+          <button onclick="window.appInstance.closeExportModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black text-xs sm:text-sm rounded-lg transition">
             닫기
           </button>
         </div>
@@ -497,26 +496,26 @@
     </div>
 
     <!-- [데이터 초기화 2단계 확인창] -->
-    <div id="resetConfirmModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-3 transition-opacity duration-200 opacity-0 pointer-events-none">
+    <div id="resetConfirmModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-3.5 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border-2 border-red-500 w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-200" id="resetConfirmBox">
-        <div class="px-4 py-3 bg-red-50 border-b border-red-200 flex items-center justify-between">
-          <div class="flex items-center space-x-1.5">
-            <span class="text-lg animate-bounce">⚠️</span>
-            <h3 class="text-sm font-black text-red-900 leading-tight">데이터 초기화 최종 확인</h3>
+        <div class="px-5 py-3.5 bg-red-50 border-b border-red-200 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="text-xl animate-bounce">⚠️</span>
+            <h3 class="text-base font-black text-red-900 leading-tight">데이터 초기화 최종 확인</h3>
           </div>
           <button onclick="window.appInstance.closeResetConfirmModal()" class="text-slate-400 hover:text-slate-800 text-lg font-bold p-1">✕</button>
         </div>
-        <div class="p-3.5 space-y-2.5">
+        <div class="p-4 space-y-3">
           <p id="resetModalMsg" class="text-xs font-bold text-slate-700 leading-relaxed">
             데이터 삭제를 진행합니다.
           </p>
-          <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 text-xs text-slate-600 font-bold">
+          <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs text-slate-600 font-bold">
             실수 방지를 위해 아래 입력창에 <strong class="text-red-600 underline">초기화</strong> 라고 직접 입력하세요.
           </div>
-          <input type="text" id="resetConfirmInput" placeholder="'초기화' 입력" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-black text-center text-slate-900 focus:ring-2 focus:ring-red-500 focus:outline-none">
-          <div class="flex space-x-2 pt-1">
-            <button onclick="window.appInstance.closeResetConfirmModal()" class="w-1/2 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black text-xs rounded-xl transition">취소</button>
-            <button onclick="window.appInstance.executeDataReset()" class="w-1/2 py-2 bg-red-600 hover:bg-red-700 text-white font-black text-xs rounded-xl transition shadow-md">영구 삭제</button>
+          <input type="text" id="resetConfirmInput" placeholder="'초기화' 입력" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm font-black text-center text-slate-900 focus:ring-2 focus:ring-red-500 focus:outline-none">
+          <div class="flex space-x-2 pt-2">
+            <button onclick="window.appInstance.closeResetConfirmModal()" class="w-1/2 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black text-xs rounded-xl transition">취소</button>
+            <button onclick="window.appInstance.executeDataReset()" class="w-1/2 py-2.5 bg-red-600 hover:bg-red-700 text-white font-black text-xs rounded-xl transition shadow-md">영구 초기화 실행</button>
           </div>
         </div>
       </div>
@@ -525,21 +524,21 @@
     <!-- Urgent Absentee 3-Week Modal -->
     <div id="urgentAlertModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border-2 border-red-400 w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-200" id="urgentModalBox">
-        <div class="px-4 py-2.5 bg-red-50 border-b border-red-100 flex items-center justify-between">
-          <div class="flex items-center space-x-1.5">
-            <span class="text-lg animate-bounce">🚨</span>
+        <div class="px-4 py-3 bg-red-50 border-b border-red-100 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="text-xl animate-bounce">🚨</span>
             <div>
-              <h3 class="text-sm sm:text-base font-black text-red-900 leading-tight">심방 및 돌봄 긴급 알림</h3>
-              <p class="text-[10px] text-red-600 font-bold">3주 이상 연속 결석 성도 명단</p>
+              <h3 class="text-base sm:text-lg font-black text-red-900 leading-tight">심방 및 돌봄 긴급 알림</h3>
+              <p class="text-xs text-red-600 font-bold">3주 이상 연속 결석 성도 명단</p>
             </div>
           </div>
           <button onclick="window.appInstance.closeUrgentModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg p-1">✕</button>
         </div>
 
-        <div id="urgentModalList" class="p-3 max-h-[65vh] overflow-y-auto custom-scrollbar space-y-2"></div>
+        <div id="urgentModalList" class="p-3.5 max-h-[65vh] overflow-y-auto custom-scrollbar space-y-2"></div>
 
-        <div class="px-4 py-2.5 bg-slate-50 border-t border-slate-100 text-right">
-          <button onclick="window.appInstance.closeUrgentModal()" class="w-full py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-black text-xs sm:text-sm tracking-tight rounded-xl transition">
+        <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 text-right">
+          <button onclick="window.appInstance.closeUrgentModal()" class="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white font-black text-sm sm:text-base tracking-tight rounded-xl transition">
             확인 완료
           </button>
         </div>
@@ -549,29 +548,29 @@
     <!-- Care Visit Modal -->
     <div id="careVisitModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border-2 border-blue-300 w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200" id="careModalBox">
-        <div class="px-4 py-2.5 bg-blue-50 border-b border-blue-100 flex items-center justify-between">
-          <div class="flex items-center space-x-1.5">
-            <span class="text-lg">💬</span>
+        <div class="px-4 py-3 bg-blue-50 border-b border-blue-100 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="text-xl">💬</span>
             <div>
-              <h3 id="careModalTitle" class="text-sm sm:text-base font-black text-slate-900 leading-tight">심방 완료 처리</h3>
-              <p class="text-[10px] text-blue-700 font-bold">안부 확인 사유를 기록하세요</p>
+              <h3 id="careModalTitle" class="text-base font-black text-slate-900 leading-tight">심방 완료 처리</h3>
+              <p class="text-xs text-blue-700 font-bold">안부 확인 사유를 기록하세요</p>
             </div>
           </div>
           <button onclick="window.appInstance.closeCareModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg p-1">✕</button>
         </div>
 
-        <form onsubmit="event.preventDefault(); window.appInstance.submitCareVisit();" class="p-3.5 space-y-2.5">
+        <form onsubmit="event.preventDefault(); window.appInstance.submitCareVisit();" class="p-4 space-y-3">
           <input type="hidden" id="careMemberId">
           <div>
             <label class="block text-xs font-black text-slate-700 mb-1">심방 및 결석 사유 *</label>
-            <input type="text" id="careReasonInput" required placeholder="예: 해외 출장, 입원 치료, 시험 준비 등" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none">
+            <input type="text" id="careReasonInput" required placeholder="예: 해외 출장, 입원 치료, 시험 준비 등" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none">
           </div>
-          <div class="bg-blue-50 p-2 rounded-xl border border-blue-200 text-[11px] font-bold text-blue-900 leading-relaxed">
+          <div class="bg-blue-50 p-2.5 rounded-xl border border-blue-200 text-xs font-bold text-blue-900 leading-relaxed">
             💡 <b>하이브리드 돌봄:</b> 사유를 기록하면 긴급 배너에서 제외되며, 성도가 다음 안식일에 <b>출석</b>하면 경고 상태가 자동으로 리셋됩니다.
           </div>
           <div class="flex space-x-2 pt-1">
-            <button type="button" onclick="window.appInstance.closeCareModal()" class="w-1/2 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black text-xs tracking-tight rounded-xl transition">취소</button>
-            <button type="submit" class="w-1/2 py-2 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs tracking-tight rounded-xl transition shadow-md">심방 저장</button>
+            <button type="button" onclick="window.appInstance.closeCareModal()" class="w-1/2 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black text-xs sm:text-sm tracking-tight rounded-xl transition">취소</button>
+            <button type="submit" class="w-1/2 py-2 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs sm:text-sm tracking-tight rounded-xl transition shadow-md">심방 완료 저장</button>
           </div>
         </form>
       </div>
@@ -580,19 +579,19 @@
     <!-- Member Attendance Detail Modal -->
     <div id="memberDetailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-200" id="memberModalBox">
-        <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-          <div class="flex items-center space-x-1.5">
-            <span class="text-lg">📋</span>
+        <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="text-xl">📋</span>
             <div>
-              <h3 id="modalMemberName" class="text-sm sm:text-base font-black text-slate-900 leading-tight">성도명</h3>
-              <p id="modalMemberSub" class="text-[10px] text-slate-500 font-bold">소속반 및 출석 현황</p>
+              <h3 id="modalMemberName" class="text-base sm:text-lg font-black text-slate-900 leading-tight">성도명</h3>
+              <p id="modalMemberSub" class="text-xs text-slate-500 font-bold">소속반 및 출석 현황</p>
             </div>
           </div>
           <button onclick="window.appInstance.closeMemberDetailModal()" class="text-slate-400 hover:text-slate-800 text-lg font-bold p-1">✕</button>
         </div>
 
-        <div class="p-3 max-h-[70vh] overflow-y-auto custom-scrollbar space-y-2.5">
-          <div class="flex items-center justify-center space-x-2.5 bg-slate-100 py-1.5 rounded-xl text-xs font-black">
+        <div class="p-4 max-h-[70vh] overflow-y-auto custom-scrollbar space-y-3">
+          <div class="flex items-center justify-center space-x-3 bg-slate-100 py-1.5 rounded-xl text-xs font-black">
             <span class="text-emerald-700">⭕ 출석</span>
             <span class="text-amber-700">△ 지각</span>
             <span class="text-red-600">❌ 결석</span>
@@ -601,9 +600,9 @@
           <div id="modalLessonsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
         </div>
 
-        <div class="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs">
+        <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs">
           <span id="modalSummaryText" class="font-black text-slate-800">출석 0회 · 지각 0회 · 결석 0회</span>
-          <button onclick="window.appInstance.closeMemberDetailModal()" class="px-3 py-1 bg-slate-800 hover:bg-slate-900 text-white font-black tracking-tight rounded-lg transition">닫기</button>
+          <button onclick="window.appInstance.closeMemberDetailModal()" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-black tracking-tight rounded-lg transition">닫기</button>
         </div>
       </div>
     </div>
@@ -611,72 +610,72 @@
     <!-- Stat Card Detail Modal -->
     <div id="statDetailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-xl overflow-hidden transform scale-95 transition-transform duration-200" id="statModalBox">
-        <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-          <div class="flex items-center space-x-1.5">
-            <span id="statModalIcon" class="text-lg">📊</span>
+        <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span id="statModalIcon" class="text-xl">📊</span>
             <div>
-              <h3 id="statModalTitle" class="text-sm sm:text-base font-black text-slate-900 leading-tight">통계 상세 정보</h3>
-              <p id="statModalSub" class="text-[10px] text-slate-500 font-bold">분기 출석 분석 데이터</p>
+              <h3 id="statModalTitle" class="text-base sm:text-lg font-black text-slate-900 leading-tight">통계 상세 정보</h3>
+              <p id="statModalSub" class="text-xs text-slate-500 font-bold">분기 출석 분석 데이터</p>
             </div>
           </div>
           <button onclick="window.appInstance.closeStatDetailModal()" class="text-slate-400 hover:text-slate-800 text-lg font-bold p-1">✕</button>
         </div>
 
-        <div id="statModalBody" class="p-3 max-h-[70vh] overflow-y-auto custom-scrollbar space-y-2"></div>
+        <div id="statModalBody" class="p-4 max-h-[70vh] overflow-y-auto custom-scrollbar space-y-3"></div>
 
-        <div class="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs">
+        <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs">
           <span id="statModalFooterNote" class="text-slate-500 font-bold">실시간 동기화 데이터</span>
-          <button onclick="window.appInstance.closeStatDetailModal()" class="px-3 py-1 bg-slate-800 hover:bg-slate-900 text-white font-black tracking-tight rounded-lg transition">닫기</button>
+          <button onclick="window.appInstance.closeStatDetailModal()" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-black tracking-tight rounded-lg transition">닫기</button>
         </div>
       </div>
     </div>
 
-    <!-- [새가족 / 방문자 현장 등록 모달] -->
+    <!-- [신규 모달] 새가족 / 방문자 현장 등록 모달 (관리자 전용) -->
     <div id="newMemberModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border border-emerald-200 w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-200" id="newMemberModalBox">
-        <div class="px-4 py-2.5 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between">
-          <div class="flex items-center space-x-1.5">
-            <span class="text-lg">🌱</span>
+        <div class="px-4 py-3 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="text-xl">🌱</span>
             <div>
-              <h3 class="text-sm sm:text-base font-black text-emerald-900 leading-tight">새가족 / 방문자 등록</h3>
-              <p class="text-[10px] text-emerald-700 font-bold">교역자/관리자 전용 명부 추가</p>
+              <h3 class="text-base font-black text-emerald-900 leading-tight">새가족 / 방문자 등록</h3>
+              <p class="text-xs text-emerald-700 font-bold">교역자/관리자 전용 명부 추가</p>
             </div>
           </div>
           <button onclick="window.appInstance.closeNewMemberModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg p-1">✕</button>
         </div>
 
-        <form onsubmit="event.preventDefault(); window.appInstance.submitNewMember();" class="p-3.5 space-y-2.5">
+        <form onsubmit="event.preventDefault(); window.appInstance.submitNewMember();" class="p-4 space-y-3">
           <div>
-            <label class="block text-xs font-black text-slate-700 mb-0.5">성명 *</label>
-            <input type="text" id="newMemberName" required placeholder="예: 홍길동" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            <label class="block text-xs font-black text-slate-700 mb-1">성명 *</label>
+            <input type="text" id="newMemberName" required placeholder="예: 홍길동" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
           </div>
           <div>
-            <label class="block text-xs font-black text-slate-700 mb-0.5">연락처</label>
-            <input type="tel" id="newMemberPhone" placeholder="예: 010-1234-5678" class="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            <label class="block text-xs font-black text-slate-700 mb-1">연락처</label>
+            <input type="tel" id="newMemberPhone" placeholder="예: 010-1234-5678" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
           </div>
           
-          <div class="grid grid-cols-2 gap-2">
+          <div class="grid grid-cols-2 gap-2.5">
             <div>
-              <label class="block text-xs font-black text-slate-700 mb-0.5">등록 구분 *</label>
-              <select id="newMemberStatus" onchange="window.appInstance.onNewMemberTypeChange()" class="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+              <label class="block text-xs font-black text-slate-700 mb-1">등록 구분 *</label>
+              <select id="newMemberStatus" onchange="window.appInstance.onNewMemberTypeChange()" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                 <option value="새가족">🌱 정규 새가족</option>
                 <option value="방문자">🏷️ 단순 방문자</option>
               </select>
             </div>
             <div>
-              <label class="block text-xs font-black text-slate-700 mb-0.5">배정할 반 *</label>
-              <select id="newMemberClassSelect" class="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+              <label class="block text-xs font-black text-slate-700 mb-1">배정할 반 *</label>
+              <select id="newMemberClassSelect" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
               </select>
             </div>
           </div>
 
-          <p id="newMemberNotice" class="text-[10px] text-slate-500 font-bold leading-relaxed bg-slate-50 p-2 rounded-xl border border-slate-200">
+          <p id="newMemberNotice" class="text-[11px] text-slate-500 font-bold leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-200 mt-2">
             💡 <b>새가족:</b> 해당 반 정규 명부에 추가되며 주차별 출석 통계에 반영됩니다.
           </p>
 
-          <div class="flex space-x-2 pt-1">
-            <button type="button" onclick="window.appInstance.closeNewMemberModal()" class="w-1/2 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black text-xs tracking-tight rounded-xl transition">취소</button>
-            <button type="submit" class="w-1/2 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs tracking-tight rounded-xl transition shadow-md">명부에 등록</button>
+          <div class="flex space-x-2 pt-2">
+            <button type="button" onclick="window.appInstance.closeNewMemberModal()" class="w-1/2 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black text-xs sm:text-sm tracking-tight rounded-xl transition">취소</button>
+            <button type="submit" class="w-1/2 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm tracking-tight rounded-xl transition shadow-md">명부에 등록</button>
           </div>
         </form>
       </div>
@@ -687,14 +686,14 @@
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center transition-opacity duration-200 opacity-0 pointer-events-none">
-      <div class="bg-white p-4 rounded-2xl shadow-2xl flex flex-col items-center space-y-2 max-w-xs text-center">
-        <div class="w-7 h-7 border-3 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
-        <p id="loadingMessage" class="text-xs font-black text-slate-800">동기화 중입니다...</p>
+      <div class="bg-white p-5 rounded-2xl shadow-2xl flex flex-col items-center space-y-2.5 max-w-xs text-center">
+        <div class="w-8 h-8 border-3 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
+        <p id="loadingMessage" class="text-xs sm:text-sm font-black text-slate-800">동기화 중입니다...</p>
       </div>
     </div>
 
     <!-- Toast Box -->
-    <div id="toast" class="fixed bottom-3 right-3 z-50 transform translate-y-16 opacity-0 transition-all duration-300 pointer-events-none bg-slate-900 text-white px-3.5 py-2 rounded-xl shadow-2xl flex items-center space-x-1.5 text-xs font-black">
+    <div id="toast" class="fixed bottom-4 right-4 z-50 transform translate-y-16 opacity-0 transition-all duration-300 pointer-events-none bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-2xl flex items-center space-x-2 text-xs sm:text-sm font-black">
       <span id="toastIcon">✨</span>
       <span id="toastMsg">알림 메시지</span>
     </div>
@@ -768,7 +767,7 @@
       setupNetworkListeners() {
         window.addEventListener('online', () => {
           this.isOnline = true;
-          this.updateCloudStatusBadge('syncing', '동기화 중...');
+          this.updateCloudStatusBadge('syncing', '온라인 복구! 동기화 중...');
           this.showToast('🌐 인터넷이 다시 연결되었습니다.', 'success');
           this.processOfflineQueue();
         });
@@ -787,15 +786,15 @@
         if (!badge || !icon || !text) return;
 
         if (state === 'saved') {
-          badge.className = 'inline-flex items-center space-x-1 px-2 py-1 rounded-lg text-[11px] font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition shadow-2xs';
+          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition shadow-2xs';
           icon.textContent = '☁️';
           text.textContent = customText || '자동 저장됨';
         } else if (state === 'syncing') {
-          badge.className = 'inline-flex items-center space-x-1 px-2 py-1 rounded-lg text-[11px] font-black bg-blue-50 text-blue-800 border border-blue-200 transition shadow-2xs';
+          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-blue-50 text-blue-800 border border-blue-200 transition shadow-2xs';
           icon.textContent = '🔄';
           text.textContent = customText || '저장 중...';
         } else if (state === 'offline') {
-          badge.className = 'inline-flex items-center space-x-1 px-2 py-1 rounded-lg text-[11px] font-black bg-amber-50 text-amber-800 border border-amber-300 transition animate-pulse shadow-2xs';
+          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-amber-50 text-amber-800 border border-amber-300 transition animate-pulse shadow-2xs';
           icon.textContent = '⚠️';
           text.textContent = customText || '오프라인';
         }
@@ -870,7 +869,7 @@
 
           const sabbathMidnight = new Date(item.fullDate.getFullYear(), item.fullDate.getMonth(), item.fullDate.getDate()).getTime();
 
-          // 30일(일), 31일(월) 등 안식일이 지나면 다가오는 다음 안식일을 기본 선택
+          // 30일(일), 31일(월) 등 지나간 안식일이면 다가오는 다음 안식일을 기본 선택
           if (!defaultSelectedDateStr && sabbathMidnight >= todayMidnight) {
             defaultSelectedDateStr = item.dateStr;
           }
@@ -993,7 +992,7 @@
         }
 
         if (!hasLoadedFromCache) {
-          this.showLoading('인증 및 동기화 중...');
+          this.showLoading('인증 및 최신 데이터 동기화 중...');
         }
 
         try {
@@ -1374,22 +1373,22 @@ ${className} ${leaderName} 리더입니다.
             const careNote = this.careNotesMap[item.memberId];
 
             const div = document.createElement('div');
-            div.className = 'p-2.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 ' +
+            div.className = 'p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ' +
               (careNote ? 'bg-blue-50 border-blue-200' : 'bg-red-50 border-red-200');
 
             let badgeHtml = careNote 
-              ? '<span class="text-[10px] font-black bg-blue-600 text-white px-1.5 py-0.2 rounded">💬 심방완료</span>'
-              : '<span class="text-[10px] font-black bg-red-600 text-white px-1.5 py-0.2 rounded animate-pulse">🚨 ' + (item.consecutiveWeeks || 3) + '주 결석</span>';
+              ? '<span class="text-[11px] font-black bg-blue-600 text-white px-2 py-0.5 rounded">💬 심방완료</span>'
+              : '<span class="text-[11px] font-black bg-red-600 text-white px-2 py-0.5 rounded animate-pulse">🚨 ' + (item.consecutiveWeeks || 3) + '주 결석</span>';
 
             let reasonHtml = careNote 
-              ? '<p class="text-[11px] text-blue-700 font-bold mt-0.5">사유: ' + careNote.reason + '</p>' 
+              ? '<p class="text-xs text-blue-700 font-bold mt-0.5">사유: ' + careNote.reason + '</p>' 
               : '';
 
-            let kakaoBtnHtml = `<button onclick="window.appInstance.copyKakaoCareMessage('${item.memberId}', ${item.consecutiveWeeks || 3})" class="px-2 py-1 bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-xs rounded-lg transition shadow-2xs flex items-center space-x-0.5"><span>💬</span><span>카톡</span></button>`;
+            let kakaoBtnHtml = `<button onclick="window.appInstance.copyKakaoCareMessage('${item.memberId}', ${item.consecutiveWeeks || 3})" class="px-2.5 py-1.5 bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-xs sm:text-sm tracking-tight whitespace-nowrap rounded-lg transition shadow-2xs flex items-center space-x-0.5"><span>💬</span><span>카톡</span></button>`;
 
             let phoneButtonsHtml = cleanPhone 
-              ? '<a href="tel:' + cleanPhone + '" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-lg transition shadow-2xs">📞 통화</a>' +
-                '<a href="sms:' + cleanPhone + '" class="px-2 py-1 bg-white border border-slate-300 text-slate-700 font-black text-xs rounded-lg transition">문자</a>'
+              ? '<a href="tel:' + cleanPhone + '" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm tracking-tight whitespace-nowrap rounded-lg transition shadow-xs">📞 통화</a>' +
+                '<a href="sms:' + cleanPhone + '" class="px-2.5 py-1.5 bg-white border border-slate-300 text-slate-700 font-black text-xs sm:text-sm tracking-tight whitespace-nowrap rounded-lg transition">문자</a>'
               : '';
 
             let careBtnText = careNote ? '사유 수정' : '심방 완료';
@@ -1403,10 +1402,10 @@ ${className} ${leaderName} 리더입니다.
                 '<p class="text-xs text-slate-500 font-bold mt-0.5">📞 ' + (item.phone || '연락처 없음') + '</p>' +
                 reasonHtml +
               '</div>' +
-              '<div class="flex flex-wrap items-center gap-1 self-end sm:self-center">' +
+              '<div class="flex flex-wrap items-center gap-1.5 self-end sm:self-center">' +
                 phoneButtonsHtml +
                 kakaoBtnHtml +
-                '<button onclick="window.appInstance.openCareModal(\'' + item.memberId + '\')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-lg transition shadow-2xs">' +
+                '<button onclick="window.appInstance.openCareModal(\'' + item.memberId + '\')" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs sm:text-sm tracking-tight whitespace-nowrap rounded-lg transition shadow-xs">' +
                   careBtnText +
                 '</button>' +
               '</div>';
@@ -1504,6 +1503,7 @@ ${className} ${leaderName} 리더입니다.
         this.renderAttendanceList();
       }
 
+      // 💡 [사진과 같거나 더 큼직한 글씨 크기 적용]
       renderAttendanceList() {
         const container = document.getElementById('attendanceList');
         if (!container) return;
@@ -1545,51 +1545,53 @@ ${className} ${leaderName} 리더입니다.
             borderStyle = 'border-2 border-blue-300 bg-blue-50/40';
           }
 
-          row.className = `p-2 sm:p-2.5 rounded-xl transition shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 ${borderStyle}`;
+          row.className = `p-3 sm:p-3.5 rounded-2xl transition shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${borderStyle}`;
 
           let avatarIcon = isUrgentActive ? '🚨' : (isCareHandled ? '💬' : (isNewFamily ? '🌱' : (isVisitor ? '🏷️' : member.name.slice(0, 1))));
           let avatarClass = isUrgentActive ? 'bg-red-500 text-white' : (isCareHandled ? 'bg-blue-600 text-white' : (isNewFamily ? 'bg-amber-100 text-amber-800' : (isVisitor ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800')));
 
-          let urgentBadgeHtml = isUrgentActive ? '<span class="text-[10px] font-black text-white bg-red-600 px-1.5 py-0.2 rounded animate-pulse">🚨 3주 연속 결석</span>' : '';
-          let careBadgeHtml = isCareHandled ? '<span class="text-[10px] font-black text-blue-800 bg-blue-100 border border-blue-300 px-1.5 py-0.2 rounded">💬 심방: ' + careNote.reason + '</span>' : '';
-          let urgentCareBtnHtml = isUrgentActive ? '<button onclick="window.appInstance.openCareModal(\'' + member.memberId + '\')" class="text-[10px] font-black text-red-700 bg-white border border-red-300 px-1 py-0.2 rounded hover:bg-red-50 transition">✍️ 심방완료</button>' : '';
+          let urgentBadgeHtml = isUrgentActive ? '<span class="text-xs font-black text-white bg-red-600 px-2 py-0.5 rounded-md animate-pulse">🚨 3주 연속 결석 (심방필요)</span>' : '';
+          let careBadgeHtml = isCareHandled ? '<span class="text-xs font-black text-blue-800 bg-blue-100 border border-blue-300 px-2 py-0.5 rounded-md">💬 심방완료: ' + careNote.reason + '</span>' : '';
+          let urgentCareBtnHtml = isUrgentActive ? '<button onclick="window.appInstance.openCareModal(\'' + member.memberId + '\')" class="text-xs font-black text-red-700 bg-white border border-red-300 px-2 py-0.5 rounded-md hover:bg-red-50 transition">✍️ 심방완료 처리</button>' : '';
 
-          let quickKakaoBtnHtml = isUrgentActive ? `<button onclick="window.appInstance.copyKakaoCareMessage('${member.memberId}', 3)" title="카톡 심방 안부 문구 복사" class="text-[10px] font-black text-amber-900 bg-amber-200 hover:bg-amber-300 px-1 py-0.2 rounded transition flex items-center space-x-0.5"><span>💬</span><span>카톡복사</span></button>` : '';
+          let quickKakaoBtnHtml = isUrgentActive ? `<button onclick="window.appInstance.copyKakaoCareMessage('${member.memberId}', 3)" title="카톡 심방 안부 문구 복사" class="text-xs font-black text-amber-900 bg-amber-300 hover:bg-amber-400 px-2 py-0.5 rounded-md transition flex items-center space-x-0.5"><span>💬</span><span>카톡복사</span></button>` : '';
 
           row.innerHTML = 
-            '<div class="flex items-start sm:items-center space-x-2">' +
-              '<div class="w-9 h-9 rounded-xl ' + avatarClass + ' flex items-center justify-center font-black text-sm flex-shrink-0 shadow-2xs">' +
+            '<div class="flex items-start sm:items-center space-x-2.5">' +
+              '<div class="w-10 h-10 rounded-xl ' + avatarClass + ' flex items-center justify-center font-black text-base flex-shrink-0 shadow-2xs">' +
                 avatarIcon +
               '</div>' +
               '<div>' +
-                '<div class="flex items-center space-x-1 flex-wrap">' +
-                  '<span class="font-black text-slate-900 text-sm sm:text-base">' + member.name + '</span>' +
-                  '<span class="text-[11px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-1 py-0.2 rounded">' + (member.role || '성도') + '</span>' +
-                  (isNewFamily ? '<span class="text-[11px] font-bold text-amber-800 bg-amber-100 border border-amber-200 px-1 py-0.2 rounded">새가족</span>' : '') +
-                  (isVisitor ? '<span class="text-[11px] font-bold text-blue-800 bg-blue-100 border border-blue-200 px-1 py-0.2 rounded">방문자</span>' : '') +
+                '<div class="flex items-center space-x-1.5 flex-wrap">' +
+                  // 💡 성도 이름 큼직하게 (text-lg sm:text-xl font-black)
+                  '<span class="font-black text-slate-900 text-lg sm:text-xl leading-tight">' + member.name + '</span>' +
+                  '<span class="text-xs font-bold text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">' + (member.role || '성도') + '</span>' +
+                  (isNewFamily ? '<span class="text-xs font-bold text-amber-800 bg-amber-100 border border-amber-200 px-1.5 py-0.5 rounded">새가족</span>' : '') +
+                  (isVisitor ? '<span class="text-xs font-bold text-blue-800 bg-blue-100 border border-blue-200 px-1.5 py-0.5 rounded">방문자</span>' : '') +
                   urgentBadgeHtml +
                   careBadgeHtml +
                 '</div>' +
-                '<div class="flex items-center space-x-1.5 mt-0.5 flex-wrap">' +
-                  '<p class="text-[11px] text-slate-500 font-bold">' + (member.phone || '연락처 없음') + '</p>' +
+                '<div class="flex items-center space-x-2 mt-0.5 flex-wrap">' +
+                  '<p class="text-xs sm:text-sm text-slate-500 font-bold">' + (member.phone || '연락처 없음') + '</p>' +
                   urgentCareBtnHtml +
                   quickKakaoBtnHtml +
                 '</div>' +
               '</div>' +
             '</div>' +
-            '<div class="flex flex-wrap items-center gap-1.5 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-slate-100">' +
-              '<div class="inline-flex rounded-xl shadow-2xs border border-slate-200 bg-slate-100 p-0.5" role="group">' +
-                '<button onclick="window.appInstance.setStatus(\'' + member.memberId + '\', \'출석\')" class="status-btn-' + member.memberId + '-출석 px-2 sm:px-2.5 py-1 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-lg transition ' + (state.status === '출석' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900') + '">' +
+            '<div class="flex flex-wrap items-center gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">' +
+              // 💡 ⭕출석/△지각/❌결석 버튼 큼직하게 복원 (text-base sm:text-lg font-black px-3.5 py-1.5)
+              '<div class="inline-flex rounded-xl shadow-xs border border-slate-200 bg-slate-100 p-0.5" role="group">' +
+                '<button onclick="window.appInstance.setStatus(\'' + member.memberId + '\', \'출석\')" class="status-btn-' + member.memberId + '-출석 px-3 sm:px-4 py-1.5 text-base sm:text-lg font-black tracking-tight whitespace-nowrap rounded-lg transition ' + (state.status === '출석' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900') + '">' +
                   '⭕ 출석' +
                 '</button>' +
-                '<button onclick="window.appInstance.setStatus(\'' + member.memberId + '\', \'지각\')" class="status-btn-' + member.memberId + '-지각 px-2 sm:px-2.5 py-1 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-lg transition ' + (state.status === '지각' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900') + '">' +
+                '<button onclick="window.appInstance.setStatus(\'' + member.memberId + '\', \'지각\')" class="status-btn-' + member.memberId + '-지각 px-3 sm:px-4 py-1.5 text-base sm:text-lg font-black tracking-tight whitespace-nowrap rounded-lg transition ' + (state.status === '지각' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900') + '">' +
                   '△ 지각' +
                 '</button>' +
-                '<button onclick="window.appInstance.setStatus(\'' + member.memberId + '\', \'결석\')" class="status-btn-' + member.memberId + '-결석 px-2 sm:px-2.5 py-1 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-lg transition ' + (state.status === '결석' ? 'bg-red-500 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900') + '">' +
+                '<button onclick="window.appInstance.setStatus(\'' + member.memberId + '\', \'결석\')" class="status-btn-' + member.memberId + '-결석 px-3 sm:px-4 py-1.5 text-base sm:text-lg font-black tracking-tight whitespace-nowrap rounded-lg transition ' + (state.status === '결석' ? 'bg-red-500 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900') + '">' +
                   '❌ 결석' +
                 '</button>' +
               '</div>' +
-              '<input type="text" value="' + (state.reason || '') + '" onchange="window.appInstance.setReason(\'' + member.memberId + '\', this.value)" placeholder="사유" class="text-xs font-bold px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-xl w-24 sm:w-32 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">' +
+              '<input type="text" value="' + (state.reason || '') + '" onchange="window.appInstance.setReason(\'' + member.memberId + '\', this.value)" placeholder="사유 입력" class="text-sm font-bold px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl w-28 sm:w-36 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">' +
             '</div>';
 
           container.appendChild(row);
@@ -1680,7 +1682,7 @@ ${className} ${leaderName} 리더입니다.
               const docRef = doc(db, 'attendance_records', recordId);
               await setDoc(docRef, recordData);
             } catch (e) {
-              console.error("Firestore 저장 오류:", e);
+              console.error("Firestore 실시간 저장 오류:", e);
             }
           }
 
@@ -1694,8 +1696,8 @@ ${className} ${leaderName} 리더입니다.
           const btn = document.querySelector(`.status-btn-${memberId}-${st}`);
           if (btn) {
             btn.className = (st === finalStatus)
-              ? `status-btn-${memberId}-${st} px-2 sm:px-2.5 py-1 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-lg transition ${st === '출석' ? 'bg-emerald-600 text-white shadow-sm' : st === '지각' ? 'bg-amber-500 text-white shadow-sm' : 'bg-red-500 text-white shadow-sm'}`
-              : `status-btn-${memberId}-${st} px-2 sm:px-2.5 py-1 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-lg transition text-slate-600 hover:text-slate-900`;
+              ? `status-btn-${memberId}-${st} px-3 sm:px-4 py-1.5 text-base sm:text-lg font-black tracking-tight whitespace-nowrap rounded-lg transition ${st === '출석' ? 'bg-emerald-600 text-white shadow-sm' : st === '지각' ? 'bg-amber-500 text-white shadow-sm' : 'bg-red-500 text-white shadow-sm'}`
+              : `status-btn-${memberId}-${st} px-3 sm:px-4 py-1.5 text-base sm:text-lg font-black tracking-tight whitespace-nowrap rounded-lg transition text-slate-600 hover:text-slate-900`;
           }
         });
 
@@ -1937,29 +1939,29 @@ ${className} ${leaderName} 리더입니다.
           const isPerfect = hasRecord && parseFloat(rate) === 100.0 && item.checkedCount >= 3;
 
           const tr = document.createElement('tr');
-          tr.className = 'hover:bg-slate-50 transition cursor-pointer';
+          tr.className = 'hover:bg-slate-50 transition cursor-pointer font-bold';
           tr.onclick = () => this.openMemberDetailModal(item.memberId);
 
           tr.innerHTML = 
-            '<td class="py-2 px-2.5 font-black text-slate-900 text-xs sm:text-sm">' +
+            '<td class="py-2.5 px-3 font-black text-slate-900 text-sm sm:text-base">' +
               '<div class="flex items-center space-x-1">' +
                 '<span>' + item.name + '</span>' +
-                (isPerfect ? '<span class="text-[11px]">👑</span>' : '') +
+                (isPerfect ? '<span class="text-xs">👑</span>' : '') +
               '</div>' +
             '</td>' +
-            '<td class="py-2 px-2.5 text-slate-600 font-bold text-xs">' + this.getClassName(item.classId) + '</td>' +
-            '<td class="py-2 px-2 text-center font-black text-emerald-600 text-xs sm:text-sm">' + item.present + '</td>' +
-            '<td class="py-2 px-2 text-center font-black text-amber-600 text-xs sm:text-sm">' + item.late + '</td>' +
-            '<td class="py-2 px-2 text-center font-black text-red-500 text-xs sm:text-sm">' + item.absent + '</td>' +
-            '<td class="py-2 px-2.5 text-right">' +
+            '<td class="py-2.5 px-3 text-slate-600 text-xs sm:text-sm">' + this.getClassName(item.classId) + '</td>' +
+            '<td class="py-2.5 px-2 text-center font-black text-emerald-600 text-sm sm:text-base">' + item.present + '</td>' +
+            '<td class="py-2.5 px-2 text-center font-black text-amber-600 text-sm sm:text-base">' + item.late + '</td>' +
+            '<td class="py-2.5 px-2 text-center font-black text-red-500 text-sm sm:text-base">' + item.absent + '</td>' +
+            '<td class="py-2.5 px-3 text-right">' +
               (hasRecord ? 
-                '<span class="inline-block px-1.5 py-0.2 rounded-full text-[11px] font-black ' +
+                '<span class="inline-block px-2 py-0.5 rounded-full text-xs font-black ' +
                   (parseFloat(rate) >= 90 ? 'bg-emerald-100 text-emerald-800' :
                   parseFloat(rate) >= 70 ? 'bg-blue-100 text-blue-800' :
                   parseFloat(rate) >= 50 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800') + '">' +
                   rate + '%' +
                 '</span>' 
-                : '<span class="text-[11px] font-bold text-slate-300">-</span>') +
+                : '<span class="text-xs font-bold text-slate-300">-</span>') +
             '</td>';
 
           tbody.appendChild(tr);
@@ -1989,33 +1991,33 @@ ${className} ${leaderName} 리더입니다.
           const lessonNo = idx + 1;
           const rec = this.rawRecords.find(r => r.memberId === memberId && r.date === item.dateStr);
           
-          let iconHtml = '<span class="text-slate-300 font-bold text-sm">-</span>';
+          let iconHtml = '<span class="text-slate-300 font-bold text-base">-</span>';
           let borderClass = 'border-slate-200 bg-white';
 
           if (rec) {
             if (rec.status === '출석') {
-              iconHtml = '<span class="text-emerald-600 font-black text-base">⭕</span>';
+              iconHtml = '<span class="text-emerald-600 font-black text-lg">⭕</span>';
               borderClass = 'border-emerald-200 bg-emerald-50/50';
               present++;
             } else if (rec.status === '지각') {
-              iconHtml = '<span class="text-amber-500 font-black text-base">△</span>';
+              iconHtml = '<span class="text-amber-500 font-black text-lg">△</span>';
               borderClass = 'border-amber-200 bg-amber-50/50';
               late++;
             } else if (rec.status === '결석') {
-              iconHtml = '<span class="text-red-500 font-black text-base">❌</span>';
+              iconHtml = '<span class="text-red-500 font-black text-lg">❌</span>';
               borderClass = 'border-red-200 bg-red-50/50';
               absent++;
             }
           }
 
           const card = document.createElement('div');
-          card.className = `p-2 rounded-xl border ${borderClass} flex items-center justify-between shadow-2xs`;
+          card.className = `p-2.5 rounded-xl border ${borderClass} flex items-center justify-between shadow-2xs`;
           card.innerHTML = 
             '<div>' +
               '<div class="text-xs font-black text-slate-800">제' + lessonNo + '과</div>' +
-              '<div class="text-[10px] text-slate-400 font-bold">' + item.monthNum + '/' + item.dayNum + '</div>' +
+              '<div class="text-[10px] text-slate-400 font-bold">' + item.monthNum + '월 ' + item.dayNum + '일</div>' +
             '</div>' +
-            '<div class="flex items-center justify-center w-6 h-6">' +
+            '<div class="flex items-center justify-center w-7 h-7">' +
               iconHtml +
             '</div>';
 
@@ -2024,7 +2026,7 @@ ${className} ${leaderName} 리더입니다.
 
         const sumEl = document.getElementById('modalSummaryText');
         if (sumEl) {
-          sumEl.innerHTML = `총 ${sabbaths.length}주: <span class="text-emerald-700">출석 ${present}</span> · <span class="text-amber-700">지각 ${late}</span> · <span class="text-red-600">결석 ${absent}</span>`;
+          sumEl.innerHTML = `총 ${sabbaths.length}주 중 <span class="text-emerald-700">출석 ${present}</span> · <span class="text-amber-700">지각 ${late}</span> · <span class="text-red-600">결석 ${absent}</span>`;
         }
 
         const modal = document.getElementById('memberDetailModal');
@@ -2105,23 +2107,23 @@ ${className} ${leaderName} 리더입니다.
           if (footerEl) footerEl.textContent = `활동 ${this.rawMembers.filter(m => m.status === '활동').length}명 · 새가족 ${this.rawMembers.filter(m => m.status === '새가족').length}명 · 방문자 ${this.rawMembers.filter(m => m.status === '방문자').length}명`;
 
           bodyEl.innerHTML = 
-            '<div class="space-y-1.5">' +
+            '<div class="space-y-2">' +
               this.rawMembers.map(m => {
                 const cleanPhone = (m.phone || '').replace(/[^0-9]/g, '');
                 return (
-                  '<div class="p-2 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">' +
+                  '<div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">' +
                     '<div class="flex items-center space-x-2">' +
-                      '<div class="w-7 h-7 rounded-lg ' + (m.status === '새가족' ? 'bg-amber-100 text-amber-800' : (m.status === '방문자' ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800')) + ' flex items-center justify-center font-black text-xs">' +
+                      '<div class="w-8 h-8 rounded-lg ' + (m.status === '새가족' ? 'bg-amber-100 text-amber-800' : (m.status === '방문자' ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800')) + ' flex items-center justify-center font-black text-xs">' +
                         m.name.slice(0, 1) +
                       '</div>' +
                       '<div>' +
-                        '<div class="flex items-center space-x-1">' +
-                          '<span class="font-black text-slate-900 text-xs sm:text-sm">' + m.name + '</span>' +
-                          '<span class="text-[10px] text-slate-500 bg-white border border-slate-200 px-1 py-0.2 rounded font-bold">' + (m.role || '성도') + '</span>' +
-                          (m.status === '새가족' ? '<span class="text-[10px] text-amber-700 bg-amber-100 px-1 py-0.2 rounded font-black">새가족</span>' : '') +
-                          (m.status === '방문자' ? '<span class="text-[10px] text-blue-700 bg-blue-100 px-1 py-0.2 rounded font-black">방문자</span>' : '') +
+                        '<div class="flex items-center space-x-1.5">' +
+                          '<span class="font-black text-slate-900 text-sm sm:text-base">' + m.name + '</span>' +
+                          '<span class="text-[10px] text-slate-500 bg-white border border-slate-200 px-1 py-0.5 rounded font-bold">' + (m.role || '성도') + '</span>' +
+                          (m.status === '새가족' ? '<span class="text-[10px] text-amber-700 bg-amber-100 px-1 py-0.5 rounded font-black">새가족</span>' : '') +
+                          (m.status === '방문자' ? '<span class="text-[10px] text-blue-700 bg-blue-100 px-1 py-0.5 rounded font-black">방문자</span>' : '') +
                         '</div>' +
-                        '<p class="text-[11px] text-slate-500 font-bold">' + this.getClassName(m.classId) + ' · ' + (m.phone || '연락처 없음') + '</p>' +
+                        '<p class="text-xs text-slate-500 font-bold mt-0.5">' + this.getClassName(m.classId) + ' · ' + (m.phone || '연락처 없음') + '</p>' +
                       '</div>' +
                     '</div>' +
                     (cleanPhone ? 
@@ -2154,40 +2156,40 @@ ${className} ${leaderName} 리더입니다.
           if (footerEl) footerEl.textContent = `가중치: 출석 1.0 / 지각 0.5 / 결석 0`;
 
           bodyEl.innerHTML = 
-            '<div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-center">' +
-              '<div class="p-2 rounded-xl bg-emerald-50 border border-emerald-200">' +
-                '<span class="text-[10px] font-black text-emerald-800">최우수 (90%+)</span>' +
-                '<p class="text-base font-black text-emerald-700 mt-0.5">' + excellent + '명</p>' +
+            '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">' +
+              '<div class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200">' +
+                '<span class="text-[11px] font-black text-emerald-800">최우수 (90%+)</span>' +
+                '<p class="text-lg font-black text-emerald-700 mt-0.5">' + excellent + '명</p>' +
               '</div>' +
-              '<div class="p-2 rounded-xl bg-blue-50 border border-blue-200">' +
-                '<span class="text-[10px] font-black text-blue-800">우수 (70~89%)</span>' +
-                '<p class="text-base font-black text-blue-700 mt-0.5">' + good + '명</p>' +
+              '<div class="p-2.5 rounded-xl bg-blue-50 border border-blue-200">' +
+                '<span class="text-[11px] font-black text-blue-800">우수 (70~89%)</span>' +
+                '<p class="text-lg font-black text-blue-700 mt-0.5">' + good + '명</p>' +
               '</div>' +
-              '<div class="p-2 rounded-xl bg-amber-50 border border-amber-200">' +
-                '<span class="text-[10px] font-black text-amber-800">관심 (50~69%)</span>' +
-                '<p class="text-base font-black text-amber-700 mt-0.5">' + warning + '명</p>' +
+              '<div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200">' +
+                '<span class="text-[11px] font-black text-amber-800">관심 (50~69%)</span>' +
+                '<p class="text-lg font-black text-amber-700 mt-0.5">' + warning + '명</p>' +
               '</div>' +
-              '<div class="p-2 rounded-xl bg-red-50 border border-red-200">' +
-                '<span class="text-[10px] font-black text-red-800">돌봄 (50% 미만)</span>' +
-                '<p class="text-base font-black text-red-600 mt-0.5">' + danger + '명</p>' +
+              '<div class="p-2.5 rounded-xl bg-red-50 border border-red-200">' +
+                '<span class="text-[11px] font-black text-red-800">돌봄 (50% 미만)</span>' +
+                '<p class="text-lg font-black text-red-600 mt-0.5">' + danger + '명</p>' +
               '</div>' +
             '</div>' +
-            '<div class="mt-2.5 pt-2 border-t border-slate-100">' +
-              '<h4 class="text-xs font-black text-slate-700 mb-1.5">성도별 출석 랭킹 순위</h4>' +
-              '<div class="space-y-1 max-h-44 overflow-y-auto custom-scrollbar">' +
+            '<div class="mt-3 pt-3 border-t border-slate-100">' +
+              '<h4 class="text-xs font-black text-slate-700 mb-2">성도별 출석 랭킹 순위</h4>' +
+              '<div class="space-y-1 max-h-48 overflow-y-auto custom-scrollbar">' +
                 list.filter(item => item.checkedCount > 0)
                   .sort((a,b) => (b.score / b.checkedCount) - (a.score / a.checkedCount))
                   .map((item, idx) => {
                     const rate = ((item.score / item.checkedCount) * 100).toFixed(1);
                     return (
-                      '<div class="flex items-center justify-between p-1.5 rounded-lg bg-slate-50 border border-slate-200/60 text-xs font-bold">' +
-                        '<div class="flex items-center space-x-1">' +
-                          '<span class="text-slate-400 w-3 text-center">' + (idx + 1) + '</span>' +
-                          '<span class="text-slate-900 font-black">' + item.name + '</span>' +
-                          '<span class="text-[10px] text-slate-500">(' + this.getClassName(item.classId) + ')</span>' +
-                        '</div>' +
+                      '<div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200/60 text-xs font-bold">' +
                         '<div class="flex items-center space-x-1.5">' +
-                          '<span class="text-[10px] text-slate-500">출' + item.present + '·지' + item.late + '·결' + item.absent + '</span>' +
+                          '<span class="text-slate-400 w-4">' + (idx + 1) + '</span>' +
+                          '<span class="text-slate-900 font-black">' + item.name + '</span>' +
+                          '<span class="text-[11px] text-slate-500">(' + this.getClassName(item.classId) + ')</span>' +
+                        '</div>' +
+                        '<div class="flex items-center space-x-2">' +
+                          '<span class="text-[11px] text-slate-500">출 ' + item.present + ' · 지 ' + item.late + ' · 결 ' + item.absent + '</span>' +
                           '<span class="font-black ' + (parseFloat(rate) >= 70 ? 'text-emerald-600' : 'text-red-500') + '">' + rate + '%</span>' +
                         '</div>' +
                       '</div>'
@@ -2205,7 +2207,7 @@ ${className} ${leaderName} 리더입니다.
             bodyEl.innerHTML = '<div class="p-6 text-center text-slate-400 text-xs font-bold">아직 기록된 안식일 예배가 없습니다.</div>';
           } else {
             bodyEl.innerHTML = 
-              '<div class="space-y-1.5">' +
+              '<div class="space-y-2">' +
                 uniqueDates.map((dateStr, idx) => {
                   const dayRecords = validRecords.filter(r => r.date === dateStr);
                   const pCount = dayRecords.filter(r => r.status === '출석').length;
@@ -2213,15 +2215,15 @@ ${className} ${leaderName} 리더입니다.
                   const aCount = dayRecords.filter(r => r.status === '결석').length;
 
                   return (
-                    '<div class="p-2 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs">' +
+                    '<div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs">' +
                       '<div>' +
-                        '<span class="font-black text-slate-900">제' + (idx + 1) + '회차 (' + dateStr + ')</span>' +
-                        '<p class="text-[10px] text-slate-500 font-bold mt-0.5">총 ' + dayRecords.length + '명 체크</p>' +
+                        '<span class="font-black text-slate-900 text-sm">제' + (idx + 1) + '회차 (' + dateStr + ')</span>' +
+                        '<p class="text-[11px] text-slate-500 font-bold mt-0.5">총 ' + dayRecords.length + '명 기록</p>' +
                       '</div>' +
-                      '<div class="flex items-center space-x-1 font-black text-[11px]">' +
-                        '<span class="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">출 ' + pCount + '</span>' +
-                        '<span class="px-1.5 py-0.2 rounded bg-amber-100 text-amber-800">지 ' + lCount + '</span>' +
-                        '<span class="px-1.5 py-0.2 rounded bg-red-100 text-red-800">결 ' + aCount + '</span>' +
+                      '<div class="flex items-center space-x-1.5 font-black text-xs">' +
+                        '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">출석 ' + pCount + '</span>' +
+                        '<span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800">지각 ' + lCount + '</span>' +
+                        '<span class="px-2 py-0.5 rounded bg-red-100 text-red-800">결석 ' + aCount + '</span>' +
                       '</div>' +
                     '</div>'
                   );
@@ -2244,31 +2246,31 @@ ${className} ${leaderName} 리더입니다.
           if (careList.length === 0) {
             bodyEl.innerHTML = 
               '<div class="p-6 text-center text-emerald-600 space-y-1 font-bold">' +
-                '<span class="text-2xl">🎉</span>' +
-                '<p class="text-xs text-slate-800 font-black">관심/심방 대상 성도가 없습니다!</p>' +
+                '<span class="text-3xl">🎉</span>' +
+                '<p class="text-sm text-slate-800 font-black">관심/심방 대상 성도가 없습니다!</p>' +
               '</div>';
           } else {
             bodyEl.innerHTML = 
-              '<div class="space-y-1.5">' +
+              '<div class="space-y-2">' +
                 careList.map(m => {
                   const rate = ((m.score / m.checkedCount) * 100).toFixed(1);
                   const cleanPhone = (m.phone || '').replace(/[^0-9]/g, '');
 
                   return (
-                    '<div class="p-2 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between text-xs">' +
+                    '<div class="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between">' +
                       '<div>' +
-                        '<div class="flex items-center space-x-1">' +
-                          '<span class="font-black text-slate-900">' + m.name + '</span>' +
-                          '<span class="text-[10px] font-black bg-red-100 text-red-700 px-1 py-0.2 rounded">' + rate + '%</span>' +
+                        '<div class="flex items-center space-x-1.5">' +
+                          '<span class="font-black text-slate-900 text-sm sm:text-base">' + m.name + '</span>' +
+                          '<span class="text-[10px] font-black bg-red-100 text-red-700 px-1.5 py-0.5 rounded">' + rate + '%</span>' +
                         '</div>' +
-                        '<p class="text-[10px] text-slate-600 font-bold mt-0.5">' +
+                        '<p class="text-xs text-slate-600 font-bold mt-0.5">' +
                           this.getClassName(m.classId) + ' · 결석 ' + m.absent + '회 (총 ' + m.checkedCount + '회)' +
                         '</p>' +
                       '</div>' +
                       '<div class="flex items-center space-x-1">' +
-                        `<button onclick="window.appInstance.copyKakaoCareMessage('${m.memberId}', 3)" class="px-2 py-1 bg-amber-400 text-amber-950 rounded-lg text-xs font-black">💬 카톡</button>` +
+                        `<button onclick="window.appInstance.copyKakaoCareMessage('${m.memberId}', 3)" class="px-2.5 py-1 bg-amber-400 hover:bg-amber-500 text-amber-950 rounded-lg text-xs font-black">💬 카톡</button>` +
                         (cleanPhone ? 
-                          '<a href="tel:' + cleanPhone + '" class="px-2 py-1 bg-emerald-600 text-white rounded-lg text-xs font-black">📞</a>' : '') +
+                          '<a href="tel:' + cleanPhone + '" class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-xs font-black">📞</a>' : '') +
                       '</div>' +
                     '</div>'
                   );
@@ -2313,22 +2315,22 @@ ${className} ${leaderName} 리더입니다.
               tension: 0.35,
               fill: true,
               pointBackgroundColor: '#059669',
-              pointRadius: 3
+              pointRadius: 3.5
             }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-              y: { beginAtZero: true, ticks: { stepSize: 1, font: { weight: 'bold', size: 10 } } },
-              x: { ticks: { font: { weight: 'bold', size: 10 } } }
+              y: { beginAtZero: true, ticks: { stepSize: 1, font: { weight: 'bold', size: 11 } } },
+              x: { ticks: { font: { weight: 'bold', size: 11 } } }
             },
             plugins: { legend: { display: false } }
           }
         });
       }
 
-      // 💡 [교인 명부 렌더링]: 이름, 소속반, 직분, 상태 1줄 + 전화번호 2줄 쪼개기
+      // 💡 [교인 명부 렌더링]: 이름, 소속반, 직분, 상태 1줄 + 전화번호 2줄 쪼개기 + 시원한 폰트 크기
       renderMemberDirectory() {
         const tbody = document.getElementById('memberDirectoryBody');
         if (!tbody) return;
@@ -2341,12 +2343,12 @@ ${className} ${leaderName} 리더입니다.
           const rawPhone = (m.phone || '').trim();
           const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
 
-          // 전화번호를 2줄로 표시 (010-XXXX<br>-XXXX)
+          // 전화번호를 2줄로 쪼개어 가로폭 확보
           let formattedPhoneHtml = '<span class="text-slate-400">-</span>';
           if (cleanPhone.length === 11) {
-            formattedPhoneHtml = `<a href="tel:${cleanPhone}" class="text-emerald-700 hover:underline font-black text-xs leading-tight inline-block">📞 ${cleanPhone.slice(0,3)}-${cleanPhone.slice(3,7)}<br>&nbsp;&nbsp;&nbsp;&nbsp;-${cleanPhone.slice(7,11)}</a>`;
+            formattedPhoneHtml = `<a href="tel:${cleanPhone}" class="text-emerald-700 hover:underline font-black text-xs sm:text-sm leading-tight inline-block">📞 ${cleanPhone.slice(0,3)}-${cleanPhone.slice(3,7)}<br>&nbsp;&nbsp;&nbsp;&nbsp;-${cleanPhone.slice(7,11)}</a>`;
           } else if (cleanPhone.length > 0) {
-            formattedPhoneHtml = `<a href="tel:${cleanPhone}" class="text-emerald-700 hover:underline font-black text-xs leading-tight inline-block">📞 ${rawPhone}</a>`;
+            formattedPhoneHtml = `<a href="tel:${cleanPhone}" class="text-emerald-700 hover:underline font-black text-xs sm:text-sm leading-tight inline-block">📞 ${rawPhone}</a>`;
           }
 
           const tr = document.createElement('tr');
@@ -2364,20 +2366,20 @@ ${className} ${leaderName} 리더입니다.
             }
 
             classCellHtml = 
-              `<select onchange="window.appInstance.updateMemberClass('${m.memberId}', this.value, '${m.name}')" class="px-1.5 py-1 bg-amber-50 border border-amber-300 rounded-lg text-xs font-black text-amber-900 focus:ring-1 focus:ring-amber-500 focus:outline-none transition shadow-2xs whitespace-nowrap">` +
+              `<select onchange="window.appInstance.updateMemberClass('${m.memberId}', this.value, '${m.name}')" class="px-2 py-1.5 bg-amber-50 border border-amber-300 rounded-xl text-xs sm:text-sm font-black text-amber-900 focus:ring-1 focus:ring-amber-500 focus:outline-none transition shadow-2xs whitespace-nowrap">` +
                 optionsHtml +
               `</select>`;
           } else {
-            classCellHtml = `<span class="px-1.5 py-0.5 rounded text-xs font-black bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">${this.getClassName(m.classId)}</span>`;
+            classCellHtml = `<span class="px-2 py-1 rounded-lg text-xs sm:text-sm font-black bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">${this.getClassName(m.classId)}</span>`;
           }
 
           tr.innerHTML = 
-            '<td class="py-2.5 px-2 font-black text-slate-900 text-sm whitespace-nowrap">' + m.name + '</td>' +
-            '<td class="py-2.5 px-2 whitespace-nowrap">' + classCellHtml + '</td>' +
-            '<td class="py-2.5 px-1.5 text-slate-600 text-xs whitespace-nowrap">' + (m.role || '-') + '</td>' +
-            '<td class="py-2.5 px-2 whitespace-nowrap">' + formattedPhoneHtml + '</td>' +
-            '<td class="py-2.5 px-2 text-center whitespace-nowrap">' +
-              '<span class="px-1.5 py-0.5 rounded text-[11px] font-black ' +
+            '<td class="py-3 px-2.5 font-black text-slate-900 text-base whitespace-nowrap">' + m.name + '</td>' +
+            '<td class="py-3 px-2.5 whitespace-nowrap">' + classCellHtml + '</td>' +
+            '<td class="py-3 px-2 text-slate-600 text-xs sm:text-sm whitespace-nowrap">' + (m.role || '-') + '</td>' +
+            '<td class="py-3 px-2.5 whitespace-nowrap">' + formattedPhoneHtml + '</td>' +
+            '<td class="py-3 px-2 text-center whitespace-nowrap">' +
+              '<span class="px-2 py-1 rounded text-xs font-black ' +
                 (m.status === '활동' ? 'bg-emerald-100 text-emerald-800' :
                 m.status === '새가족' ? 'bg-amber-100 text-amber-800' : 
                 m.status === '방문자' ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600') + '">' +
@@ -2460,12 +2462,12 @@ ${className} ${leaderName} 리더입니다.
 
       switchTab(tabId) {
         document.querySelectorAll('.tab-btn').forEach(btn => {
-          btn.classList.remove('bg-white', 'text-emerald-800', 'shadow-2xs');
+          btn.classList.remove('bg-white', 'text-emerald-800', 'shadow-sm');
           btn.classList.add('text-slate-600');
         });
         const activeBtn = document.getElementById(`tabBtn-${tabId}`);
         if (activeBtn) {
-          activeBtn.classList.add('bg-white', 'text-emerald-800', 'shadow-2xs');
+          activeBtn.classList.add('bg-white', 'text-emerald-800', 'shadow-sm');
           activeBtn.classList.remove('text-slate-600');
         }
 
@@ -2655,10 +2657,10 @@ ${className} ${leaderName} 리더입니다.
         if (!notice) return;
 
         if (type === '방문자') {
-          notice.className = "text-[10px] text-blue-700 font-bold leading-relaxed bg-blue-50 p-2 rounded-xl border border-blue-200";
+          notice.className = "text-[11px] text-blue-700 font-bold leading-relaxed bg-blue-50 p-2.5 rounded-xl border border-blue-200 mt-2";
           notice.innerHTML = "💡 <b>단순 방문자:</b> 당일 예배 출석만 기록되며, 향후 결석 시에도 '3주 연속 결석 경고'에 걸리지 않습니다.";
         } else {
-          notice.className = "text-[10px] text-slate-500 font-bold leading-relaxed bg-slate-50 p-2 rounded-xl border border-slate-200";
+          notice.className = "text-[11px] text-slate-500 font-bold leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-200 mt-2";
           notice.innerHTML = "💡 <b>새가족:</b> 해당 반 정규 명부에 추가되며 주차별 출석 통계에 지속 반영됩니다.";
         }
       }
@@ -2735,7 +2737,7 @@ ${className} ${leaderName} 리더입니다.
           }
         } catch (err) {
           this.hideLoading();
-          this.showToast('서버 통신 중 오류가 발생했습니다.', 'error');
+          this.showToast('서버 통신 중 오류가 발생했습니다. 네트워크를 확인해주세요.', 'error');
         }
       }
 

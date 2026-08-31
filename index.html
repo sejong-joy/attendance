@@ -13,7 +13,7 @@
   <meta name="theme-color" content="#047857">
   <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/church.png">
   <link rel="icon" href="https://img.icons8.com/color/96/church.png" type="image/png">
-  <link rel="manifest" href="data:application/manifest+json;utf-8,%7B%22name%22%3A%22%EC%84%B8%EC%A2%85%20%EC%A1%B0%EC%9D%B4%20%EC%B6%9C%EC%84%9D%EB%B6%80%22%2C%22short_name%22%3A%22%EC%A1%B0%EC%9D%B4%EC%B6%9C%EC%84%9D%EB%B6%80%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background-color%22%3A%22%23f8fafc%22%2C%22theme_color%22%3A%22%23047857%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fimg.icons8.com%2Fcolor%2F192%2Fchurch.png%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
+  <link rel="manifest" href="data:application/manifest+json;utf-8,%7B%22name%22%3A%22%EC%84%B8%EC%A2%85%20%EC%A1%B0%EC%9D%B4%20%EC%B6%9C%EC%84%9D%EB%B6%80%22%2C%22short_name%22%3A%22%EC%A1%B0%EC%9D%B4%EC%B6%9C%EC%84%9D%EB%B6%80%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f8fafc%22%2C%22theme_color%22%3A%22%23047857%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fimg.icons8.com%2Fcolor%2F192%2Fchurch.png%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -181,23 +181,18 @@
       <!-- TAB 1: ATTENDANCE CHECK VIEW -->
       <div id="tabContent-check" class="space-y-2.5">
         
-        <!-- 💡 [관리자 전용] 전체 반 종합 모니터링 그리드 대시보드 (한눈에 전체 반 파악) -->
+        <!-- 💡 [관리자 전용] 오늘 예배 출석 현황 (와이드 마스터 카드 + 2배 그리드 대시보드) -->
         <div id="adminClassStatusBarWrap" class="hidden bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-xs space-y-2.5">
           <div class="flex items-center justify-between pb-1 border-b border-slate-100">
-            <div class="flex items-center space-x-2">
-              <span class="text-sm font-black text-slate-900 flex items-center space-x-1.5">
-                <span class="text-emerald-600">⚡</span>
-                <span>오늘 예배 전체 반 실시간 출석 현황</span>
-              </span>
-              <span id="adminTotalStatusBadge" class="text-xs bg-emerald-100 text-emerald-800 font-black px-2 py-0.5 rounded-md">
-                전체 0 / 0명 (0%)
-              </span>
-            </div>
+            <span class="text-sm font-black text-slate-900 flex items-center space-x-1.5">
+              <span class="text-emerald-600">⚡</span>
+              <span>오늘 예배 출석 현황</span>
+            </span>
             <span class="text-[11px] text-slate-400 font-bold">반 카드 터치 시 명단 필터링</span>
           </div>
 
           <!-- 그리드 컨테이너: 모바일 2열, PC/태블릿 4열 -->
-          <div id="classChipsContainer" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+          <div id="classChipsContainer" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5"></div>
         </div>
 
         <!-- Controls Card: 2단 최적화 레이아웃 -->
@@ -234,7 +229,7 @@
             </div>
           </div>
 
-          <!-- 2단 (아랫줄): 큼직한 제O과 O월O일 (좌측) / 반 필터 / 🔄 최신 동기화(새로고침) (우측) -->
+          <!-- 2단 (아랫줄): 큼직한 제O과 O월O일 (좌측) / 반 필터 / 🔄 새로고침 (우측) -->
           <div class="flex items-center justify-between gap-1.5 sm:gap-2">
             <div class="flex-1 flex items-center space-x-1.5 sm:space-x-2 min-w-0">
               <select id="sabbathSelect" onchange="window.appInstance.onSabbathSelectChange()" class="flex-1 px-3 py-1.5 sm:py-2 bg-emerald-50 border border-emerald-300 rounded-xl text-sm sm:text-base font-black text-emerald-950 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-xs truncate"></select>
@@ -279,10 +274,10 @@
         <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-3 sm:p-4">
           <div class="pb-2.5 mb-2.5 border-b border-slate-100 flex items-center justify-between">
             <div class="flex items-center space-x-2">
-              <span class="text-sm sm:text-base font-black text-slate-900">출석 명단</span>
+              <span id="attendanceListTitle" class="text-sm sm:text-base font-black text-slate-900">출석 명단</span>
               <span id="memberCountBadge" class="text-xs bg-slate-100 text-slate-700 font-black px-2 py-0.5 rounded-full border border-slate-200">0명</span>
             </div>
-            <span class="text-[11px] text-slate-400 font-bold">터치하여 출석을 기록하세요</span>
+            <span id="attendanceListSubTip" class="text-[11px] text-slate-400 font-bold">터치하여 출석을 기록하세요</span>
           </div>
 
           <!-- 개별 카드 목록 -->
@@ -369,11 +364,11 @@
             
             <button id="adminNewMemberBtn" onclick="window.appInstance.openNewMemberModal()" class="hidden px-3 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl transition shadow-xs whitespace-nowrap flex items-center space-x-1 flex-shrink-0">
               <span>➕</span>
-              <span>새가족/방문자</span>
+              <span>새가족/방문자 등록</span>
             </button>
           </div>
 
-          <!-- 교인 명부 테이블 -->
+          <!-- 교인 명부 테이블 (순수 정규 교인만 표시) -->
           <div class="overflow-x-auto mt-2 custom-scrollbar">
             <table class="w-full text-left text-xs sm:text-sm font-medium">
               <thead class="bg-slate-50 text-slate-600 font-black border-b border-slate-100">
@@ -393,7 +388,7 @@
 
     </section>
 
-    <!-- 💡 [설교 예배 출석 체크 모달] (다중 선택 후 일괄 저장 완료) -->
+    <!-- 💡 [설교 예배 출석 체크 모달] (다중 선택 후 일괄 저장) -->
     <div id="worshipCheckModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3.5 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border border-indigo-200 w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-200" id="worshipCheckModalBox">
         <div class="px-5 py-3.5 bg-indigo-50 border-b border-indigo-100 flex items-center justify-between">
@@ -699,7 +694,7 @@
       </div>
     </div>
 
-    <!-- [새가족 / 방문자 현장 등록 모달] -->
+    <!-- 💡 [새가족 / 방문자 현장 등록 모달] -->
     <div id="newMemberModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border border-emerald-200 w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-200" id="newMemberModalBox">
         <div class="px-4 py-3 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between">
@@ -707,7 +702,7 @@
             <span class="text-xl">🌱</span>
             <div>
               <h3 class="text-base font-black text-emerald-900 leading-tight">새가족 / 방문자 등록</h3>
-              <p class="text-xs text-emerald-700 font-bold">교역자/관리자 전용 명부 추가</p>
+              <p class="text-xs text-emerald-700 font-bold">현장 방문자 방명록 및 정규 새가족 등록</p>
             </div>
           </div>
           <button onclick="window.appInstance.closeNewMemberModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg p-1">✕</button>
@@ -727,19 +722,24 @@
             <div>
               <label class="block text-xs font-black text-slate-700 mb-1">등록 구분 *</label>
               <select id="newMemberStatus" onchange="window.appInstance.onNewMemberTypeChange()" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                <option value="새가족">🌱 정규 새가족</option>
-                <option value="방문자">🏷️ 단순 방문자</option>
+                <option value="방문자">🏷️ 당일 단순 방문자</option>
+                <option value="새가족">🌱 정규 새가족 등록</option>
               </select>
             </div>
-            <div>
+            <div id="newMemberClassWrap" class="hidden">
               <label class="block text-xs font-black text-slate-700 mb-1">배정할 반 *</label>
               <select id="newMemberClassSelect" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
               </select>
             </div>
           </div>
 
-          <p id="newMemberNotice" class="text-[11px] text-slate-500 font-bold leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-200 mt-2">
-            💡 <b>새가족:</b> 해당 반 정규 명부에 추가되며 주차별 출석 통계에 반영됩니다.
+          <div>
+            <label class="block text-xs font-black text-slate-700 mb-1">인도자 / 비고 메모</label>
+            <input type="text" id="newMemberNote" placeholder="예: 김철수 집사 인도, 이사 탐방 등" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
+
+          <p id="newMemberNotice" class="text-[11px] text-blue-700 font-bold leading-relaxed bg-blue-50 p-2.5 rounded-xl border border-blue-200 mt-2">
+            💡 <b>당일 단순 방문자:</b> 독립된 [방문자_명부] 탭에만 방명록 형태로 기록되며, 정규 교인 수와 출석 통계에는 일절 영향을 주지 않습니다.
           </p>
 
           <div class="flex space-x-2 pt-2">
@@ -800,7 +800,8 @@
       constructor() {
         this.currentUser = null;
         this.classList = [];
-        this.rawMembers = [];
+        this.rawMembers = []; // 순수 정규 교인 (활동, 새가족)
+        this.rawVisitors = []; // 💡 독립된 방문자 방명록 명단
         this.rawRecords = [];
         this.currentAttendance = {};
         this.absentAlertMap = {};
@@ -813,7 +814,7 @@
         this.isSyncing = false;
         this.selectedFilterClass = 'ALL';
         this.pendingResetType = null;
-        this.worshipPendingSet = new Set(); // 💡 설교 예배 다중 선택 임시 버퍼
+        this.worshipPendingSet = new Set();
       }
 
       async init() {
@@ -830,6 +831,7 @@
       getClassName(classId) {
         if (!classId) return '-';
         if (classId === 'ADMIN' || classId === 'ALL') return '전체 반';
+        if (classId === 'C12' || classId === 'VISITOR') return '방문자';
         const found = this.classList.find(c => c.classId === classId);
         return found ? found.className : classId;
       }
@@ -1025,6 +1027,14 @@
             adminFilter.appendChild(filterOpt);
           }
         });
+
+        if (adminFilter) {
+          const visitorOpt = document.createElement('option');
+          visitorOpt.value = 'C12';
+          visitorOpt.textContent = '🏷️ 방문자 (당일 방명록)';
+          adminFilter.appendChild(visitorOpt);
+        }
+
         if (curVal) select.value = curVal;
       }
 
@@ -1046,7 +1056,9 @@
             const cached = JSON.parse(cachedStr);
             if (cached.user) {
               this.currentUser = cached.user;
-              this.rawMembers = cached.members || [];
+              // 순수 정규 교인(활동, 새가족)만 rawMembers에 적재
+              this.rawMembers = (cached.members || []).filter(m => m.status !== '방문자');
+              this.rawVisitors = cached.visitors || (cached.members || []).filter(m => m.status === '방문자');
               this.rawRecords = cached.records || [];
               this.updateAbsentAlertMap(cached.absentAlerts || []);
               this.calculateConsecutiveAbsentees();
@@ -1073,7 +1085,9 @@
 
           if (json.success) {
             this.currentUser = json.user;
-            this.rawMembers = json.members || [];
+            // 💡 [핵심] 방문자는 정규 교인 명단에서 완전 분리
+            this.rawMembers = (json.members || []).filter(m => m.status !== '방문자');
+            this.rawVisitors = json.visitors || (json.members || []).filter(m => m.status === '방문자');
             this.rawRecords = json.records || [];
             this.updateAbsentAlertMap(json.absentAlerts || []);
             this.calculateConsecutiveAbsentees();
@@ -1109,6 +1123,7 @@
             if (found) {
               this.currentUser = found;
               this.rawMembers = this.getMockMembers(classId);
+              this.rawVisitors = [];
               this.rawRecords = [];
               this.calculateConsecutiveAbsentees();
               this.setupLoggedInUI();
@@ -1172,8 +1187,6 @@
         if (!this.rawMembers || !this.rawRecords) return;
 
         this.rawMembers.forEach(member => {
-          if (member.status === '방문자') return;
-
           const memberRecs = this.rawRecords
             .filter(r => r.memberId === member.memberId && r.date && (r.status === '출석' || r.status === '지각' || r.status === '결석'))
             .sort((a, b) => b.date.localeCompare(a.date));
@@ -1325,11 +1338,10 @@
         this.renderClassMonitoringBar();
       }
 
-      // 💡 [2배 크기로 확대된 전체 반 종합 모니터링 그리드 보드]
+      // 💡 [관리자 모드: 전체 현황 와이드 마스터 카드 + 2배 크기 그리드 대시보드]
       renderClassMonitoringBar() {
         if (!this.currentUser || !this.currentUser.isAdmin) return;
         const container = document.getElementById('classChipsContainer');
-        const totalBadge = document.getElementById('adminTotalStatusBadge');
         if (!container) return;
 
         const curDate = document.getElementById('sabbathSelect')?.value;
@@ -1337,37 +1349,78 @@
         
         container.innerHTML = '';
 
-        const totalPresent = this.rawMembers.filter(m => {
+        // 1. 순수 정규 교인 수치 집계 (방문자 완전 제외)
+        const totalRegularMembers = this.rawMembers.length;
+        const ssPresentCount = this.rawMembers.filter(m => {
           const r = this.rawRecords.find(rec => rec.date === curDate && rec.memberId === m.memberId);
           return r && (r.status === '출석' || r.status === '지각');
         }).length;
 
-        const totalPercent = this.rawMembers.length > 0 ? ((totalPresent / this.rawMembers.length) * 100).toFixed(0) : '0';
-        if (totalBadge) totalBadge.textContent = `전체 출석 ${totalPresent} / ${this.rawMembers.length}명 (${totalPercent}%)`;
+        const worshipOnlyCount = this.rawMembers.filter(m => {
+          const r = this.rawRecords.find(rec => rec.date === curDate && rec.memberId === m.memberId);
+          return r && r.status === '결석' && r.worshipAttended;
+        }).length;
 
-        // 1) 전체 반 마스터 카드
-        const isAllSelected = this.selectedFilterClass === 'ALL';
-        const allCard = document.createElement('div');
-        allCard.className = `p-3 rounded-xl border transition cursor-pointer select-none flex flex-col justify-between shadow-2xs ${
-          isAllSelected ? 'bg-emerald-600 text-white border-emerald-700 ring-2 ring-emerald-400' : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-800'
+        const totalWorshipAttended = ssPresentCount + worshipOnlyCount;
+        const ssRate = totalRegularMembers > 0 ? ((ssPresentCount / totalRegularMembers) * 100).toFixed(1) : '0.0';
+        const totalOverallRate = totalRegularMembers > 0 ? ((totalWorshipAttended / totalRegularMembers) * 100).toFixed(1) : '0.0';
+
+        // 2. 당일(curDate) 방문자 수 집계 (방문자_명부 기준)
+        const todayVisitors = this.rawVisitors.filter(v => v.date === curDate || (v.visitDate && v.visitDate === curDate));
+        const todayVisitorCount = todayVisitors.length;
+
+        // 3. [✨ 전체 현황] 2칸 너비(col-span-2) 와이드 마스터 카드
+        const isMasterSelected = this.selectedFilterClass === 'ALL';
+        const masterCard = document.createElement('div');
+        masterCard.className = `col-span-2 p-3 sm:p-3.5 rounded-2xl border transition cursor-pointer select-none flex flex-col justify-between shadow-2xs ${
+          isMasterSelected 
+            ? 'bg-gradient-to-br from-emerald-700 to-teal-800 text-white border-emerald-800 ring-2 ring-emerald-400' 
+            : 'bg-white hover:border-emerald-400 border-slate-200 text-slate-800'
         }`;
-        allCard.onclick = () => this.selectMonitoringClass('ALL');
-        allCard.innerHTML = `
-          <div class="flex items-center justify-between">
-            <span class="font-black text-xs sm:text-sm">✨ 전체 반 종합</span>
-            <span class="text-[10px] font-black px-1.5 py-0.2 rounded ${isAllSelected ? 'bg-white/20' : 'bg-emerald-100 text-emerald-800'}">${totalPercent}%</span>
+        masterCard.onclick = () => this.selectMonitoringClass('ALL');
+
+        masterCard.innerHTML = `
+          <div class="flex items-center justify-between pb-1.5 border-b ${isMasterSelected ? 'border-white/20' : 'border-slate-100'}">
+            <span class="font-black text-xs sm:text-sm flex items-center space-x-1.5">
+              <span>✨ 전체 현황</span>
+              <span class="text-[11px] font-normal opacity-90">(정규 재적 ${totalRegularMembers}명)</span>
+            </span>
+            <span class="text-xs font-black px-2 py-0.5 rounded-lg ${isMasterSelected ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'}">
+              전체 출석률 ${totalOverallRate}%
+            </span>
           </div>
-          <div class="my-1">
-            <span class="text-base sm:text-lg font-black">${totalPresent}</span>
-            <span class="text-xs font-bold ${isAllSelected ? 'text-emerald-100' : 'text-slate-400'}">/ ${this.rawMembers.length}명</span>
+
+          <div class="grid grid-cols-3 gap-2 my-2 text-center">
+            <div class="p-1.5 rounded-xl ${isMasterSelected ? 'bg-white/10' : 'bg-slate-50'}">
+              <span class="text-[10px] font-black ${isMasterSelected ? 'text-emerald-200' : 'text-slate-500'} block">📖 안교 출석</span>
+              <p class="text-sm sm:text-base font-black ${isMasterSelected ? 'text-white' : 'text-emerald-700'} mt-0.5">${ssPresentCount}명</p>
+              <span class="text-[9px] font-bold ${isMasterSelected ? 'text-emerald-100' : 'text-slate-400'}">(${ssRate}%)</span>
+            </div>
+            <div class="p-1.5 rounded-xl ${isMasterSelected ? 'bg-white/10' : 'bg-slate-50'}">
+              <span class="text-[10px] font-black ${isMasterSelected ? 'text-indigo-200' : 'text-slate-500'} block">⛪ 설교 예배</span>
+              <p class="text-sm sm:text-base font-black ${isMasterSelected ? 'text-white' : 'text-indigo-700'} mt-0.5">${totalWorshipAttended}명</p>
+              <span class="text-[9px] font-bold ${isMasterSelected ? 'text-emerald-100' : 'text-slate-400'}">(${totalOverallRate}%)</span>
+            </div>
+            <div class="p-1.5 rounded-xl ${isMasterSelected ? 'bg-white/10' : 'bg-blue-50'}">
+              <span class="text-[10px] font-black ${isMasterSelected ? 'text-blue-200' : 'text-blue-700'} block">🏷️ 당일 방문자</span>
+              <p class="text-sm sm:text-base font-black ${isMasterSelected ? 'text-white' : 'text-blue-700'} mt-0.5">${todayVisitorCount}명</p>
+              <span class="text-[9px] font-bold ${isMasterSelected ? 'text-emerald-100' : 'text-blue-400'}">(현장 방명록)</span>
+            </div>
           </div>
-          <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-            <div class="bg-emerald-500 h-full rounded-full transition-all duration-300" style="width: ${totalPercent}%"></div>
+
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-[10px] font-bold ${isMasterSelected ? 'text-emerald-100' : 'text-slate-500'}">
+              <span>전체 출석률 게이지 바</span>
+              <span>${totalOverallRate}%</span>
+            </div>
+            <div class="w-full bg-black/10 h-1.5 rounded-full overflow-hidden">
+              <div class="bg-emerald-400 h-full rounded-full transition-all duration-300" style="width: ${totalOverallRate}%"></div>
+            </div>
           </div>
         `;
-        container.appendChild(allCard);
+        container.appendChild(masterCard);
 
-        // 2) 각 교과반별 상세 카드
+        // 4. 각 교과반별 상세 카드 (2배 크기 그리드)
         activeClasses.forEach(c => {
           const classMembers = this.rawMembers.filter(m => m.classId === c.classId);
           let presentCount = 0;
@@ -1384,7 +1437,7 @@
           const isSelected = this.selectedFilterClass === c.classId;
 
           const card = document.createElement('div');
-          card.className = `p-3 rounded-xl border transition cursor-pointer select-none flex flex-col justify-between shadow-2xs ${
+          card.className = `p-3 rounded-2xl border transition cursor-pointer select-none flex flex-col justify-between shadow-2xs ${
             isSelected 
               ? 'bg-emerald-700 text-white border-emerald-800 ring-2 ring-emerald-400' 
               : 'bg-white hover:border-emerald-300 border-slate-200 text-slate-800'
@@ -1403,7 +1456,7 @@
               <span class="font-black text-xs sm:text-sm truncate">${c.className}</span>
               ${statusBadgeHtml}
             </div>
-            <div class="flex items-baseline justify-between my-1">
+            <div class="flex items-baseline justify-between my-1.5">
               <div>
                 <span class="text-base sm:text-lg font-black ${isSelected ? 'text-white' : 'text-emerald-600'}">${presentCount}</span>
                 <span class="text-xs font-bold ${isSelected ? 'text-emerald-100' : 'text-slate-400'}">/ ${classMembers.length}명</span>
@@ -1627,25 +1680,84 @@ ${className} ${leaderName} 리더입니다.
         this.renderAttendanceList();
       }
 
+      // 💡 [출석 명단 및 방문자 방명록 분리 렌더링]
       renderAttendanceList() {
         const container = document.getElementById('attendanceList');
+        const titleEl = document.getElementById('attendanceListTitle');
+        const subTipEl = document.getElementById('attendanceListSubTip');
+        const countBadge = document.getElementById('memberCountBadge');
         if (!container) return;
 
-        let filtered = this.rawMembers;
+        const curDate = document.getElementById('sabbathSelect')?.value;
         const activeFilter = (this.currentUser && this.currentUser.isAdmin) 
           ? (this.selectedFilterClass || document.getElementById('adminClassFilter')?.value || 'ALL')
           : this.currentUser.classId;
 
+        // 🌟 [방문자반 선택 시]: 해당 안식일에 다녀간 방문자만 방명록 카드로 렌더링
+        if (activeFilter === 'C12' || activeFilter === 'VISITOR') {
+          if (titleEl) titleEl.textContent = `🏷️ ${curDate} 현장 방문자 방명록`;
+          if (subTipEl) subTipEl.textContent = `당일 방문하신 손님 명단입니다`;
+
+          const todayVisitors = this.rawVisitors.filter(v => v.date === curDate || (v.visitDate && v.visitDate === curDate));
+          if (countBadge) countBadge.textContent = `${todayVisitors.length}명`;
+          container.innerHTML = '';
+
+          if (todayVisitors.length === 0) {
+            container.innerHTML = '<div class="p-8 text-center text-slate-400 text-xs font-bold bg-slate-50 rounded-2xl border border-dashed border-slate-200">선택한 날짜(' + curDate + ')에 등록된 방문자가 없습니다. 🍃</div>';
+            this.updateAttendanceSummary();
+            return;
+          }
+
+          todayVisitors.forEach((visitor, idx) => {
+            const cleanPhone = (visitor.phone || '').replace(/[^0-9]/g, '');
+            const card = document.createElement('div');
+            card.className = 'p-3.5 sm:p-4 rounded-2xl border border-blue-200 bg-blue-50/40 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3';
+            
+            card.innerHTML = `
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-base shadow-2xs flex-shrink-0">
+                  🏷️
+                </div>
+                <div>
+                  <div class="flex items-center space-x-2 flex-wrap">
+                    <span class="font-black text-slate-900 text-base sm:text-lg">${visitor.name}</span>
+                    <span class="text-xs font-bold text-blue-800 bg-blue-100 border border-blue-200 px-1.5 py-0.5 rounded">방문자</span>
+                    <span class="text-xs text-slate-500 font-bold">${visitor.role || visitor.affiliation || '손님'}</span>
+                  </div>
+                  <p class="text-xs text-slate-600 font-bold mt-0.5">
+                    📞 ${visitor.phone || '연락처 없음'} ${visitor.notes ? ` · 메모: ${visitor.notes}` : ''}
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2 self-end sm:self-center">
+                ${cleanPhone ? `<a href="tel:${cleanPhone}" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-lg shadow-2xs transition">📞 통화</a>` : ''}
+                ${cleanPhone ? `<a href="sms:${cleanPhone}" class="px-2.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-black rounded-lg shadow-2xs transition">💬 문자</a>` : ''}
+                <button onclick="window.appInstance.promoteVisitorToMember('${visitor.visitorId || idx}', '${visitor.name}', '${visitor.phone || ''}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-lg shadow-2xs transition">
+                  🌱 새가족 등록
+                </button>
+              </div>
+            `;
+            container.appendChild(card);
+          });
+
+          this.updateAttendanceSummary();
+          return;
+        }
+
+        // 🌟 [일반 교과반 또는 전체 반 선택 시]: 순수 정규 교인만 렌더링
+        if (titleEl) titleEl.textContent = `출석 명단`;
+        if (subTipEl) subTipEl.textContent = `터치하여 출석을 기록하세요`;
+
+        let filtered = this.rawMembers;
         if (activeFilter !== 'ALL') {
           filtered = this.rawMembers.filter(m => m.classId === activeFilter);
         }
 
-        const countBadge = document.getElementById('memberCountBadge');
         if (countBadge) countBadge.textContent = `${filtered.length}명`;
         container.innerHTML = '';
 
         if (filtered.length === 0) {
-          container.innerHTML = '<div class="p-6 text-center text-slate-400 text-xs font-bold">등록된 교인이 없습니다.</div>';
+          container.innerHTML = '<div class="p-6 text-center text-slate-400 text-xs font-bold">등록된 정규 교인이 없습니다.</div>';
           this.updateAttendanceSummary();
           return;
         }
@@ -1657,7 +1769,6 @@ ${className} ${leaderName} 리더입니다.
           const isCareHandled = is3WeekAbsent && !!careNote;
           const isUrgentActive = is3WeekAbsent && !careNote;
           const isNewFamily = member.status === '새가족';
-          const isVisitor = member.status === '방문자';
           const isWorshipOnly = (state.status === '결석' && state.worshipAttended);
 
           const row = document.createElement('div');
@@ -1673,8 +1784,8 @@ ${className} ${leaderName} 리더입니다.
 
           row.className = `p-3 sm:p-3.5 rounded-2xl transition shadow-xs flex flex-col gap-2.5 ${borderStyle}`;
 
-          let avatarIcon = isUrgentActive ? '🚨' : (isCareHandled ? '💬' : (isWorshipOnly ? '⛪' : (isNewFamily ? '🌱' : (isVisitor ? '🏷️' : member.name.slice(0, 1)))));
-          let avatarClass = isUrgentActive ? 'bg-red-500 text-white' : (isCareHandled ? 'bg-blue-600 text-white' : (isWorshipOnly ? 'bg-indigo-600 text-white' : (isNewFamily ? 'bg-amber-100 text-amber-800' : (isVisitor ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'))));
+          let avatarIcon = isUrgentActive ? '🚨' : (isCareHandled ? '💬' : (isWorshipOnly ? '⛪' : (isNewFamily ? '🌱' : member.name.slice(0, 1))));
+          let avatarClass = isUrgentActive ? 'bg-red-500 text-white' : (isCareHandled ? 'bg-blue-600 text-white' : (isWorshipOnly ? 'bg-indigo-600 text-white' : (isNewFamily ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800')));
 
           let urgentBadgeHtml = isUrgentActive ? '<span class="text-xs font-black text-white bg-red-600 px-2 py-0.5 rounded-md animate-pulse">🚨 3주 결석</span>' : '';
           
@@ -1701,7 +1812,6 @@ ${className} ${leaderName} 리더입니다.
                     '<span class="font-black text-slate-900 text-lg sm:text-xl leading-tight truncate">' + member.name + '</span>' +
                     '<span class="text-xs font-bold text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">' + (member.role || '성도') + '</span>' +
                     (isNewFamily ? '<span class="text-xs font-bold text-amber-800 bg-amber-100 border border-amber-200 px-1.5 py-0.5 rounded">새가족</span>' : '') +
-                    (isVisitor ? '<span class="text-xs font-bold text-blue-800 bg-blue-100 border border-blue-200 px-1.5 py-0.5 rounded">방문자</span>' : '') +
                     urgentBadgeHtml +
                     careBadgeHtml +
                     worshipBadgeHtml +
@@ -1831,7 +1941,6 @@ ${className} ${leaderName} 리더입니다.
         this.triggerAutoSheetSync();
       }
 
-      // 💡 [수동 최신 동기화(새로고침) 실행]
       async forceSyncLatestData() {
         if (!this.currentUser) return;
         
@@ -1853,7 +1962,8 @@ ${className} ${leaderName} 리더입니다.
           const json = await res.json();
 
           if (json.success) {
-            this.rawMembers = json.members || [];
+            this.rawMembers = (json.members || []).filter(m => m.status !== '방문자');
+            this.rawVisitors = json.visitors || (json.members || []).filter(m => m.status === '방문자');
             this.rawRecords = json.records || [];
             this.updateAbsentAlertMap(json.absentAlerts || []);
             this.calculateConsecutiveAbsentees();
@@ -1883,7 +1993,6 @@ ${className} ${leaderName} 리더입니다.
         }
       }
 
-      // 💡 [관리자 전용: 설교 예배 출석 체크 팝업 오픈]
       openWorshipCheckModal() {
         if (!this.currentUser || !this.currentUser.isAdmin) return;
         const modal = document.getElementById('worshipCheckModal');
@@ -1894,7 +2003,6 @@ ${className} ${leaderName} 리더입니다.
         const curDate = document.getElementById('sabbathSelect')?.value;
         if (!curDate) return;
 
-        // 현재 이미 예배참석으로 등록된 성도들을 버퍼 세트에 초기 탑재
         this.worshipPendingSet = new Set();
         this.rawRecords.forEach(r => {
           if (r.date === curDate && r.worshipAttended) {
@@ -1919,7 +2027,6 @@ ${className} ${leaderName} 리더입니다.
         this.worshipPendingSet.clear();
       }
 
-      // 💡 [다중 선택 방식의 가벼운 렌더링]
       renderWorshipCheckList() {
         const container = document.getElementById('worshipListContainer');
         const countBadge = document.getElementById('worshipCountBadge');
@@ -1928,7 +2035,6 @@ ${className} ${leaderName} 리더입니다.
         const curDate = document.getElementById('sabbathSelect')?.value;
         if (!curDate) return;
 
-        // 안교 출석/지각자는 명단에서 제외 (순수 미참석/결석자만 필터)
         const candidates = this.rawMembers.filter(m => {
           const rec = this.rawRecords.find(r => r.date === curDate && r.memberId === m.memberId);
           if (rec && (rec.status === '출석' || rec.status === '지각')) {
@@ -1982,7 +2088,6 @@ ${className} ${leaderName} 리더입니다.
         this.updateWorshipSubmitButtonText();
       }
 
-      // 💡 [화면 깜빡임 없이 즉시 버튼만 토글하는 함수]
       toggleWorshipSelection(memberId) {
         if (this.worshipPendingSet.has(memberId)) {
           this.worshipPendingSet.delete(memberId);
@@ -2032,7 +2137,6 @@ ${className} ${leaderName} 리더입니다.
         });
       }
 
-      // 💡 [다중 선택된 성도들을 단 한 번에 일괄 저장하는 Batch 로직]
       async saveWorshipBatchAttendance() {
         const targetDate = document.getElementById('sabbathSelect')?.value;
         const quarter = document.getElementById('quarterSelect')?.value;
@@ -2087,7 +2191,6 @@ ${className} ${leaderName} 리더입니다.
               this.enqueueOfflineRecord(rec);
 
             } else {
-              // 선택 해제된 경우
               if (rec && rec.worshipAttended) {
                 rec.worshipAttended = false;
                 if (rec.reason === '설교 예배 참석') rec.reason = '';
@@ -2253,6 +2356,22 @@ ${className} ${leaderName} 리더입니다.
         const activeFilter = (this.currentUser && this.currentUser.isAdmin) 
           ? (this.selectedFilterClass || document.getElementById('adminClassFilter')?.value || 'ALL')
           : (this.currentUser ? this.currentUser.classId : 'ALL');
+
+        if (activeFilter === 'C12' || activeFilter === 'VISITOR') {
+          const curDate = document.getElementById('sabbathSelect')?.value;
+          const todayVisitors = this.rawVisitors.filter(v => v.date === curDate || (v.visitDate && v.visitDate === curDate));
+          
+          const sumTot = document.getElementById('summaryTotalBox');
+          const sumPres = document.getElementById('summaryPresentBox');
+          const sumLate = document.getElementById('summaryLateBox');
+          const sumAbs = document.getElementById('summaryAbsentBox');
+
+          if (sumTot) sumTot.textContent = todayVisitors.length;
+          if (sumPres) sumPres.textContent = todayVisitors.length;
+          if (sumLate) sumLate.textContent = 0;
+          if (sumAbs) sumAbs.textContent = 0;
+          return;
+        }
 
         if (activeFilter !== 'ALL') {
           filtered = this.rawMembers.filter(m => m.classId === activeFilter);
@@ -2547,8 +2666,8 @@ ${className} ${leaderName} 리더입니다.
         if (type === 'members') {
           iconEl.textContent = '👥';
           titleEl.textContent = `등록 교인 명단 (${this.rawMembers.length}명)`;
-          subEl.textContent = '현재 반 및 직분별 등록 현황';
-          if (footerEl) footerEl.textContent = `활동 ${this.rawMembers.filter(m => m.status === '활동').length}명 · 새가족 ${this.rawMembers.filter(m => m.status === '새가족').length}명 · 방문자 ${this.rawMembers.filter(m => m.status === '방문자').length}명`;
+          subEl.textContent = '현재 반 및 직분별 정규 등록 현황';
+          if (footerEl) footerEl.textContent = `활동 ${this.rawMembers.filter(m => m.status === '활동').length}명 · 새가족 ${this.rawMembers.filter(m => m.status === '새가족').length}명 (방문자 완전 분리)`;
 
           bodyEl.innerHTML = 
             '<div class="space-y-2">' +
@@ -2557,7 +2676,7 @@ ${className} ${leaderName} 리더입니다.
                 return (
                   '<div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">' +
                     '<div class="flex items-center space-x-2">' +
-                      '<div class="w-8 h-8 rounded-lg ' + (m.status === '새가족' ? 'bg-amber-100 text-amber-800' : (m.status === '방문자' ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800')) + ' flex items-center justify-center font-black text-xs">' +
+                      '<div class="w-8 h-8 rounded-lg ' + (m.status === '새가족' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800') + ' flex items-center justify-center font-black text-xs">' +
                         m.name.slice(0, 1) +
                       '</div>' +
                       '<div>' +
@@ -2565,7 +2684,6 @@ ${className} ${leaderName} 리더입니다.
                           '<span class="font-black text-slate-900 text-sm sm:text-base">' + m.name + '</span>' +
                           '<span class="text-[10px] text-slate-500 bg-white border border-slate-200 px-1 py-0.5 rounded font-bold">' + (m.role || '성도') + '</span>' +
                           (m.status === '새가족' ? '<span class="text-[10px] text-amber-700 bg-amber-100 px-1 py-0.5 rounded font-black">새가족</span>' : '') +
-                          (m.status === '방문자' ? '<span class="text-[10px] text-blue-700 bg-blue-100 px-1 py-0.5 rounded font-black">방문자</span>' : '') +
                         '</div>' +
                         '<p class="text-xs text-slate-500 font-bold mt-0.5">' + this.getClassName(m.classId) + ' · ' + (m.phone || '연락처 없음') + '</p>' +
                       '</div>' +
@@ -2584,11 +2702,9 @@ ${className} ${leaderName} 리더입니다.
           titleEl.textContent = '출석률 분석';
           subEl.textContent = `${curQuarter} 실제 안교 출석 분포`;
 
-          let excellent = 0, good = 0, warning = 0, danger = 0, unrecorded = 0;
+          let excellent = 0, good = 0, warning = 0, danger = 0;
           list.forEach(m => {
-            if (m.checkedCount === 0) {
-              unrecorded++;
-            } else {
+            if (m.checkedCount > 0) {
               const rate = (m.score / m.checkedCount) * 100;
               if (rate >= 90) excellent++;
               else if (rate >= 70) good++;
@@ -2663,7 +2779,7 @@ ${className} ${leaderName} 리더입니다.
                     '<div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs">' +
                       '<div>' +
                         '<span class="font-black text-slate-900 text-sm">제' + (idx + 1) + '회차 (' + dateStr + ')</span>' +
-                        '<p class="text-[11px] text-slate-500 font-bold mt-0.5">총 ' + dayRecords.length + '명 기록 (설교 예배 추가 참석: ' + wCount + '명)</p>' +
+                        '<p class="text-[11px] text-slate-500 font-bold mt-0.5">정규 교인 ' + dayRecords.length + '명 기록 (설교 예배 추가 참석: ' + wCount + '명)</p>' +
                       '</div>' +
                       '<div class="flex items-center space-x-1.5 font-black text-xs">' +
                         '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">출석 ' + pCount + '</span>' +
@@ -2678,7 +2794,7 @@ ${className} ${leaderName} 리더입니다.
         } else if (type === 'care') {
           iconEl.textContent = '🚨';
           titleEl.textContent = '관심 및 심방 권장 대상';
-          subEl.textContent = `${curQuarter} 안교 출석률 60% 미만 성도`;
+          subEl.textContent = `${curQuarter} 안교 출석률 60% 미만 정규 성도`;
 
           const careList = list.filter(m => {
             if (m.checkedCount < 2) return false;
@@ -2716,7 +2832,7 @@ ${className} ${leaderName} 리더입니다.
                       '<div>' +
                         '<div class="flex items-center space-x-1.5 flex-wrap">' +
                           '<span class="font-black text-slate-900 text-sm sm:text-base">' + m.name + '</span>' +
-                          '<span class="text-xs font-bold text-slate-600 bg-white border border-slate-200 px-1.5 py-0.5 rounded">' + (member.role || '성도') + '</span>' +
+                          '<span class="text-xs font-bold text-slate-600 bg-white border border-slate-200 px-1.5 py-0.5 rounded">' + (m.role || '성도') + '</span>' +
                           '<span class="text-[11px] font-black bg-red-100 text-red-700 px-1.5 py-0.5 rounded">' + rate + '%</span>' +
                         '</div>' +
                         '<p class="text-xs text-slate-600 font-bold mt-0.5">' +
@@ -2794,6 +2910,7 @@ ${className} ${leaderName} 리더입니다.
         const isAdmin = !!(this.currentUser && this.currentUser.isAdmin);
         const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
 
+        // 순수 정규 교인(활동, 새가족)만 교인 명부에 출력
         this.rawMembers.forEach(m => {
           const rawPhone = (m.phone || '').trim();
           const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
@@ -2834,9 +2951,7 @@ ${className} ${leaderName} 리더입니다.
             '<td class="py-3 px-2.5 whitespace-nowrap">' + formattedPhoneHtml + '</td>' +
             '<td class="py-3 px-2 text-center whitespace-nowrap">' +
               '<span class="px-2 py-1 rounded text-xs font-black ' +
-                (m.status === '활동' ? 'bg-emerald-100 text-emerald-800' :
-                m.status === '새가족' ? 'bg-amber-100 text-amber-800' : 
-                m.status === '방문자' ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600') + '">' +
+                (m.status === '활동' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800') + '">' +
                 m.status +
               '</span>' +
             '</td>';
@@ -2873,18 +2988,6 @@ ${className} ${leaderName} 리더입니다.
             const targetMember = this.rawMembers.find(m => m.memberId === memberId);
             if (targetMember) targetMember.classId = newClassId;
 
-            if (this.currentUser) {
-              const cacheKey = `church_cache_${this.currentUser.classId}`;
-              const cachedStr = localStorage.getItem(cacheKey);
-              if (cachedStr) {
-                try {
-                  const cached = JSON.parse(cachedStr);
-                  cached.members = this.rawMembers;
-                  localStorage.setItem(cacheKey, JSON.stringify(cached));
-                } catch(e) {}
-              }
-            }
-
             this.showToast(`✨ ${memberName} 성도님이 [${targetClassName}]으로 이동되었습니다.`, 'success');
             this.renderMemberDirectory();
             this.renderAttendanceList();
@@ -2903,6 +3006,34 @@ ${className} ${leaderName} 리더입니다.
           this.showToast('서버 통신 오류가 발생했습니다.', 'error');
           this.renderMemberDirectory();
         }
+      }
+
+      // 💡 [방문자 ➔ 정규 새가족으로 승격 기능]
+      promoteVisitorToMember(visitorId, name, phone) {
+        const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
+        const classNames = activeClasses.map((c, i) => `${i + 1}. ${c.className}`).join('\n');
+        
+        const choice = prompt(`[${name}] 님을 정규 새가족으로 등록할 반 번호를 입력하세요:\n\n${classNames}`);
+        if (!choice) return;
+
+        const idx = parseInt(choice, 10) - 1;
+        if (isNaN(idx) || idx < 0 || idx >= activeClasses.length) {
+          alert('올바른 반 번호를 선택해주세요.');
+          return;
+        }
+
+        const selectedClass = activeClasses[idx];
+        if (!confirm(`[${name}] 님을 [${selectedClass.className}] 정규 새가족으로 승격 등록하시겠습니까?`)) return;
+
+        document.getElementById('newMemberName').value = name;
+        document.getElementById('newMemberPhone').value = phone;
+        document.getElementById('newMemberStatus').value = '새가족';
+        this.onNewMemberTypeChange();
+
+        const classSelect = document.getElementById('newMemberClassSelect');
+        if (classSelect) classSelect.value = selectedClass.classId;
+
+        this.openNewMemberModal();
       }
 
       filterMemberList() {
@@ -3077,7 +3208,8 @@ ${className} ${leaderName} 리더입니다.
         
         document.getElementById('newMemberName').value = '';
         document.getElementById('newMemberPhone').value = '';
-        document.getElementById('newMemberStatus').value = '새가족';
+        document.getElementById('newMemberNote').value = '';
+        document.getElementById('newMemberStatus').value = '방문자';
         this.onNewMemberTypeChange();
 
         if (classSelect) {
@@ -3108,38 +3240,50 @@ ${className} ${leaderName} 리더입니다.
       onNewMemberTypeChange() {
         const type = document.getElementById('newMemberStatus')?.value;
         const notice = document.getElementById('newMemberNotice');
-        if (!notice) return;
+        const classWrap = document.getElementById('newMemberClassWrap');
+        if (!notice || !classWrap) return;
 
         if (type === '방문자') {
+          classWrap.classList.add('hidden');
           notice.className = "text-[11px] text-blue-700 font-bold leading-relaxed bg-blue-50 p-2.5 rounded-xl border border-blue-200 mt-2";
-          notice.innerHTML = "💡 <b>단순 방문자:</b> 당일 예배 출석만 기록되며, 향후 결석 시에도 '3주 연속 결석 경고'에 걸리지 않습니다.";
+          notice.innerHTML = "💡 <b>당일 단순 방문자:</b> 독립된 [방문자_명부] 탭에만 방명록 형태로 기록되며, 정규 교인 수와 출석 통계에는 일절 영향을 주지 않습니다.";
         } else {
+          classWrap.classList.remove('hidden');
           notice.className = "text-[11px] text-slate-500 font-bold leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-200 mt-2";
-          notice.innerHTML = "💡 <b>새가족:</b> 해당 반 정규 명부에 추가되며 주차별 출석 통계에 지속 반영됩니다.";
+          notice.innerHTML = "💡 <b>정규 새가족:</b> 교인_명부에 추가되어 해당 반 명단과 주차별 출석 통계에 정상 산입됩니다.";
         }
       }
 
       async submitNewMember() {
         const name = document.getElementById('newMemberName')?.value?.trim();
         const phone = document.getElementById('newMemberPhone')?.value?.trim();
-        const status = document.getElementById('newMemberStatus')?.value || '새가족';
+        const status = document.getElementById('newMemberStatus')?.value || '방문자';
+        const note = document.getElementById('newMemberNote')?.value?.trim() || '';
         const targetClassId = document.getElementById('newMemberClassSelect')?.value;
+        const curDate = document.getElementById('sabbathSelect')?.value;
 
-        if (!name || !targetClassId) {
-          this.showToast('성명과 배정 반을 확인해주세요.', 'error');
+        if (!name) {
+          this.showToast('성명을 입력해주세요.', 'error');
           return;
         }
 
-        this.showLoading(`${name} 님을 구글 시트에 등록 중...`);
+        if (status === '새가족' && !targetClassId) {
+          this.showToast('배정할 반을 선택해주세요.', 'error');
+          return;
+        }
+
+        this.showLoading(`${name} 님을 등록하는 중...`);
 
         try {
           const payload = {
             action: 'registerNewMember',
             name: name,
             phone: phone,
-            classId: targetClassId,
+            classId: status === '방문자' ? 'C12' : targetClassId,
             role: status === '방문자' ? '방문자' : '성도',
-            status: status
+            status: status,
+            notes: note,
+            visitDate: curDate
           };
 
           const res = await fetch(SHEETS_API_URL, {
@@ -3151,33 +3295,34 @@ ${className} ${leaderName} 리더입니다.
           this.hideLoading();
 
           if (json.success) {
-            const newMember = {
-              memberId: json.memberId,
-              name: name,
-              classId: targetClassId,
-              role: status === '방문자' ? '방문자' : '성도',
-              phone: phone,
-              status: status,
-              notes: status === '방문자' ? '현장 단순 방문자' : '현장 새가족 등록'
-            };
-            
-            this.rawMembers.push(newMember);
-            
-            if (this.currentUser) {
-              const cacheKey = `church_cache_${this.currentUser.classId}`;
-              const cachedStr = localStorage.getItem(cacheKey);
-              if (cachedStr) {
-                try {
-                  const cached = JSON.parse(cachedStr);
-                  cached.members = this.rawMembers;
-                  localStorage.setItem(cacheKey, JSON.stringify(cached));
-                } catch(e) {}
-              }
+            if (status === '방문자') {
+              const newVisitor = {
+                visitorId: json.visitorId || ('V_' + Date.now()),
+                visitDate: curDate,
+                date: curDate,
+                name: name,
+                phone: phone,
+                role: '방문자',
+                notes: note,
+                registeredAt: new Date().toISOString()
+              };
+              this.rawVisitors.push(newVisitor);
+              this.showToast(`✨ ${curDate} 방문자 방명록에 [${name}] 등록 완료!`, 'success');
+            } else {
+              const newMember = {
+                memberId: json.memberId,
+                name: name,
+                classId: targetClassId,
+                role: '성도',
+                phone: phone,
+                status: '새가족',
+                notes: note
+              };
+              this.rawMembers.push(newMember);
+              this.showToast(`✨ [${this.getClassName(targetClassId)}]에 새가족 [${name}] 등록 완료!`, 'success');
             }
 
             this.closeNewMemberModal();
-            this.showToast(`✨ [${this.getClassName(targetClassId)}]에 ${name} (${status}) 등록 완료!`, 'success');
-            
             this.renderMemberDirectory();
             this.renderAttendanceList();
             this.renderClassMonitoringBar();

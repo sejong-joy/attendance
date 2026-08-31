@@ -181,26 +181,41 @@
       <!-- TAB 1: ATTENDANCE CHECK VIEW -->
       <div id="tabContent-check" class="space-y-2.5">
         
-        <!-- 💡 [관리자 전용] 오늘 예배 출석 현황 (와이드 마스터 카드 + 2배 그리드 대시보드) -->
-        <div id="adminClassStatusBarWrap" class="hidden bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-xs space-y-2.5">
-          <div class="flex items-center justify-between pb-1 border-b border-slate-100">
-            <span class="text-sm font-black text-slate-900 flex items-center space-x-1.5">
+        <!-- 💡 [관리자 전용] 오늘의 현황 헤더 바 (⚡ 오늘의 현황 + [⛪ 설교 예배 체크] + [🔄 새로고침]) -->
+        <div id="adminClassStatusBarWrap" class="hidden bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs space-y-2.5">
+          <div class="flex items-center justify-between gap-1.5 pb-2 border-b border-slate-100">
+            
+            <!-- 좌측: 타이틀 -->
+            <span class="text-sm sm:text-base font-black text-slate-900 flex items-center space-x-1.5 flex-shrink-0">
               <span class="text-emerald-600">⚡</span>
-              <span>오늘 예배 출석 현황</span>
+              <span>오늘의 현황</span>
             </span>
-            <span class="text-[11px] text-slate-400 font-bold">반 카드 터치 시 명단 필터링</span>
+
+            <!-- 중앙: 설교 예배 체크 버튼 -->
+            <div class="flex-1 flex justify-center min-w-0 px-1">
+              <button id="adminWorshipCheckBtn" onclick="window.appInstance.openWorshipCheckModal()" class="px-2.5 sm:px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition flex items-center space-x-1 shadow-2xs">
+                <span>⛪</span>
+                <span>설교 예배 체크</span>
+              </button>
+            </div>
+
+            <!-- 우측: 새로고침 버튼 -->
+            <button onclick="window.appInstance.forceSyncLatestData()" title="서버 최신 출석 데이터 즉시 동기화" class="px-2.5 sm:px-3 py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-200 flex items-center space-x-1 shadow-2xs flex-shrink-0">
+              <span id="refreshBtnIcon">🔄</span>
+              <span>새로고침</span>
+            </button>
           </div>
 
           <!-- 그리드 컨테이너: 모바일 2열, PC/태블릿 4열 -->
           <div id="classChipsContainer" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5"></div>
         </div>
 
-        <!-- Controls Card: 2단 최적화 레이아웃 -->
+        <!-- Controls Card: 2단 최적화 레이아웃 (공간 넉넉화) -->
         <div class="bg-white rounded-xl border border-slate-200 p-2.5 sm:p-3.5 shadow-xs space-y-2 sm:space-y-2.5">
           
-          <!-- 1단 (윗줄): 년도 + 기수 (좌측) / ⛪ 설교 예배 체크 (중간) / ☁️ 자동 저장됨 (우측) -->
+          <!-- 1단 (윗줄): 년도 + 기수 (좌측) / ☁️ 자동 저장됨 (우측) -->
           <div class="flex items-center justify-between gap-1.5 sm:gap-2">
-            <div class="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0">
+            <div class="flex items-center space-x-1.5 sm:space-x-2">
               <select id="yearSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-2 sm:px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-2xs">
                 <option value="2025">2025년</option>
                 <option value="2026" selected>2026년</option>
@@ -214,38 +229,22 @@
               </select>
             </div>
 
-            <!-- 설교 예배 체크 버튼 (3기와 자동저장됨 사이) -->
-            <div class="flex-1 flex justify-center min-w-0">
-              <button id="adminWorshipCheckBtn" onclick="window.appInstance.openWorshipCheckModal()" class="hidden px-2.5 sm:px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition flex items-center space-x-1 shadow-2xs">
-                <span>⛪</span>
-                <span>설교 예배 체크</span>
-              </button>
-            </div>
-
-            <!-- 자동 저장됨 배지 -->
-            <div id="syncStatusBadge" class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition shadow-2xs flex-shrink-0">
+            <!-- 자동 저장됨 배지 (터치 시 강제 새로고침 지원) -->
+            <button onclick="window.appInstance.forceSyncLatestData()" id="syncStatusBadge" class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition shadow-2xs flex-shrink-0 cursor-pointer hover:bg-emerald-100">
               <span id="syncStatusIcon">☁️</span>
               <span id="syncStatusText">자동 저장됨</span>
-            </div>
+            </button>
           </div>
 
-          <!-- 2단 (아랫줄): 큼직한 제O과 O월O일 (좌측) / 반 필터 / 🔄 새로고침 (우측) -->
+          <!-- 2단 (아랫줄): 큼직한 제O과 O월O일 (좌측) / 반 필터 (우측 넓게 배치) -->
           <div class="flex items-center justify-between gap-1.5 sm:gap-2">
-            <div class="flex-1 flex items-center space-x-1.5 sm:space-x-2 min-w-0">
-              <select id="sabbathSelect" onchange="window.appInstance.onSabbathSelectChange()" class="flex-1 px-3 py-1.5 sm:py-2 bg-emerald-50 border border-emerald-300 rounded-xl text-sm sm:text-base font-black text-emerald-950 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-xs truncate"></select>
+            <select id="sabbathSelect" onchange="window.appInstance.onSabbathSelectChange()" class="flex-1 px-3 py-1.5 sm:py-2 bg-emerald-50 border border-emerald-300 rounded-xl text-sm sm:text-base font-black text-emerald-950 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-xs truncate"></select>
 
-              <div id="adminClassFilterWrap" class="hidden flex-shrink-0">
-                <select id="adminClassFilter" onchange="window.appInstance.renderAttendanceList()" class="px-2.5 py-1.5 sm:py-2 bg-amber-50 border border-amber-300 rounded-xl text-xs sm:text-sm font-black text-amber-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
-                  <option value="ALL">전체 반 보기</option>
-                </select>
-              </div>
+            <div id="adminClassFilterWrap" class="hidden flex-shrink-0 min-w-[130px] sm:min-w-[160px]">
+              <select id="adminClassFilter" onchange="window.appInstance.renderAttendanceList()" class="w-full px-2.5 py-1.5 sm:py-2 bg-amber-50 border border-amber-300 rounded-xl text-xs sm:text-sm font-black text-amber-900 focus:ring-2 focus:ring-amber-500 focus:outline-none shadow-2xs">
+                <option value="ALL">전체 반 보기</option>
+              </select>
             </div>
-
-            <!-- 🔄 최신 동기화(새로고침) 버튼 -->
-            <button onclick="window.appInstance.forceSyncLatestData()" title="서버 최신 출석 데이터 즉시 동기화" class="px-3 sm:px-3.5 py-1.5 sm:py-2 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-200 flex items-center space-x-1 shadow-2xs flex-shrink-0">
-              <span id="refreshBtnIcon">🔄</span>
-              <span>새로고침</span>
-            </button>
           </div>
 
         </div>
@@ -694,7 +693,7 @@
       </div>
     </div>
 
-    <!-- 💡 [새가족 / 방문자 현장 등록 모달] -->
+    <!-- [새가족 / 방문자 현장 등록 모달] -->
     <div id="newMemberModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border border-emerald-200 w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-200" id="newMemberModalBox">
         <div class="px-4 py-3 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between">
@@ -800,8 +799,8 @@
       constructor() {
         this.currentUser = null;
         this.classList = [];
-        this.rawMembers = []; // 순수 정규 교인 (활동, 새가족)
-        this.rawVisitors = []; // 💡 독립된 방문자 방명록 명단
+        this.rawMembers = [];
+        this.rawVisitors = [];
         this.rawRecords = [];
         this.currentAttendance = {};
         this.absentAlertMap = {};
@@ -858,15 +857,15 @@
         if (!badge || !icon || !text) return;
 
         if (state === 'saved') {
-          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition shadow-2xs flex-shrink-0';
+          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition shadow-2xs flex-shrink-0 cursor-pointer hover:bg-emerald-100';
           icon.textContent = '☁️';
           text.textContent = customText || '자동 저장됨';
         } else if (state === 'syncing') {
-          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-blue-50 text-blue-800 border border-blue-200 transition shadow-2xs flex-shrink-0';
+          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-blue-50 text-blue-800 border border-blue-200 transition shadow-2xs flex-shrink-0 cursor-pointer';
           icon.textContent = '🔄';
           text.textContent = customText || '저장 중...';
         } else if (state === 'offline') {
-          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-amber-50 text-amber-800 border border-amber-300 transition animate-pulse shadow-2xs flex-shrink-0';
+          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-amber-50 text-amber-800 border border-amber-300 transition animate-pulse shadow-2xs flex-shrink-0 cursor-pointer';
           icon.textContent = '⚠️';
           text.textContent = customText || '오프라인';
         }
@@ -1056,7 +1055,6 @@
             const cached = JSON.parse(cachedStr);
             if (cached.user) {
               this.currentUser = cached.user;
-              // 순수 정규 교인(활동, 새가족)만 rawMembers에 적재
               this.rawMembers = (cached.members || []).filter(m => m.status !== '방문자');
               this.rawVisitors = cached.visitors || (cached.members || []).filter(m => m.status === '방문자');
               this.rawRecords = cached.records || [];
@@ -1085,7 +1083,6 @@
 
           if (json.success) {
             this.currentUser = json.user;
-            // 💡 [핵심] 방문자는 정규 교인 명단에서 완전 분리
             this.rawMembers = (json.members || []).filter(m => m.status !== '방문자');
             this.rawVisitors = json.visitors || (json.members || []).filter(m => m.status === '방문자');
             this.rawRecords = json.records || [];
@@ -1187,6 +1184,8 @@
         if (!this.rawMembers || !this.rawRecords) return;
 
         this.rawMembers.forEach(member => {
+          if (member.status === '방문자') return;
+
           const memberRecs = this.rawRecords
             .filter(r => r.memberId === member.memberId && r.date && (r.status === '출석' || r.status === '지각' || r.status === '결석'))
             .sort((a, b) => b.date.localeCompare(a.date));
@@ -1314,20 +1313,17 @@
         const statusBarWrap = document.getElementById('adminClassStatusBarWrap');
         const adminResetSec = document.getElementById('adminResetSection');
         const adminNewMemberBtn = document.getElementById('adminNewMemberBtn');
-        const adminWorshipCheckBtn = document.getElementById('adminWorshipCheckBtn');
 
         if (this.currentUser.isAdmin) {
           filterWrap?.classList.remove('hidden');
           statusBarWrap?.classList.remove('hidden');
           adminResetSec?.classList.remove('hidden');
           adminNewMemberBtn?.classList.remove('hidden');
-          adminWorshipCheckBtn?.classList.remove('hidden');
         } else {
           filterWrap?.classList.add('hidden');
           statusBarWrap?.classList.add('hidden');
           adminResetSec?.classList.add('hidden');
           adminNewMemberBtn?.classList.add('hidden');
-          adminWorshipCheckBtn?.classList.add('hidden');
         }
 
         this.calculateConsecutiveAbsentees();
@@ -1338,7 +1334,6 @@
         this.renderClassMonitoringBar();
       }
 
-      // 💡 [관리자 모드: 전체 현황 와이드 마스터 카드 + 2배 크기 그리드 대시보드]
       renderClassMonitoringBar() {
         if (!this.currentUser || !this.currentUser.isAdmin) return;
         const container = document.getElementById('classChipsContainer');
@@ -1349,7 +1344,6 @@
         
         container.innerHTML = '';
 
-        // 1. 순수 정규 교인 수치 집계 (방문자 완전 제외)
         const totalRegularMembers = this.rawMembers.length;
         const ssPresentCount = this.rawMembers.filter(m => {
           const r = this.rawRecords.find(rec => rec.date === curDate && rec.memberId === m.memberId);
@@ -1365,11 +1359,9 @@
         const ssRate = totalRegularMembers > 0 ? ((ssPresentCount / totalRegularMembers) * 100).toFixed(1) : '0.0';
         const totalOverallRate = totalRegularMembers > 0 ? ((totalWorshipAttended / totalRegularMembers) * 100).toFixed(1) : '0.0';
 
-        // 2. 당일(curDate) 방문자 수 집계 (방문자_명부 기준)
         const todayVisitors = this.rawVisitors.filter(v => v.date === curDate || (v.visitDate && v.visitDate === curDate));
         const todayVisitorCount = todayVisitors.length;
 
-        // 3. [✨ 전체 현황] 2칸 너비(col-span-2) 와이드 마스터 카드
         const isMasterSelected = this.selectedFilterClass === 'ALL';
         const masterCard = document.createElement('div');
         masterCard.className = `col-span-2 p-3 sm:p-3.5 rounded-2xl border transition cursor-pointer select-none flex flex-col justify-between shadow-2xs ${
@@ -1420,7 +1412,6 @@
         `;
         container.appendChild(masterCard);
 
-        // 4. 각 교과반별 상세 카드 (2배 크기 그리드)
         activeClasses.forEach(c => {
           const classMembers = this.rawMembers.filter(m => m.classId === c.classId);
           let presentCount = 0;
@@ -1680,7 +1671,6 @@ ${className} ${leaderName} 리더입니다.
         this.renderAttendanceList();
       }
 
-      // 💡 [출석 명단 및 방문자 방명록 분리 렌더링]
       renderAttendanceList() {
         const container = document.getElementById('attendanceList');
         const titleEl = document.getElementById('attendanceListTitle');
@@ -1693,7 +1683,6 @@ ${className} ${leaderName} 리더입니다.
           ? (this.selectedFilterClass || document.getElementById('adminClassFilter')?.value || 'ALL')
           : this.currentUser.classId;
 
-        // 🌟 [방문자반 선택 시]: 해당 안식일에 다녀간 방문자만 방명록 카드로 렌더링
         if (activeFilter === 'C12' || activeFilter === 'VISITOR') {
           if (titleEl) titleEl.textContent = `🏷️ ${curDate} 현장 방문자 방명록`;
           if (subTipEl) subTipEl.textContent = `당일 방문하신 손님 명단입니다`;
@@ -1744,7 +1733,6 @@ ${className} ${leaderName} 리더입니다.
           return;
         }
 
-        // 🌟 [일반 교과반 또는 전체 반 선택 시]: 순수 정규 교인만 렌더링
         if (titleEl) titleEl.textContent = `출석 명단`;
         if (subTipEl) subTipEl.textContent = `터치하여 출석을 기록하세요`;
 
@@ -2832,7 +2820,7 @@ ${className} ${leaderName} 리더입니다.
                       '<div>' +
                         '<div class="flex items-center space-x-1.5 flex-wrap">' +
                           '<span class="font-black text-slate-900 text-sm sm:text-base">' + m.name + '</span>' +
-                          '<span class="text-xs font-bold text-slate-600 bg-white border border-slate-200 px-1.5 py-0.5 rounded">' + (m.role || '성도') + '</span>' +
+                          '<span class="text-xs font-bold text-slate-600 bg-white border border-slate-200 px-1.5 py-0.5 rounded">' + (member.role || '성도') + '</span>' +
                           '<span class="text-[11px] font-black bg-red-100 text-red-700 px-1.5 py-0.5 rounded">' + rate + '%</span>' +
                         '</div>' +
                         '<p class="text-xs text-slate-600 font-bold mt-0.5">' +
@@ -2910,7 +2898,6 @@ ${className} ${leaderName} 리더입니다.
         const isAdmin = !!(this.currentUser && this.currentUser.isAdmin);
         const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
 
-        // 순수 정규 교인(활동, 새가족)만 교인 명부에 출력
         this.rawMembers.forEach(m => {
           const rawPhone = (m.phone || '').trim();
           const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
@@ -3008,7 +2995,6 @@ ${className} ${leaderName} 리더입니다.
         }
       }
 
-      // 💡 [방문자 ➔ 정규 새가족으로 승격 기능]
       promoteVisitorToMember(visitorId, name, phone) {
         const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
         const classNames = activeClasses.map((c, i) => `${i + 1}. ${c.className}`).join('\n');

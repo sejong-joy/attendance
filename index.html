@@ -236,7 +236,7 @@
 
         </div>
 
-        <!-- 💡 [신설] 4칸 독립 요약 대시보드 박스 (총원 / 출석 / 지각 / 결석) -->
+        <!-- 💡 4칸 독립 요약 대시보드 박스 (총원 / 출석 / 지각 / 결석) -->
         <div class="grid grid-cols-4 gap-2">
           <div class="bg-white rounded-xl border border-slate-200 p-2 sm:p-2.5 text-center shadow-2xs">
             <span class="text-[11px] sm:text-xs font-black text-slate-500 block">총원</span>
@@ -882,7 +882,6 @@
 
           const sabbathMidnight = new Date(item.fullDate.getFullYear(), item.fullDate.getMonth(), item.fullDate.getDate()).getTime();
 
-          // 30일(일), 31일(월) 등 지나간 안식일이면 다가오는 다음 안식일을 기본 선택
           if (!defaultSelectedDateStr && sabbathMidnight >= todayMidnight) {
             defaultSelectedDateStr = item.dateStr;
           }
@@ -938,7 +937,7 @@
           if (!this.classList.length) {
             this.classList = [
               { classId: 'ADMIN', className: '관리자 (교역자/전체)', leaderName: '교역자', isAdmin: true },
-              { classId: 'C01', className: '청년 1반', leaderName: '김철수', isAdmin: false },
+              { classId: 'C01', className: '청년 1반', leaderName: '최세원', isAdmin: false },
               { classId: 'C02', className: '청년 2반', leaderName: '이영희', isAdmin: false },
               { classId: 'C03', className: '믿음반', leaderName: '박민수', isAdmin: false }
             ];
@@ -1337,6 +1336,7 @@
         }
       }
 
+      // 💡 직분(장로님, 집사님, 성도님 등) 자동 반영 카톡 심방 문구
       copyKakaoCareMessage(memberId, consecutiveWeeks = 3) {
         const member = this.rawMembers.find(m => m.memberId === memberId);
         if (!member) return;
@@ -1344,8 +1344,15 @@
         const leaderName = this.currentUser?.leaderName || '리더';
         const className = this.getClassName(member.classId);
 
+        // 직분에 맞춰 호칭 자동 조절 (장로 -> 장로님, 집사 -> 집사님, 성도 -> 성도님)
+        let roleTitle = (member.role || '성도').trim();
+        if (roleTitle && !roleTitle.endsWith('님')) {
+          roleTitle += '님';
+        }
+        if (!roleTitle) roleTitle = '성도님';
+
         const template = `[세종 조이 안식일학교 안부 심방]
-${member.name} 성도님, 평안하신지요?
+${member.name} ${roleTitle}, 평안하신지요?
 ${className} ${leaderName} 리더입니다.
 
 최근 안식일 예배 때 뵙지 못해 염려되고 보고 싶은 마음에 안부 여쭙니다. 
@@ -1357,7 +1364,7 @@ ${className} ${leaderName} 리더입니다.
 이번 안식일에는 기쁜 얼굴로 꼭 뵐 수 있기를 소망합니다. 주님의 평안이 늘 함께하시길 기도합니다! 🙏`;
 
         navigator.clipboard.writeText(template).then(() => {
-          this.showToast(`💬 ${member.name} 성도님 카톡 심방 문구 복사 완료!`, 'success');
+          this.showToast(`💬 ${member.name} ${roleTitle} 카톡 심방 문구 복사 완료!`, 'success');
         }).catch(() => {
           const tArea = document.createElement('textarea');
           tArea.value = template;
@@ -1365,7 +1372,7 @@ ${className} ${leaderName} 리더입니다.
           tArea.select();
           document.execCommand('copy');
           document.body.removeChild(tArea);
-          this.showToast(`💬 ${member.name} 성도님 카톡 심방 문구 복사 완료!`, 'success');
+          this.showToast(`💬 ${member.name} ${roleTitle} 카톡 심방 문구 복사 완료!`, 'success');
         });
       }
 
@@ -1397,11 +1404,11 @@ ${className} ${leaderName} 리더입니다.
               ? '<p class="text-xs text-blue-700 font-bold mt-0.5">사유: ' + careNote.reason + '</p>' 
               : '';
 
-            let kakaoBtnHtml = `<button onclick="window.appInstance.copyKakaoCareMessage('${item.memberId}', ${item.consecutiveWeeks || 3})" class="px-2.5 py-1.5 bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-xs sm:text-sm tracking-tight whitespace-nowrap rounded-lg transition shadow-2xs flex items-center space-x-0.5"><span>💬</span><span>카톡</span></button>`;
+            let kakaoBtnHtml = `<button onclick="window.appInstance.copyKakaoCareMessage('${item.memberId}', ${item.consecutiveWeeks || 3})" class="h-8 px-2.5 bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-xs tracking-tight whitespace-nowrap rounded-lg transition shadow-2xs flex items-center justify-center space-x-0.5"><span>💬</span><span>카톡</span></button>`;
 
             let phoneButtonsHtml = cleanPhone 
-              ? '<a href="tel:' + cleanPhone + '" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm tracking-tight whitespace-nowrap rounded-lg transition shadow-xs">📞 통화</a>' +
-                '<a href="sms:' + cleanPhone + '" class="px-2.5 py-1.5 bg-white border border-slate-300 text-slate-700 font-black text-xs sm:text-sm tracking-tight whitespace-nowrap rounded-lg transition">문자</a>'
+              ? '<a href="tel:' + cleanPhone + '" class="h-8 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs tracking-tight whitespace-nowrap rounded-lg transition shadow-xs flex items-center justify-center"><span>📞 전화</span></a>' +
+                '<a href="sms:' + cleanPhone + '" class="h-8 px-2.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-black text-xs tracking-tight whitespace-nowrap rounded-lg transition flex items-center justify-center"><span>💬 문자</span></a>'
               : '';
 
             let careBtnText = careNote ? '사유 수정' : '심방 완료';
@@ -1418,7 +1425,7 @@ ${className} ${leaderName} 리더입니다.
               '<div class="flex flex-wrap items-center gap-1.5 self-end sm:self-center">' +
                 phoneButtonsHtml +
                 kakaoBtnHtml +
-                '<button onclick="window.appInstance.openCareModal(\'' + item.memberId + '\')" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs sm:text-sm tracking-tight whitespace-nowrap rounded-lg transition shadow-xs">' +
+                '<button onclick="window.appInstance.openCareModal(\'' + item.memberId + '\')" class="h-8 px-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs tracking-tight whitespace-nowrap rounded-lg transition shadow-xs flex items-center justify-center">' +
                   careBtnText +
                 '</button>' +
               '</div>';
@@ -1565,7 +1572,6 @@ ${className} ${leaderName} 리더입니다.
 
           let urgentBadgeHtml = isUrgentActive ? '<span class="text-xs font-black text-white bg-red-600 px-2 py-0.5 rounded-md animate-pulse">🚨 3주 결석</span>' : '';
           
-          // 💡 심방완료 배지 터치 시 즉시 수정 모달 오픈 연동
           let careBadgeHtml = isCareHandled 
             ? '<button type="button" onclick="window.appInstance.openCareModal(\'' + member.memberId + '\')" class="text-xs font-black text-blue-800 bg-blue-100 hover:bg-blue-200 border border-blue-300 px-2 py-0.5 rounded-md transition flex items-center space-x-1"><span>💬 ' + careNote.reason + '</span><span class="text-[10px] text-blue-500">✏️</span></button>' 
             : '';
@@ -1574,7 +1580,6 @@ ${className} ${leaderName} 리더입니다.
 
           let quickKakaoBtnHtml = isUrgentActive ? `<button onclick="window.appInstance.copyKakaoCareMessage('${member.memberId}', 3)" title="카톡 심방 안부 문구 복사" class="text-xs font-black text-amber-900 bg-amber-300 hover:bg-amber-400 px-2 py-0.5 rounded-md transition flex items-center space-x-0.5"><span>💬</span><span>카톡</span></button>` : '';
 
-          // 💡 1행 (정보 + 직분 오른쪽에 위치한 사유 입력창) & 2행 (화면 가득 찬 풀사이즈 왕버튼 3개)
           row.innerHTML = 
             '<div class="flex items-center justify-between gap-2">' +
               '<div class="flex items-center space-x-2.5 min-w-0">' +
@@ -1860,7 +1865,6 @@ ${className} ${leaderName} 리더입니다.
           }
         });
 
-        // 💡 4칸 독립 요약 박스 업데이트
         const sumTot = document.getElementById('summaryTotalBox');
         const sumPres = document.getElementById('summaryPresentBox');
         const sumLate = document.getElementById('summaryLateBox');
@@ -1898,6 +1902,7 @@ ${className} ${leaderName} 리더입니다.
             memberId: m.memberId,
             name: m.name,
             classId: m.classId,
+            role: m.role || '성도',
             present: 0,
             late: 0,
             absent: 0,
@@ -2254,6 +2259,7 @@ ${className} ${leaderName} 리더입니다.
               '</div>';
           }
         } else if (type === 'care') {
+          // 💡 [심방 대상 팝업] 1:1:1 비율의 전화 / 문자 / 카톡 삼총사 버튼 탑재
           iconEl.textContent = '🚨';
           titleEl.textContent = '관심 및 심방 권장 대상';
           subEl.textContent = `${curQuarter} 출석률 60% 미만 성도`;
@@ -2274,26 +2280,37 @@ ${className} ${leaderName} 리더입니다.
               '</div>';
           } else {
             bodyEl.innerHTML = 
-              '<div class="space-y-2">' +
+              '<div class="space-y-2.5">' +
                 careList.map(m => {
                   const rate = ((m.score / m.checkedCount) * 100).toFixed(1);
                   const cleanPhone = (m.phone || '').replace(/[^0-9]/g, '');
 
+                  let callBtnHtml = cleanPhone 
+                    ? `<a href="tel:${cleanPhone}" class="flex-1 h-8 px-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-black flex items-center justify-center space-x-0.5 shadow-2xs whitespace-nowrap transition"><span>📞</span><span>전화</span></a>`
+                    : `<span class="flex-1 h-8 px-2 bg-slate-100 text-slate-400 rounded-lg text-xs font-black flex items-center justify-center space-x-0.5 whitespace-nowrap"><span>📞</span><span>전화</span></span>`;
+
+                  let smsBtnHtml = cleanPhone 
+                    ? `<a href="sms:${cleanPhone}" class="flex-1 h-8 px-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 rounded-lg text-xs font-black flex items-center justify-center space-x-0.5 shadow-2xs whitespace-nowrap transition"><span>💬</span><span>문자</span></a>`
+                    : `<span class="flex-1 h-8 px-2 bg-slate-100 text-slate-400 rounded-lg text-xs font-black flex items-center justify-center space-x-0.5 whitespace-nowrap"><span>💬</span><span>문자</span></span>`;
+
+                  let kakaoBtnHtml = `<button onclick="window.appInstance.copyKakaoCareMessage('${m.memberId}', 3)" class="flex-1 h-8 px-2 bg-amber-400 hover:bg-amber-500 text-amber-950 rounded-lg text-xs font-black flex items-center justify-center space-x-0.5 shadow-2xs whitespace-nowrap transition"><span>💬</span><span>카톡</span></button>`;
+
                   return (
-                    '<div class="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between">' +
+                    '<div class="p-3 bg-red-50/70 border border-red-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-2xs">' +
                       '<div>' +
-                        '<div class="flex items-center space-x-1.5">' +
+                        '<div class="flex items-center space-x-1.5 flex-wrap">' +
                           '<span class="font-black text-slate-900 text-sm sm:text-base">' + m.name + '</span>' +
-                          '<span class="text-[10px] font-black bg-red-100 text-red-700 px-1.5 py-0.5 rounded">' + rate + '%</span>' +
+                          '<span class="text-xs font-bold text-slate-600 bg-white border border-slate-200 px-1.5 py-0.5 rounded">' + (m.role || '성도') + '</span>' +
+                          '<span class="text-[11px] font-black bg-red-100 text-red-700 px-1.5 py-0.5 rounded">' + rate + '%</span>' +
                         '</div>' +
                         '<p class="text-xs text-slate-600 font-bold mt-0.5">' +
-                          this.getClassName(m.classId) + ' · 결석 ' + m.absent + '회 (총 ' + m.checkedCount + '회)' +
+                          this.getClassName(m.classId) + ' · 결석 ' + m.absent + '회 (총 ' + m.checkedCount + '회 체크)' +
                         '</p>' +
                       '</div>' +
-                      '<div class="flex items-center space-x-1">' +
-                        `<button onclick="window.appInstance.copyKakaoCareMessage('${m.memberId}', 3)" class="px-2.5 py-1 bg-amber-400 hover:bg-amber-500 text-amber-950 rounded-lg text-xs font-black">💬 카톡</button>` +
-                        (cleanPhone ? 
-                          '<a href="tel:' + cleanPhone + '" class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-xs font-black">📞</a>' : '') +
+                      '<div class="flex items-center gap-1.5 w-full sm:w-auto min-w-[210px]">' +
+                        callBtnHtml +
+                        smsBtnHtml +
+                        kakaoBtnHtml +
                       '</div>' +
                     '</div>'
                   );
@@ -2353,7 +2370,6 @@ ${className} ${leaderName} 리더입니다.
         });
       }
 
-      // 💡 [교인 명부 렌더링]: 이름, 소속반, 직분, 상태 1줄 + 전화번호 2줄 쪼개기 + 시원한 폰트 크기
       renderMemberDirectory() {
         const tbody = document.getElementById('memberDirectoryBody');
         if (!tbody) return;
@@ -3430,8 +3446,8 @@ ${className} ${leaderName} 리더입니다.
       getMockMembers(classId) {
         return [
           { memberId: 'M0001', name: '홍길동', classId: classId, role: '성도', phone: '010-1234-5678', status: '활동' },
-          { memberId: 'M0002', name: '김영수', classId: classId, role: '성도', phone: '010-2345-6789', status: '새가족' },
-          { memberId: 'M0004', name: '박준호', classId: classId, role: '성도', phone: '010-4567-8901', status: '활동' }
+          { memberId: 'M0002', name: '김영수', classId: classId, role: '집사', phone: '010-2345-6789', status: '활동' },
+          { memberId: 'M0004', name: '박준호', classId: classId, role: '장로', phone: '010-4567-8901', status: '활동' }
         ];
       }
     }

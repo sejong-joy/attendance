@@ -32,8 +32,8 @@
       -webkit-tap-highlight-color: transparent;
     }
     .custom-scrollbar::-webkit-scrollbar {
-      width: 5px;
-      height: 5px;
+      width: 4px;
+      height: 4px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
       background-color: #cbd5e1;
@@ -44,7 +44,7 @@
     }
     @keyframes alert-pulse {
       0%, 100% { border-color: rgba(239, 68, 68, 1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-      50% { border-color: rgba(220, 38, 38, 0.6); box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); }
+      50% { border-color: rgba(220, 38, 38, 0.6); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
     }
     .pulse-danger {
       animation: alert-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -165,15 +165,15 @@
         </div>
       </div>
 
-      <!-- Navigation Tabs: 큼직하고 시원시원한 버튼 크기 복원 -->
-      <div class="flex items-center space-x-1 bg-slate-200/90 p-1.5 rounded-2xl w-full sm:w-max shadow-inner">
-        <button onclick="window.appInstance.switchTab('check')" id="tabBtn-check" class="tab-btn flex-1 sm:flex-initial px-3.5 py-2 rounded-xl text-sm sm:text-base font-black tracking-tight whitespace-nowrap bg-white text-emerald-800 shadow-sm transition">
+      <!-- 💡 Navigation Tabs: 패딩 압축 + 글씨를 탭 박스 안에 꽉 채움 (text-base sm:text-lg font-black leading-none) -->
+      <div class="flex items-center space-x-1 bg-slate-200/90 p-1 rounded-2xl w-full sm:w-max shadow-inner">
+        <button onclick="window.appInstance.switchTab('check')" id="tabBtn-check" class="tab-btn flex-1 sm:flex-initial px-3 sm:px-4 py-2.5 rounded-xl text-base sm:text-lg font-black tracking-tight whitespace-nowrap bg-white text-emerald-800 shadow-sm transition leading-none">
           ✍️ 출석 체크 (실시간)
         </button>
-        <button onclick="window.appInstance.switchTab('stats')" id="tabBtn-stats" class="tab-btn flex-1 sm:flex-initial px-3.5 py-2 rounded-xl text-sm sm:text-base font-black tracking-tight whitespace-nowrap text-slate-600 hover:text-slate-900 transition">
+        <button onclick="window.appInstance.switchTab('stats')" id="tabBtn-stats" class="tab-btn flex-1 sm:flex-initial px-3 sm:px-4 py-2.5 rounded-xl text-base sm:text-lg font-black tracking-tight whitespace-nowrap text-slate-600 hover:text-slate-900 transition leading-none">
           📊 출석 통계
         </button>
-        <button onclick="window.appInstance.switchTab('members')" id="tabBtn-members" class="tab-btn flex-1 sm:flex-initial px-3.5 py-2 rounded-xl text-sm sm:text-base font-black tracking-tight whitespace-nowrap text-slate-600 hover:text-slate-900 transition">
+        <button onclick="window.appInstance.switchTab('members')" id="tabBtn-members" class="tab-btn flex-1 sm:flex-initial px-3 sm:px-4 py-2.5 rounded-xl text-base sm:text-lg font-black tracking-tight whitespace-nowrap text-slate-600 hover:text-slate-900 transition leading-none">
           👥 교인 명부
         </button>
       </div>
@@ -183,25 +183,25 @@
         
         <!-- [관리자 전용] 상단 실시간 반별 실제 출석 현황 바 -->
         <div id="adminClassStatusBarWrap" class="hidden bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
-          <div class="text-[11px] font-black text-slate-400 mb-1 flex items-center justify-between">
+          <div class="text-[11px] font-black text-slate-400 mb-1.5 flex items-center justify-between">
             <span>⚡ 오늘 예배 실시간 출석 현황 (실제 참석 / 재적)</span>
             <span class="text-[10px] text-slate-400">터치 시 해당 반으로 전환</span>
           </div>
           <div id="classChipsContainer" class="flex items-center space-x-1.5 overflow-x-auto custom-scrollbar pb-0.5"></div>
         </div>
 
-        <!-- Controls Card: 2단 최적화 레이아웃 + 시원시원한 폰트 크기 -->
-        <div class="bg-white rounded-xl border border-slate-200 p-2.5 sm:p-3.5 shadow-xs space-y-2 sm:space-y-2.5">
+        <!-- Controls Card: 2단 배치 + 글씨 꽉 채우기 -->
+        <div class="bg-white rounded-xl border border-slate-200 p-2.5 sm:p-3.5 shadow-xs space-y-2.5">
           
           <!-- 1단 (윗줄): 년도 + 기수 (좌측) / ☁️ 자동 저장됨 (우측) -->
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center space-x-1.5 sm:space-x-2">
-              <select id="yearSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-2xs">
+              <select id="yearSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-sm sm:text-base font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-2xs">
                 <option value="2025">2025년</option>
                 <option value="2026" selected>2026년</option>
                 <option value="2027">2027년</option>
               </select>
-              <select id="quarterSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-black text-emerald-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-2xs">
+              <select id="quarterSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-sm sm:text-base font-black text-emerald-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-2xs">
                 <option value="1기">1기</option>
                 <option value="2기">2기</option>
                 <option value="3기">3기</option>
@@ -210,7 +210,7 @@
             </div>
 
             <!-- 자동 저장됨 배지 -->
-            <div id="syncStatusBadge" class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition shadow-2xs">
+            <div id="syncStatusBadge" class="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition shadow-2xs leading-none">
               <span id="syncStatusIcon">☁️</span>
               <span id="syncStatusText">자동 저장됨</span>
             </div>
@@ -219,17 +219,17 @@
           <!-- 2단 (아랫줄): 큼직한 제O과 O월O일 (좌측) / ✨ 전원 출석 (우측) -->
           <div class="flex items-center justify-between gap-2">
             <div class="flex-1 flex items-center space-x-1.5 sm:space-x-2 min-w-0">
-              <select id="sabbathSelect" onchange="window.appInstance.onSabbathSelectChange()" class="flex-1 px-3 py-1.5 sm:py-2 bg-emerald-50 border border-emerald-300 rounded-xl text-sm sm:text-base font-black text-emerald-950 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-xs truncate"></select>
+              <select id="sabbathSelect" onchange="window.appInstance.onSabbathSelectChange()" class="flex-1 px-3 py-2 bg-emerald-50 border border-emerald-300 rounded-xl text-base sm:text-lg font-black text-emerald-950 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-xs truncate"></select>
 
               <div id="adminClassFilterWrap" class="hidden flex-shrink-0">
-                <select id="adminClassFilter" onchange="window.appInstance.renderAttendanceList()" class="px-2.5 py-1.5 sm:py-2 bg-amber-50 border border-amber-300 rounded-xl text-xs sm:text-sm font-black text-amber-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                <select id="adminClassFilter" onchange="window.appInstance.renderAttendanceList()" class="px-2.5 py-2 bg-amber-50 border border-amber-300 rounded-xl text-xs sm:text-sm font-black text-amber-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
                   <option value="ALL">전체 반 보기</option>
                 </select>
               </div>
             </div>
 
-            <!-- 전원 출석 버튼 -->
-            <button onclick="window.appInstance.markAllPresent()" class="px-3 sm:px-3.5 py-1.5 sm:py-2 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-200 flex items-center space-x-1 shadow-2xs flex-shrink-0">
+            <!-- 💡 전원 출석 버튼: 여백은 줄이고 글자를 박스에 꽉 채움 -->
+            <button onclick="window.appInstance.markAllPresent()" class="px-3 sm:px-4 py-2 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-sm sm:text-base font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-200 flex items-center space-x-1 shadow-2xs flex-shrink-0 leading-none">
               <span>✨ 전원 출석</span>
             </button>
           </div>
@@ -240,16 +240,16 @@
         <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-3 sm:p-4">
           <div class="pb-2.5 mb-2.5 border-b border-slate-100 flex items-center justify-between">
             <div class="flex items-center space-x-2">
-              <span class="text-sm sm:text-base font-black text-slate-900">출석 명단</span>
-              <span id="memberCountBadge" class="text-xs bg-slate-100 text-slate-700 font-black px-2 py-0.5 rounded-full border border-slate-200">0명</span>
+              <span class="text-base sm:text-lg font-black text-slate-900">출석 명단</span>
+              <span id="memberCountBadge" class="text-xs sm:text-sm bg-slate-100 text-slate-700 font-black px-2 py-0.5 rounded-full border border-slate-200">0명</span>
             </div>
             <!-- Summary Stats -->
-            <div class="flex items-center space-x-2 text-xs font-black bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200">
-              <span class="text-emerald-700">출석 <span id="summaryPresent" class="text-sm font-black">0</span></span>
+            <div class="flex items-center space-x-2 text-xs sm:text-sm font-black bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200">
+              <span class="text-emerald-700">출석 <span id="summaryPresent" class="text-sm sm:text-base font-black">0</span></span>
               <span class="text-slate-300">|</span>
-              <span class="text-amber-700">지각 <span id="summaryLate" class="text-sm font-black">0</span></span>
+              <span class="text-amber-700">지각 <span id="summaryLate" class="text-sm sm:text-base font-black">0</span></span>
               <span class="text-slate-300">|</span>
-              <span class="text-red-600">결석 <span id="summaryAbsent" class="text-sm font-black">0</span></span>
+              <span class="text-red-600">결석 <span id="summaryAbsent" class="text-sm sm:text-base font-black">0</span></span>
             </div>
           </div>
 
@@ -260,42 +260,42 @@
 
       <!-- TAB 2: STATISTICS DASHBOARD VIEW -->
       <div id="tabContent-stats" class="hidden space-y-3">
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          <div onclick="window.appInstance.openStatDetailModal('members')" class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-400 transition cursor-pointer select-none">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+          <div onclick="window.appInstance.openStatDetailModal('members')" class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-400 transition cursor-pointer select-none">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-500">총 등록 교인</span>
-              <span class="text-[10px] text-slate-400">🔍</span>
+              <span class="text-xs sm:text-sm font-bold text-slate-500">총 등록 교인</span>
+              <span class="text-[11px] text-slate-400">🔍</span>
             </div>
-            <p id="statTotalMembers" class="text-2xl font-black text-slate-900 mt-0.5">0명</p>
+            <p id="statTotalMembers" class="text-2xl sm:text-3xl font-black text-slate-900 mt-1">0명</p>
           </div>
-          <div onclick="window.appInstance.openStatDetailModal('rate')" class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-400 transition cursor-pointer select-none">
+          <div onclick="window.appInstance.openStatDetailModal('rate')" class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-400 transition cursor-pointer select-none">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-500">평균 출석률</span>
-              <span class="text-[10px] text-slate-400">🔍</span>
+              <span class="text-xs sm:text-sm font-bold text-slate-500">평균 출석률</span>
+              <span class="text-[11px] text-slate-400">🔍</span>
             </div>
-            <p id="statAvgRate" class="text-2xl font-black text-emerald-600 mt-0.5">0%</p>
+            <p id="statAvgRate" class="text-2xl sm:text-3xl font-black text-emerald-600 mt-1">0%</p>
           </div>
-          <div onclick="window.appInstance.openStatDetailModal('sabbaths')" class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-400 transition cursor-pointer select-none">
+          <div onclick="window.appInstance.openStatDetailModal('sabbaths')" class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-400 transition cursor-pointer select-none">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-500">누적 예배 수</span>
-              <span class="text-[10px] text-slate-400">🔍</span>
+              <span class="text-xs sm:text-sm font-bold text-slate-500">누적 예배 수</span>
+              <span class="text-[11px] text-slate-400">🔍</span>
             </div>
-            <p id="statTotalSabbaths" class="text-2xl font-black text-slate-900 mt-0.5">0회</p>
+            <p id="statTotalSabbaths" class="text-2xl sm:text-3xl font-black text-slate-900 mt-1">0회</p>
           </div>
-          <div onclick="window.appInstance.openStatDetailModal('care')" class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs hover:border-red-400 transition cursor-pointer select-none">
+          <div onclick="window.appInstance.openStatDetailModal('care')" class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs hover:border-red-400 transition cursor-pointer select-none">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-red-600">심방 대상</span>
-              <span class="text-[10px] text-red-400 font-bold animate-pulse">🚨</span>
+              <span class="text-xs sm:text-sm font-bold text-red-600">심방 대상</span>
+              <span class="text-[11px] text-red-400 font-bold animate-pulse">🚨</span>
             </div>
-            <p id="statCareCount" class="text-2xl font-black text-red-500 mt-0.5">0명</p>
+            <p id="statCareCount" class="text-2xl sm:text-3xl font-black text-red-500 mt-1">0명</p>
           </div>
         </div>
 
         <!-- 슬림화된 주차별 그래프 (h-36 sm:h-44) -->
-        <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-xs">
+        <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-xs">
           <h3 class="text-xs sm:text-sm font-black text-slate-900 mb-2 flex items-center justify-between">
             <span>📈 주차별 출석 인원 추이</span>
-            <span class="text-[10px] font-bold text-slate-400">실시간 데이터</span>
+            <span class="text-xs font-bold text-slate-400">실시간 데이터</span>
           </h3>
           <div class="h-36 sm:h-44 relative">
             <canvas id="weeklyChart"></canvas>
@@ -304,12 +304,12 @@
 
         <!-- 개인별 출석 -->
         <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-          <div class="px-3.5 py-2.5 border-b border-slate-100 flex items-center justify-between">
+          <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
             <div>
-              <h3 class="text-xs sm:text-sm font-black text-slate-900">개인별 출석</h3>
-              <p class="text-[10px] text-slate-400 font-bold">성명을 터치하면 과별 세부 출석 팝업이 표시됩니다.</p>
+              <h3 class="text-sm sm:text-base font-black text-slate-900">개인별 출석</h3>
+              <p class="text-xs text-slate-400 font-bold">성명을 터치하면 과별 세부 출석 팝업이 표시됩니다.</p>
             </div>
-            <span class="text-[10px] text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded">출석 1.0 / 지각 0.5 / 결석 0</span>
+            <span class="text-xs text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded">출석 1.0 / 지각 0.5 / 결석 0</span>
           </div>
           <div class="overflow-x-auto custom-scrollbar">
             <table class="w-full text-left text-xs sm:text-sm">
@@ -333,15 +333,15 @@
       <div id="tabContent-members" class="hidden space-y-2.5">
         <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-3 sm:p-4">
           <div class="flex items-center justify-between gap-2.5 pb-2.5 border-b border-slate-100">
-            <input type="text" id="memberSearchInput" oninput="window.appInstance.filterMemberList()" placeholder="이름 또는 직분 검색..." class="flex-1 min-w-0 px-3 py-1.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">
+            <input type="text" id="memberSearchInput" oninput="window.appInstance.filterMemberList()" placeholder="이름 또는 직분 검색..." class="flex-1 min-w-0 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">
             
-            <button id="adminNewMemberBtn" onclick="window.appInstance.openNewMemberModal()" class="hidden px-3 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl transition shadow-xs whitespace-nowrap flex items-center space-x-1 flex-shrink-0">
+            <button id="adminNewMemberBtn" onclick="window.appInstance.openNewMemberModal()" class="hidden px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-xl transition shadow-xs whitespace-nowrap flex items-center space-x-1 flex-shrink-0">
               <span>➕</span>
               <span>새가족/방문자</span>
             </button>
           </div>
 
-          <!-- 교인 명부 테이블: 이름, 소속반, 직분, 상태 1줄 표시 + 전화번호 2줄 쪼개기 -->
+          <!-- 교인 명부 테이블: 1줄 정렬 + 전화번호 2줄 쪼개기 -->
           <div class="overflow-x-auto mt-2 custom-scrollbar">
             <table class="w-full text-left text-xs sm:text-sm font-medium">
               <thead class="bg-slate-50 text-slate-600 font-black border-b border-slate-100">
@@ -786,15 +786,15 @@
         if (!badge || !icon || !text) return;
 
         if (state === 'saved') {
-          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition shadow-2xs';
+          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition shadow-2xs leading-none';
           icon.textContent = '☁️';
           text.textContent = customText || '자동 저장됨';
         } else if (state === 'syncing') {
-          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-blue-50 text-blue-800 border border-blue-200 transition shadow-2xs';
+          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-black bg-blue-50 text-blue-800 border border-blue-200 transition shadow-2xs leading-none';
           icon.textContent = '🔄';
           text.textContent = customText || '저장 중...';
         } else if (state === 'offline') {
-          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-amber-50 text-amber-800 border border-amber-300 transition animate-pulse shadow-2xs';
+          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-black bg-amber-50 text-amber-800 border border-amber-300 transition animate-pulse shadow-2xs leading-none';
           icon.textContent = '⚠️';
           text.textContent = customText || '오프라인';
         }
@@ -1503,7 +1503,7 @@ ${className} ${leaderName} 리더입니다.
         this.renderAttendanceList();
       }
 
-      // 💡 [사진과 같거나 더 큼직한 글씨 크기 적용]
+      // 💡 [버튼 크기 고정 + 내부 여백 압축(p-0) + 글씨 크기 극대화]
       renderAttendanceList() {
         const container = document.getElementById('attendanceList');
         if (!container) return;
@@ -1550,9 +1550,9 @@ ${className} ${leaderName} 리더입니다.
           let avatarIcon = isUrgentActive ? '🚨' : (isCareHandled ? '💬' : (isNewFamily ? '🌱' : (isVisitor ? '🏷️' : member.name.slice(0, 1))));
           let avatarClass = isUrgentActive ? 'bg-red-500 text-white' : (isCareHandled ? 'bg-blue-600 text-white' : (isNewFamily ? 'bg-amber-100 text-amber-800' : (isVisitor ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800')));
 
-          let urgentBadgeHtml = isUrgentActive ? '<span class="text-xs font-black text-white bg-red-600 px-2 py-0.5 rounded-md animate-pulse">🚨 3주 연속 결석 (심방필요)</span>' : '';
-          let careBadgeHtml = isCareHandled ? '<span class="text-xs font-black text-blue-800 bg-blue-100 border border-blue-300 px-2 py-0.5 rounded-md">💬 심방완료: ' + careNote.reason + '</span>' : '';
-          let urgentCareBtnHtml = isUrgentActive ? '<button onclick="window.appInstance.openCareModal(\'' + member.memberId + '\')" class="text-xs font-black text-red-700 bg-white border border-red-300 px-2 py-0.5 rounded-md hover:bg-red-50 transition">✍️ 심방완료 처리</button>' : '';
+          let urgentBadgeHtml = isUrgentActive ? '<span class="text-xs font-black text-white bg-red-600 px-2 py-0.5 rounded-md animate-pulse">🚨 3주 연속 결석</span>' : '';
+          let careBadgeHtml = isCareHandled ? '<span class="text-xs font-black text-blue-800 bg-blue-100 border border-blue-300 px-2 py-0.5 rounded-md">💬 심방: ' + careNote.reason + '</span>' : '';
+          let urgentCareBtnHtml = isUrgentActive ? '<button onclick="window.appInstance.openCareModal(\'' + member.memberId + '\')" class="text-xs font-black text-red-700 bg-white border border-red-300 px-2 py-0.5 rounded-md hover:bg-red-50 transition">✍️ 심방완료</button>' : '';
 
           let quickKakaoBtnHtml = isUrgentActive ? `<button onclick="window.appInstance.copyKakaoCareMessage('${member.memberId}', 3)" title="카톡 심방 안부 문구 복사" class="text-xs font-black text-amber-900 bg-amber-300 hover:bg-amber-400 px-2 py-0.5 rounded-md transition flex items-center space-x-0.5"><span>💬</span><span>카톡복사</span></button>` : '';
 
@@ -1563,7 +1563,7 @@ ${className} ${leaderName} 리더입니다.
               '</div>' +
               '<div>' +
                 '<div class="flex items-center space-x-1.5 flex-wrap">' +
-                  // 💡 성도 이름 큼직하게 (text-lg sm:text-xl font-black)
+                  // 💡 성도 이름 극대화 (text-lg sm:text-xl font-black)
                   '<span class="font-black text-slate-900 text-lg sm:text-xl leading-tight">' + member.name + '</span>' +
                   '<span class="text-xs font-bold text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">' + (member.role || '성도') + '</span>' +
                   (isNewFamily ? '<span class="text-xs font-bold text-amber-800 bg-amber-100 border border-amber-200 px-1.5 py-0.5 rounded">새가족</span>' : '') +
@@ -1578,20 +1578,20 @@ ${className} ${leaderName} 리더입니다.
                 '</div>' +
               '</div>' +
             '</div>' +
-            '<div class="flex flex-wrap items-center gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">' +
-              // 💡 ⭕출석/△지각/❌결석 버튼 큼직하게 복원 (text-base sm:text-lg font-black px-3.5 py-1.5)
-              '<div class="inline-flex rounded-xl shadow-xs border border-slate-200 bg-slate-100 p-0.5" role="group">' +
-                '<button onclick="window.appInstance.setStatus(\'' + member.memberId + '\', \'출석\')" class="status-btn-' + member.memberId + '-출석 px-3 sm:px-4 py-1.5 text-base sm:text-lg font-black tracking-tight whitespace-nowrap rounded-lg transition ' + (state.status === '출석' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900') + '">' +
+            '<div class="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">' +
+              // 💡 출석/지각/결석 버튼: 크기는 그대로 유지하고 내부 여백을 없앤 뒤 폰트 크기를 버튼에 꽉 채움 (text-base sm:text-lg font-black leading-none)
+              '<div class="inline-flex rounded-xl shadow-xs border border-slate-200 bg-slate-100 p-0.5 h-10 sm:h-11 items-center" role="group">' +
+                '<button onclick="window.appInstance.setStatus(\'' + member.memberId + '\', \'출석\')" class="status-btn-' + member.memberId + '-출석 px-2 sm:px-3 h-full flex items-center justify-center text-base sm:text-lg font-black tracking-tight whitespace-nowrap rounded-lg transition leading-none ' + (state.status === '출석' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900') + '">' +
                   '⭕ 출석' +
                 '</button>' +
-                '<button onclick="window.appInstance.setStatus(\'' + member.memberId + '\', \'지각\')" class="status-btn-' + member.memberId + '-지각 px-3 sm:px-4 py-1.5 text-base sm:text-lg font-black tracking-tight whitespace-nowrap rounded-lg transition ' + (state.status === '지각' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900') + '">' +
+                '<button onclick="window.appInstance.setStatus(\'' + member.memberId + '\', \'지각\')" class="status-btn-' + member.memberId + '-지각 px-2 sm:px-3 h-full flex items-center justify-center text-base sm:text-lg font-black tracking-tight whitespace-nowrap rounded-lg transition leading-none ' + (state.status === '지각' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900') + '">' +
                   '△ 지각' +
                 '</button>' +
-                '<button onclick="window.appInstance.setStatus(\'' + member.memberId + '\', \'결석\')" class="status-btn-' + member.memberId + '-결석 px-3 sm:px-4 py-1.5 text-base sm:text-lg font-black tracking-tight whitespace-nowrap rounded-lg transition ' + (state.status === '결석' ? 'bg-red-500 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900') + '">' +
+                '<button onclick="window.appInstance.setStatus(\'' + member.memberId + '\', \'결석\')" class="status-btn-' + member.memberId + '-결석 px-2 sm:px-3 h-full flex items-center justify-center text-base sm:text-lg font-black tracking-tight whitespace-nowrap rounded-lg transition leading-none ' + (state.status === '결석' ? 'bg-red-500 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900') + '">' +
                   '❌ 결석' +
                 '</button>' +
               '</div>' +
-              '<input type="text" value="' + (state.reason || '') + '" onchange="window.appInstance.setReason(\'' + member.memberId + '\', this.value)" placeholder="사유 입력" class="text-sm font-bold px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl w-28 sm:w-36 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">' +
+              '<input type="text" value="' + (state.reason || '') + '" onchange="window.appInstance.setReason(\'' + member.memberId + '\', this.value)" placeholder="사유 입력" class="h-10 sm:h-11 text-xs sm:text-sm font-bold px-2.5 bg-slate-50 border border-slate-200 rounded-xl w-24 sm:w-32 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">' +
             '</div>';
 
           container.appendChild(row);
@@ -1696,8 +1696,8 @@ ${className} ${leaderName} 리더입니다.
           const btn = document.querySelector(`.status-btn-${memberId}-${st}`);
           if (btn) {
             btn.className = (st === finalStatus)
-              ? `status-btn-${memberId}-${st} px-3 sm:px-4 py-1.5 text-base sm:text-lg font-black tracking-tight whitespace-nowrap rounded-lg transition ${st === '출석' ? 'bg-emerald-600 text-white shadow-sm' : st === '지각' ? 'bg-amber-500 text-white shadow-sm' : 'bg-red-500 text-white shadow-sm'}`
-              : `status-btn-${memberId}-${st} px-3 sm:px-4 py-1.5 text-base sm:text-lg font-black tracking-tight whitespace-nowrap rounded-lg transition text-slate-600 hover:text-slate-900`;
+              ? `status-btn-${memberId}-${st} px-2 sm:px-3 h-full flex items-center justify-center text-base sm:text-lg font-black tracking-tight whitespace-nowrap rounded-lg transition leading-none ${st === '출석' ? 'bg-emerald-600 text-white shadow-sm' : st === '지각' ? 'bg-amber-500 text-white shadow-sm' : 'bg-red-500 text-white shadow-sm'}`
+              : `status-btn-${memberId}-${st} px-2 sm:px-3 h-full flex items-center justify-center text-base sm:text-lg font-black tracking-tight whitespace-nowrap rounded-lg transition leading-none text-slate-600 hover:text-slate-900`;
           }
         });
 
@@ -2936,343 +2936,6 @@ ${className} ${leaderName} 리더입니다.
                 </div>
               </div>
             `;
-          } else {
-            const quarters = ['1기', '2기', '3기', '4기'];
-            const yearRecs = this.rawRecords.filter(r => r.date && r.date.startsWith(year) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
-
-            html = `
-              <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 14px; border-bottom: 2px solid #0f172a; padding-bottom: 8px;">
-                  <div>
-                    <h2 style="font-size: 20px; font-weight: 900; margin: 0; color: #0f172a;">${year}년도 안식일학교 연간(1개년) 종합 결산 보고서</h2>
-                    <p style="font-size: 11px; color: #475569; margin: 2px 0 0 0;">세종 조이 안식일학교 · 정기 사무총회 및 당회 보고용</p>
-                  </div>
-                  ${approvalBoxHtml}
-                </div>
-
-                <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; margin-bottom: 16px;">
-                  <thead>
-                    <tr style="background: #f1f5f9; font-weight: bold;">
-                      <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">교과반명</th>
-                      <th style="border: 1px solid #cbd5e1; padding: 6px;">담당 리더</th>
-                      <th style="border: 1px solid #cbd5e1; padding: 6px;">재적</th>
-                      <th style="border: 1px solid #cbd5e1; padding: 6px;">1기 출석률</th>
-                      <th style="border: 1px solid #cbd5e1; padding: 6px;">2기 출석률</th>
-                      <th style="border: 1px solid #cbd5e1; padding: 6px;">3기 출석률</th>
-                      <th style="border: 1px solid #cbd5e1; padding: 6px;">4기 출석률</th>
-                      <th style="border: 1px solid #cbd5e1; padding: 6px; color: #059669;">연간 종합</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${activeClasses.map(c => {
-                      const cMembers = this.rawMembers.filter(m => m.classId === c.classId);
-                      let yrScore = 0, yrChecked = 0;
-
-                      const qTds = quarters.map(q => {
-                        let qScore = 0, qChecked = 0;
-                        cMembers.forEach(m => {
-                          const mRecs = yearRecs.filter(r => r.memberId === m.memberId && r.quarter === q);
-                          mRecs.forEach(r => {
-                            if (r.status === '출석') { qScore += 1.0; qChecked++; }
-                            else if (r.status === '지각') { qScore += 0.5; qChecked++; }
-                            else if (r.status === '결석') { qChecked++; }
-                          });
-                        });
-                        yrScore += qScore;
-                        yrChecked += qChecked;
-                        const qRate = qChecked > 0 ? ((qScore / qChecked) * 100).toFixed(0) + '%' : '-';
-                        return `<td style="border: 1px solid #cbd5e1; padding: 6px;">${qRate}</td>`;
-                      }).join('');
-
-                      const yrRate = yrChecked > 0 ? ((yrScore / yrChecked) * 100).toFixed(1) + '%' : '-';
-
-                      return `
-                        <tr>
-                          <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold; text-align: left;">${c.className}</td>
-                          <td style="border: 1px solid #cbd5e1; padding: 6px;">${c.leaderName}</td>
-                          <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold;">${cMembers.length}명</td>
-                          ${qTds}
-                          <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: 900; color: #059669; background: #f0fdf4;">${yrRate}</td>
-                        </tr>
-                      `;
-                    }).join('')}
-                  </tbody>
-                </table>
-
-                <div style="border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 6px; padding: 10px; font-size: 11px; line-height: 1.6;">
-                  <b>💡 연간 총평 요약:</b> 
-                  총 등록 성도 ${this.rawMembers.length}명 중 연간 누적 출석 기록을 종합 분석하여 분기별 성장 추이를 결산하였습니다.
-                </div>
-              </div>
-            `;
-          }
-        } else if (type === 3) {
-          const curDate = document.getElementById('sabbathSelect')?.value || '';
-          html = `
-            <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
-              <div style="border-bottom: 2px solid #111; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-end;">
-                <div>
-                  <h2 style="font-size: 18px; font-weight: 900; margin: 0;">안식일학교 현장 수기 출석부 (${className})</h2>
-                  <p style="font-size: 11px; color: #555; margin: 2px 0 0 0;">예배 일자: ${curDate} · 세종 조이 안식일학교</p>
-                </div>
-                <span style="font-size: 11px; font-weight: bold; color: #666;">기호: ⭕ 출석 / △ 지각 / ❌ 결석</span>
-              </div>
-
-              <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                <thead>
-                  <tr style="background: #f1f5f9; text-align: center;">
-                    <th style="border: 1px solid #94a3b8; padding: 6px; width: 40px;">No</th>
-                    <th style="border: 1px solid #94a3b8; padding: 6px; width: 80px;">성 명</th>
-                    <th style="border: 1px solid #94a3b8; padding: 6px; width: 60px;">직 분</th>
-                    <th style="border: 1px solid #94a3b8; padding: 6px; width: 100px;">출석 확인</th>
-                    <th style="border: 1px solid #94a3b8; padding: 6px;">결석 사유 및 심방 메모</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${targetMembers.map((m, idx) => `
-                    <tr style="height: 36px;">
-                      <td style="border: 1px solid #cbd5e1; text-align: center; color: #64748b;">${idx + 1}</td>
-                      <td style="border: 1px solid #cbd5e1; padding-left: 8px; font-weight: bold;">${m.name}</td>
-                      <td style="border: 1px solid #cbd5e1; text-align: center; color: #64748b;">${m.role || '성도'}</td>
-                      <td style="border: 1px solid #cbd5e1; text-align: center; font-size: 14px;">[ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ]</td>
-                      <td style="border: 1px solid #cbd5e1; padding-left: 8px;"></td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
-          `;
-        } else if (type === 4) {
-          const careList = this.rawMembers.filter(m => {
-            const mRecs = this.rawRecords.filter(r => r.memberId === m.memberId && (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
-            if (mRecs.length < 2) return false;
-            let sc = 0;
-            mRecs.forEach(r => { if (r.status === '출석') sc += 1.0; else if (r.status === '지각') sc += 0.5; });
-            return (sc / mRecs.length) * 100 < 60;
-          });
-
-          html = `
-            <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
-              <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px; border-bottom: 2px solid #dc2626; padding-bottom: 8px;">
-                <div>
-                  <h2 style="font-size: 18px; font-weight: 900; margin: 0; color: #991b1b;">🚨 안식일학교 심방 및 중보기도 대상자 명부</h2>
-                  <p style="font-size: 11px; color: #666; margin: 2px 0 0 0;">${year}년 ${quarter} 기준 · 출석률 60% 미만 및 장기 결석 성도</p>
-                </div>
-                ${approvalBoxHtml}
-              </div>
-
-              <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
-                <thead>
-                  <tr style="background: #fef2f2; text-align: center;">
-                    <th style="border: 1px solid #f87171; padding: 6px;">성명</th>
-                    <th style="border: 1px solid #f87171; padding: 6px;">소속반</th>
-                    <th style="border: 1px solid #f87171; padding: 6px;">연락처</th>
-                    <th style="border: 1px solid #f87171; padding: 6px;">최근 결석 사유 / 심방 기록</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${careList.map(m => {
-                    const care = this.careNotesMap[m.memberId];
-                    return `
-                      <tr style="height: 36px;">
-                        <td style="border: 1px solid #fca5a5; padding: 6px; font-weight: bold;">${m.name} (${m.role || '성도'})</td>
-                        <td style="border: 1px solid #fca5a5; text-align: center;">${this.getClassName(m.classId)}</td>
-                        <td style="border: 1px solid #fca5a5; text-align: center;">${m.phone || '-'}</td>
-                        <td style="border: 1px solid #fca5a5; padding: 6px; color: #1e3a8a;">
-                          ${care ? `<b>[심방완료]</b> ${care.reason} (${care.handledBy})` : '<span style="color: #dc2626;">심방 필요</span>'}
-                        </td>
-                      </tr>
-                    `;
-                  }).join('')}
-                </tbody>
-              </table>
-            </div>
-          `;
-        }
-
-        printBox.innerHTML = html;
-        this.closeExportModal();
-        setTimeout(() => {
-          window.print();
-        }, 300);
-      }
-
-      exportExcel(type) {
-        if (typeof XLSX === 'undefined') {
-          this.showToast('엑셀 라이브러리 로딩 중입니다.', 'error');
-          return;
-        }
-
-        const year = document.getElementById('yearSelect')?.value || '2026';
-        const quarter = document.getElementById('quarterSelect')?.value || '3기';
-        const isYearly = document.querySelector('input[name="reportPeriod"]:checked')?.value === 'year';
-        const activeFilter = (this.currentUser && this.currentUser.isAdmin)
-          ? (this.selectedFilterClass || document.getElementById('adminClassFilter')?.value || 'ALL')
-          : this.currentUser.classId;
-
-        const className = this.getClassName(activeFilter);
-        const sabbaths = this.getQuarterSabbaths(parseInt(year, 10), quarter);
-        const targetMembers = (activeFilter === 'ALL') ? this.rawMembers : this.rawMembers.filter(m => m.classId === activeFilter);
-        const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
-
-        const wb = XLSX.utils.book_new();
-
-        const styleHeader = {
-          font: { bold: true, color: { rgb: "1E293B" }, sz: 11 },
-          fill: { fgColor: { rgb: "F1F5F9" } },
-          alignment: { horizontal: "center", vertical: "center" },
-          border: { top: { style: "thin", color: { rgb: "CBD5E1" } }, bottom: { style: "thin", color: { rgb: "CBD5E1" } }, left: { style: "thin", color: { rgb: "CBD5E1" } }, right: { style: "thin", color: { rgb: "CBD5E1" } } }
-        };
-
-        const stylePresent = {
-          font: { bold: true, color: { rgb: "059669" }, sz: 12 },
-          alignment: { horizontal: "center", vertical: "center" }
-        };
-
-        const styleLate = {
-          font: { bold: true, color: { rgb: "D97706" }, sz: 12 },
-          alignment: { horizontal: "center", vertical: "center" }
-        };
-
-        const styleAbsent = {
-          font: { bold: true, color: { rgb: "DC2626" }, sz: 12 },
-          alignment: { horizontal: "center", vertical: "center" }
-        };
-
-        const styleNormalCenter = {
-          font: { color: { rgb: "334155" }, sz: 10 },
-          alignment: { horizontal: "center", vertical: "center" }
-        };
-
-        if (type === 1) {
-          const headers = ['성명', '소속반', '직분', ...sabbaths.map((s, i) => `제${i+1}과(${s.monthNum}/${s.dayNum})`), '출석', '지각', '결석', '출석률'];
-          const sheetData = [];
-          sheetData.push(headers.map(h => ({ v: h, s: styleHeader })));
-
-          targetMembers.forEach(m => {
-            let p = 0, l = 0, a = 0;
-            const rowCells = [
-              { v: m.name, s: { font: { bold: true } } },
-              { v: this.getClassName(m.classId), s: styleNormalCenter },
-              { v: m.role || '성도', s: styleNormalCenter }
-            ];
-
-            sabbaths.forEach(s => {
-              const rec = this.rawRecords.find(r => r.memberId === m.memberId && r.date === s.dateStr);
-              if (rec && rec.status === '출석') {
-                p++;
-                rowCells.push({ v: '⭕', s: stylePresent });
-              } else if (rec && rec.status === '지각') {
-                l++;
-                rowCells.push({ v: '△', s: styleLate });
-              } else if (rec && rec.status === '결석') {
-                a++;
-                rowCells.push({ v: '❌', s: styleAbsent });
-              } else {
-                rowCells.push({ v: '-', s: styleNormalCenter });
-              }
-            });
-
-            const totChecked = p + l + a;
-            const score = (p * 1.0) + (l * 0.5);
-            const rate = totChecked > 0 ? ((score / totChecked) * 100).toFixed(1) + '%' : '-';
-
-            rowCells.push(
-              { v: p, s: { font: { bold: true, color: { rgb: "059669" } }, alignment: { horizontal: "center" } } },
-              { v: l, s: { font: { bold: true, color: { rgb: "D97706" } }, alignment: { horizontal: "center" } } },
-              { v: a, s: { font: { bold: true, color: { rgb: "DC2626" } }, alignment: { horizontal: "center" } } },
-              { v: rate, s: { font: { bold: true }, alignment: { horizontal: "center" } } }
-            );
-
-            sheetData.push(rowCells);
-          });
-
-          const ws = XLSX.utils.aoa_to_sheet(sheetData);
-          ws['!cols'] = [{ wch: 12 }, { wch: 14 }, { wch: 10 }, ...sabbaths.map(() => ({ wch: 13 })), { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 12 }];
-
-          XLSX.utils.book_append_sheet(wb, ws, `${quarter} 출석부`);
-          XLSX.writeFile(wb, `${year}_${quarter}_${className}_출석부.xlsx`);
-
-        } else if (type === 2) {
-          if (!isYearly) {
-            const validRecs = this.rawRecords.filter(r => (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
-            
-            let totScore = 0;
-            validRecs.forEach(r => { if (r.status === '출석') totScore += 1.0; else if (r.status === '지각') totScore += 0.5; });
-            const totalAvgRate = validRecs.length > 0 ? ((totScore / validRecs.length) * 100).toFixed(1) + '%' : '0.0%';
-
-            const sheetData = [
-              [{ v: `${year}년 ${quarter} 안식일학교 분기 종합 결산 보고서`, s: { font: { bold: true, sz: 14 } } }],
-              [{ v: `세종 조이 안식일학교 · 출력일: ${new Date().toLocaleDateString('ko-KR')}`, s: { font: { sz: 9, color: { rgb: "64748B" } } } }],
-              [],
-              [{ v: "1. 안식일학교 핵심 지표 요약", s: { font: { bold: true, sz: 11 } } }],
-              [
-                { v: "총 등록 교인", s: styleHeader },
-                { v: "활동 교인", s: styleHeader },
-                { v: "새가족", s: styleHeader },
-                { v: "분기 진행 예배", s: styleHeader },
-                { v: "분기 평균 출석률", s: styleHeader }
-              ],
-              [
-                { v: `${this.rawMembers.length}명`, s: styleNormalCenter },
-                { v: `${this.rawMembers.filter(m => m.status === '활동').length}명`, s: { font: { bold: true, color: { rgb: "059669" } }, alignment: { horizontal: "center" } } },
-                { v: `${this.rawMembers.filter(m => m.status === '새가족').length}명`, s: { font: { bold: true, color: { rgb: "D97706" } }, alignment: { horizontal: "center" } } },
-                { v: `${sabbaths.length}회`, s: styleNormalCenter },
-                { v: totalAvgRate, s: { font: { bold: true, color: { rgb: "059669" } }, alignment: { horizontal: "center" } } }
-              ],
-              [],
-              [{ v: "2. 교과반별 주차(과)별 실제 출석 인원 현황 (1과~13과)", s: { font: { bold: true, sz: 11 } } }],
-              [
-                { v: "교과반명", s: styleHeader },
-                { v: "담당 리더", s: styleHeader },
-                { v: "재적", s: styleHeader },
-                ...sabbaths.map((s, idx) => ({ v: `${idx + 1}과`, s: styleHeader })),
-                { v: "평균 출석 인원", s: styleHeader },
-                { v: "분기 출석률", s: styleHeader }
-              ]
-            ];
-
-            activeClasses.forEach(c => {
-              const cMembers = this.rawMembers.filter(m => m.classId === c.classId);
-              let cScoreSum = 0;
-              let cCheckedSum = 0;
-
-              const weekCells = sabbaths.map(s => {
-                const cnt = cMembers.filter(m => {
-                  const r = validRecs.find(rec => rec.memberId === m.memberId && rec.date === s.dateStr);
-                  return r && (r.status === '출석' || r.status === '지각');
-                }).length;
-                return { v: cnt, s: { font: { bold: cnt > 0, color: { rgb: cnt > 0 ? "059669" : "94A3B8" } }, alignment: { horizontal: "center" } } };
-              });
-
-              cMembers.forEach(m => {
-                const mRecs = validRecs.filter(r => r.memberId === m.memberId);
-                mRecs.forEach(r => {
-                  if (r.status === '출석') { cScoreSum += 1.0; cCheckedSum++; }
-                  else if (r.status === '지각') { cScoreSum += 0.5; cCheckedSum++; }
-                  else if (r.status === '결석') { cCheckedSum++; }
-                });
-              });
-
-              const avgPresentNum = sabbaths.length > 0 ? (cScoreSum / sabbaths.length).toFixed(1) + '명' : '-';
-              const avgRate = cCheckedSum > 0 ? ((cScoreSum / cCheckedSum) * 100).toFixed(1) + '%' : '-';
-
-              sheetData.push([
-                { v: c.className, s: { font: { bold: true } } },
-                { v: c.leaderName, s: styleNormalCenter },
-                { v: `${cMembers.length}명`, s: styleNormalCenter },
-                ...weekCells,
-                { v: avgPresentNum, s: { font: { bold: true }, alignment: { horizontal: "center" } } },
-                { v: avgRate, s: { font: { bold: true, color: { rgb: "059669" } }, alignment: { horizontal: "center" } } }
-              ]);
-            });
-
-            const ws = XLSX.utils.aoa_to_sheet(sheetData);
-            ws['!cols'] = [{ wch: 16 }, { wch: 14 }, { wch: 10 }, ...sabbaths.map(() => ({ wch: 8 })), { wch: 15 }, { wch: 14 }];
-
-            XLSX.utils.book_append_sheet(wb, ws, '분기결산');
-            XLSX.writeFile(wb, `${year}_${quarter}_안교_종합결산보고서.xlsx`);
-
           } else {
             const quarters = ['1기', '2기', '3기', '4기'];
             const yearRecs = this.rawRecords.filter(r => r.date && r.date.startsWith(year) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));

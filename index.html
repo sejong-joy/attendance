@@ -347,9 +347,10 @@
             
             <div class="flex items-center space-x-2 w-full sm:w-auto">
               <input type="text" id="memberSearchInput" oninput="window.appInstance.filterMemberList()" placeholder="이름 또는 직분 검색..." class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs sm:text-sm font-bold focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition sm:w-48">
-              <button onclick="window.appInstance.openNewMemberModal()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-lg transition shadow-xs whitespace-nowrap flex items-center space-x-1">
+              <!-- 관리자 전용 등록 버튼: setupLoggedInUI에서 권한에 따라 노출 제어 -->
+              <button id="adminNewMemberBtn" onclick="window.appInstance.openNewMemberModal()" class="hidden px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-lg transition shadow-xs whitespace-nowrap flex items-center space-x-1">
                 <span>➕</span>
-                <span>등록</span>
+                <span>새가족/방문자 등록</span>
               </button>
             </div>
           </div>
@@ -649,15 +650,15 @@
       </div>
     </div>
 
-    <!-- [신규 모달] 새가족/방문자 현장 등록 모달 -->
+    <!-- [신규 모달] 새가족 / 방문자 현장 등록 모달 (관리자 전용) -->
     <div id="newMemberModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border border-emerald-200 w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-200" id="newMemberModalBox">
         <div class="px-4 py-3 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between">
           <div class="flex items-center space-x-2">
             <span class="text-xl">🌱</span>
             <div>
-              <h3 class="text-base font-black text-emerald-900 leading-tight">새가족 현장 등록</h3>
-              <p class="text-xs text-emerald-700 font-bold">새로운 방문자를 명부에 즉시 추가합니다</p>
+              <h3 class="text-base font-black text-emerald-900 leading-tight">새가족 / 방문자 등록</h3>
+              <p class="text-xs text-emerald-700 font-bold">교역자/관리자 전용 명부 추가</p>
             </div>
           </div>
           <button onclick="window.appInstance.closeNewMemberModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg p-1">✕</button>
@@ -672,21 +673,27 @@
             <label class="block text-xs font-black text-slate-700 mb-1">연락처</label>
             <input type="tel" id="newMemberPhone" placeholder="예: 010-1234-5678" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
           </div>
-          <div class="grid grid-cols-2 gap-3">
+          
+          <div class="grid grid-cols-2 gap-2.5">
             <div>
-              <label class="block text-xs font-black text-slate-700 mb-1">소속반 (자동지정)</label>
-              <input type="text" id="newMemberClassDisplay" readonly class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black text-slate-500 cursor-not-allowed">
+              <label class="block text-xs font-black text-slate-700 mb-1">등록 구분 *</label>
+              <select id="newMemberStatus" onchange="window.appInstance.onNewMemberTypeChange()" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                <option value="새가족">🌱 정규 새가족</option>
+                <option value="방문자">🏷️ 단순 방문자</option>
+              </select>
             </div>
             <div>
-              <label class="block text-xs font-black text-slate-700 mb-1">직분 / 상태</label>
-              <div class="w-full px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl text-xs font-black text-amber-800 flex items-center justify-center">
-                새가족 · 성도
-              </div>
+              <label class="block text-xs font-black text-slate-700 mb-1">배정할 반 *</label>
+              <select id="newMemberClassSelect" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                <!-- 동적으로 반 목록 추가됨 -->
+              </select>
             </div>
           </div>
-          <div class="bg-emerald-50 p-2.5 rounded-xl border border-emerald-200 text-xs font-bold text-emerald-900 leading-relaxed mt-2">
-            💡 등록 완료 시 현재 선택된 반의 명단에 즉시 나타나며, 오늘부터 바로 출석 체크가 가능해집니다.
-          </div>
+
+          <p id="newMemberNotice" class="text-[11px] text-slate-500 font-bold leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-200 mt-2">
+            💡 <b>새가족:</b> 해당 반 정규 명부에 추가되며 주차별 출석 통계에 반영됩니다.
+          </p>
+
           <div class="flex space-x-2 pt-2">
             <button type="button" onclick="window.appInstance.closeNewMemberModal()" class="w-1/2 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black text-xs sm:text-sm tracking-tight rounded-xl transition">취소</button>
             <button type="submit" class="w-1/2 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm tracking-tight rounded-xl transition shadow-md">명부에 등록</button>
@@ -1113,6 +1120,9 @@
         if (!this.rawMembers || !this.rawRecords) return;
 
         this.rawMembers.forEach(member => {
+          // 단순 방문자는 장기 결석 알림 계산에서 완전히 제외
+          if (member.status === '방문자') return;
+
           const memberRecs = this.rawRecords
             .filter(r => r.memberId === member.memberId && r.date && (r.status === '출석' || r.status === '지각' || r.status === '결석'))
             .sort((a, b) => b.date.localeCompare(a.date));
@@ -1239,15 +1249,18 @@
         const filterWrap = document.getElementById('adminClassFilterWrap');
         const statusBarWrap = document.getElementById('adminClassStatusBarWrap');
         const adminResetSec = document.getElementById('adminResetSection');
+        const adminNewMemberBtn = document.getElementById('adminNewMemberBtn');
 
         if (this.currentUser.isAdmin) {
           filterWrap?.classList.remove('hidden');
           statusBarWrap?.classList.remove('hidden');
           adminResetSec?.classList.remove('hidden');
+          adminNewMemberBtn?.classList.remove('hidden'); // 관리자 전용 등록 버튼 노출
         } else {
           filterWrap?.classList.add('hidden');
           statusBarWrap?.classList.add('hidden');
           adminResetSec?.classList.add('hidden');
+          adminNewMemberBtn?.classList.add('hidden'); // 일반 리더는 숨김 처리
         }
 
         this.calculateConsecutiveAbsentees();
@@ -1503,6 +1516,7 @@
           const isCareHandled = is3WeekAbsent && !!careNote;
           const isUrgentActive = is3WeekAbsent && !careNote;
           const isNewFamily = member.status === '새가족';
+          const isVisitor = member.status === '방문자';
 
           const row = document.createElement('div');
           
@@ -1515,8 +1529,8 @@
 
           row.className = `p-3 sm:p-3.5 rounded-xl transition shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${borderStyle}`;
 
-          let avatarIcon = isUrgentActive ? '🚨' : (isCareHandled ? '💬' : (isNewFamily ? '🌱' : member.name.slice(0, 1)));
-          let avatarClass = isUrgentActive ? 'bg-red-500 text-white' : (isCareHandled ? 'bg-blue-600 text-white' : (isNewFamily ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'));
+          let avatarIcon = isUrgentActive ? '🚨' : (isCareHandled ? '💬' : (isNewFamily ? '🌱' : (isVisitor ? '🏷️' : member.name.slice(0, 1))));
+          let avatarClass = isUrgentActive ? 'bg-red-500 text-white' : (isCareHandled ? 'bg-blue-600 text-white' : (isNewFamily ? 'bg-amber-100 text-amber-800' : (isVisitor ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800')));
 
           let urgentBadgeHtml = isUrgentActive ? '<span class="text-[11px] font-black text-white bg-red-600 px-2 py-0.5 rounded animate-pulse">🚨 3주 연속 결석 (심방필요)</span>' : '';
           let careBadgeHtml = isCareHandled ? '<span class="text-[11px] font-black text-blue-800 bg-blue-100 border border-blue-300 px-2 py-0.5 rounded">💬 심방완료: ' + careNote.reason + '</span>' : '';
@@ -1532,6 +1546,7 @@
                   '<span class="font-black text-slate-900 text-base sm:text-lg">' + member.name + '</span>' +
                   '<span class="text-xs font-bold text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">' + (member.role || '성도') + '</span>' +
                   (isNewFamily ? '<span class="text-xs font-bold text-amber-800 bg-amber-100 border border-amber-200 px-1.5 py-0.5 rounded">새가족</span>' : '') +
+                  (isVisitor ? '<span class="text-xs font-bold text-blue-800 bg-blue-100 border border-blue-200 px-1.5 py-0.5 rounded">방문자</span>' : '') +
                   urgentBadgeHtml +
                   careBadgeHtml +
                 '</div>' +
@@ -2068,7 +2083,7 @@
           iconEl.textContent = '👥';
           titleEl.textContent = `등록 교인 명단 (총 ${this.rawMembers.length}명)`;
           subEl.textContent = '현재 반 및 직분별 등록 현황';
-          if (footerEl) footerEl.textContent = `활동 교인 ${this.rawMembers.filter(m => m.status === '활동').length}명 · 새가족 ${this.rawMembers.filter(m => m.status === '새가족').length}명`;
+          if (footerEl) footerEl.textContent = `활동 교인 ${this.rawMembers.filter(m => m.status === '활동').length}명 · 새가족 ${this.rawMembers.filter(m => m.status === '새가족').length}명 · 방문자 ${this.rawMembers.filter(m => m.status === '방문자').length}명`;
 
           bodyEl.innerHTML = 
             '<div class="space-y-2">' +
@@ -2077,7 +2092,7 @@
                 return (
                   '<div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">' +
                     '<div class="flex items-center space-x-2">' +
-                      '<div class="w-8 h-8 rounded-lg ' + (m.status === '새가족' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800') + ' flex items-center justify-center font-black text-xs">' +
+                      '<div class="w-8 h-8 rounded-lg ' + (m.status === '새가족' ? 'bg-amber-100 text-amber-800' : (m.status === '방문자' ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800')) + ' flex items-center justify-center font-black text-xs">' +
                         m.name.slice(0, 1) +
                       '</div>' +
                       '<div>' +
@@ -2085,6 +2100,7 @@
                           '<span class="font-black text-slate-900 text-sm">' + m.name + '</span>' +
                           '<span class="text-[10px] text-slate-500 bg-white border border-slate-200 px-1 py-0.5 rounded font-bold">' + (m.role || '성도') + '</span>' +
                           (m.status === '새가족' ? '<span class="text-[10px] text-amber-700 bg-amber-100 px-1 py-0.5 rounded font-black">새가족</span>' : '') +
+                          (m.status === '방문자' ? '<span class="text-[10px] text-blue-700 bg-blue-100 px-1 py-0.5 rounded font-black">방문자</span>' : '') +
                         '</div>' +
                         '<p class="text-xs text-slate-500 font-bold mt-0.5">' + this.getClassName(m.classId) + ' · ' + (m.phone || '연락처 미기재') + '</p>' +
                       '</div>' +
@@ -2339,7 +2355,8 @@
             '<td class="py-2.5 px-3">' +
               '<span class="px-2 py-0.5 rounded text-[11px] font-black ' +
                 (m.status === '활동' ? 'bg-emerald-100 text-emerald-800' :
-                m.status === '새가족' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600') + '">' +
+                m.status === '새가족' ? 'bg-amber-100 text-amber-800' : 
+                m.status === '방문자' ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600') + '">' +
                 m.status +
               '</span>' +
             '</td>';
@@ -2568,24 +2585,33 @@
         }
       }
 
+      // 새가족 / 방문자 모달 오픈 (관리자 검증 및 반 목록 동적 생성)
       openNewMemberModal() {
-        const modal = document.getElementById('newMemberModal');
-        const box = document.getElementById('newMemberModalBox');
-        const classDisplay = document.getElementById('newMemberClassDisplay');
-        
-        document.getElementById('newMemberName').value = '';
-        document.getElementById('newMemberPhone').value = '';
-
-        const activeFilter = (this.currentUser && this.currentUser.isAdmin) 
-          ? (this.selectedFilterClass || document.getElementById('adminClassFilter')?.value || 'ALL')
-          : this.currentUser.classId;
-
-        if (activeFilter === 'ALL') {
-          this.showToast('새가족을 등록할 특정 반을 상단 칩스나 필터에서 먼저 선택해주세요.', 'error');
+        if (!this.currentUser || !this.currentUser.isAdmin) {
+          this.showToast('새가족 및 방문자 등록은 관리자(교역자)만 가능합니다.', 'error');
           return;
         }
 
-        if (classDisplay) classDisplay.value = this.getClassName(activeFilter);
+        const modal = document.getElementById('newMemberModal');
+        const box = document.getElementById('newMemberModalBox');
+        const classSelect = document.getElementById('newMemberClassSelect');
+        
+        document.getElementById('newMemberName').value = '';
+        document.getElementById('newMemberPhone').value = '';
+        document.getElementById('newMemberStatus').value = '새가족';
+        this.onNewMemberTypeChange();
+
+        // 팝업 내부 반 목록 드롭다운 세팅
+        if (classSelect) {
+          classSelect.innerHTML = '';
+          const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
+          activeClasses.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.classId;
+            opt.textContent = `${c.className} (${c.leaderName} 리더)`;
+            classSelect.appendChild(opt);
+          });
+        }
 
         if (modal && box) {
           modal.classList.remove('pointer-events-none', 'opacity-0');
@@ -2601,29 +2627,43 @@
         if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
       }
 
+      // 새가족 vs 단순 방문자 모달 안내 문구 전환
+      onNewMemberTypeChange() {
+        const type = document.getElementById('newMemberStatus')?.value;
+        const notice = document.getElementById('newMemberNotice');
+        if (!notice) return;
+
+        if (type === '방문자') {
+          notice.className = "text-[11px] text-blue-700 font-bold leading-relaxed bg-blue-50 p-2.5 rounded-xl border border-blue-200 mt-2";
+          notice.innerHTML = "💡 <b>단순 방문자:</b> 당일 예배 출석(⭕)만 기록되며, 향후 결석 시에도 '3주 연속 결석 경고'에 걸리지 않습니다.";
+        } else {
+          notice.className = "text-[11px] text-slate-500 font-bold leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-200 mt-2";
+          notice.innerHTML = "💡 <b>새가족:</b> 해당 반 정규 명부에 추가되며 주차별 출석 통계에 지속 반영됩니다.";
+        }
+      }
+
+      // 새가족 / 방문자 서버 등록 처리
       async submitNewMember() {
         const name = document.getElementById('newMemberName')?.value?.trim();
         const phone = document.getElementById('newMemberPhone')?.value?.trim();
-        
-        if (!name) {
-          this.showToast('성명을 입력해주세요.', 'error');
+        const status = document.getElementById('newMemberStatus')?.value || '새가족';
+        const targetClassId = document.getElementById('newMemberClassSelect')?.value;
+
+        if (!name || !targetClassId) {
+          this.showToast('성명과 배정 반을 확인해주세요.', 'error');
           return;
         }
 
-        const activeFilter = (this.currentUser && this.currentUser.isAdmin) 
-          ? (this.selectedFilterClass || document.getElementById('adminClassFilter')?.value || 'ALL')
-          : this.currentUser.classId;
-
-        this.showLoading('새가족 정보를 구글 시트에 등록 중...');
+        this.showLoading(`${name} 님을 구글 시트에 등록 중...`);
 
         try {
           const payload = {
             action: 'registerNewMember',
             name: name,
             phone: phone,
-            classId: activeFilter,
-            role: '성도',
-            status: '새가족'
+            classId: targetClassId,
+            role: status === '방문자' ? '방문자' : '성도',
+            status: status
           };
 
           const res = await fetch(SHEETS_API_URL, {
@@ -2638,15 +2678,16 @@
             const newMember = {
               memberId: json.memberId,
               name: name,
-              classId: activeFilter,
-              role: '성도',
+              classId: targetClassId,
+              role: status === '방문자' ? '방문자' : '성도',
               phone: phone,
-              status: '새가족',
-              notes: ''
+              status: status,
+              notes: status === '방문자' ? '현장 단순 방문자' : '현장 새가족 등록'
             };
             
             this.rawMembers.push(newMember);
             
+            // 캐시 동기화
             if (this.currentUser) {
               const cacheKey = `church_cache_${this.currentUser.classId}`;
               const cachedStr = localStorage.getItem(cacheKey);
@@ -2660,7 +2701,7 @@
             }
 
             this.closeNewMemberModal();
-            this.showToast(`🌱 ${name} 성도님이 새가족으로 등록되었습니다. 명단에서 바로 출석 체크하세요!`, 'success');
+            this.showToast(`✨ [${this.getClassName(targetClassId)}]에 ${name} (${status}) 등록 완료!`, 'success');
             
             this.renderMemberDirectory();
             this.renderAttendanceList();

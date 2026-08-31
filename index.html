@@ -347,6 +347,7 @@
             
             <div class="flex items-center space-x-2 w-full sm:w-auto">
               <input type="text" id="memberSearchInput" oninput="window.appInstance.filterMemberList()" placeholder="이름 또는 직분 검색..." class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs sm:text-sm font-bold focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition sm:w-48">
+              <!-- 관리자 전용 등록 버튼 -->
               <button id="adminNewMemberBtn" onclick="window.appInstance.openNewMemberModal()" class="hidden px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-black rounded-lg transition shadow-xs whitespace-nowrap flex items-center space-x-1">
                 <span>➕</span>
                 <span>새가족/방문자 등록</span>
@@ -839,6 +840,7 @@
         this.generateSabbathOptions(year, quarter);
       }
 
+      // 💡 [안식일 13과 공과 규격 고정] 14번째 토요일이 있어도 13주까지만 고정 반환
       getQuarterSabbaths(year, quarter) {
         let startMonth = 1;
         let endMonth = 3;
@@ -865,7 +867,7 @@
           }
           cur.setDate(cur.getDate() + 1);
         }
-        return sabbaths;
+        return sabbaths.slice(0, 13);
       }
 
       generateSabbathOptions(year, quarter) {
@@ -1118,6 +1120,7 @@
         if (!this.rawMembers || !this.rawRecords) return;
 
         this.rawMembers.forEach(member => {
+          // 단순 방문자는 장기 결석 알림 계산에서 완전히 제외
           if (member.status === '방문자') return;
 
           const memberRecs = this.rawRecords
@@ -1362,7 +1365,6 @@ ${className} ${leaderName} 리더입니다.
         navigator.clipboard.writeText(template).then(() => {
           this.showToast(`💬 ${member.name} 성도님께 보낼 카톡 심방 문구가 복사되었습니다!`, 'success');
         }).catch(() => {
-          // 클립보드 복사 대체 로직
           const tArea = document.createElement('textarea');
           tArea.value = template;
           document.body.appendChild(tArea);
@@ -1401,7 +1403,6 @@ ${className} ${leaderName} 리더입니다.
               ? '<p class="text-xs text-blue-700 font-bold mt-0.5">사유: ' + careNote.reason + '</p>' 
               : '';
 
-            // 카카오톡 템플릿 복사 버튼
             let kakaoBtnHtml = `<button onclick="window.appInstance.copyKakaoCareMessage('${item.memberId}', ${item.consecutiveWeeks || 3})" class="px-2 py-1 bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-xs sm:text-sm tracking-tight whitespace-nowrap rounded-lg transition shadow-2xs flex items-center space-x-0.5"><span>💬</span><span>카톡</span></button>`;
 
             let phoneButtonsHtml = cleanPhone 
@@ -1571,7 +1572,6 @@ ${className} ${leaderName} 리더입니다.
           let careBadgeHtml = isCareHandled ? '<span class="text-[11px] font-black text-blue-800 bg-blue-100 border border-blue-300 px-2 py-0.5 rounded">💬 심방완료: ' + careNote.reason + '</span>' : '';
           let urgentCareBtnHtml = isUrgentActive ? '<button onclick="window.appInstance.openCareModal(\'' + member.memberId + '\')" class="text-[11px] font-black text-red-700 bg-white border border-red-300 px-1.5 py-0.5 rounded hover:bg-red-50 transition">✍️ 심방완료 처리</button>' : '';
 
-          // 출석 체크 리스트 내 카톡 복사 버튼 (3주 연속 결석자일 경우 표시)
           let quickKakaoBtnHtml = isUrgentActive ? `<button onclick="window.appInstance.copyKakaoCareMessage('${member.memberId}', 3)" title="카톡 심방 안부 문구 복사" class="text-[11px] font-black text-amber-900 bg-amber-200 hover:bg-amber-300 px-1.5 py-0.5 rounded transition flex items-center space-x-0.5"><span>💬</span><span>카톡복사</span></button>` : '';
 
           row.innerHTML = 

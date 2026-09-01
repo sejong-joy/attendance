@@ -968,32 +968,48 @@
       }
 
       async loadClassesList() {
+        // 1단계: 로컬 캐시가 있으면 0.01초 만에 즉시 화면에 띄움
         const cachedClasses = localStorage.getItem('church_cached_classes');
         if (cachedClasses) {
           try {
-            this.classList = JSON.parse(cachedClasses);
-            this.populateClassSelect();
+            const parsed = JSON.parse(cachedClasses);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              this.classList = parsed;
+              this.populateClassSelect();
+            }
           } catch(e) {}
         }
 
+        // 2단계: 구글 시트 백엔드에서 실시간 목록 호출
         try {
           const res = await fetch(`${SHEETS_API_URL}?action=getClasses`);
           const json = await res.json();
-          if (json.success && json.data?.length > 0) {
+          if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
             this.classList = json.data;
             localStorage.setItem('church_cached_classes', JSON.stringify(this.classList));
             this.populateClassSelect();
+            return;
           }
         } catch (err) {
-          if (!this.classList.length) {
-            this.classList = [
-              { classId: 'ADMIN', className: '관리자 (교역자/전체)', leaderName: '교역자', isAdmin: true },
-              { classId: 'C01', className: '사랑반', leaderName: '최변근', isAdmin: false },
-              { classId: 'C02', className: '기쁨반', leaderName: '서종헌', isAdmin: false },
-              { classId: 'C03', className: '은혜반', leaderName: '김수희', isAdmin: false }
-            ];
-            this.populateClassSelect();
-          }
+          console.warn("서버 반 목록 로드 실패, 기본값으로 복구합니다:", err);
+        }
+
+        // 3단계: 만약 시트에서 빈 목록이 오거나 연결 실패 시 즉시 기본 반 목록으로 복구 (멈춤 100% 방지)
+        if (!this.classList || this.classList.length === 0) {
+          this.classList = [
+            { classId: 'ADMIN', className: '관리자 (교역자/전체)', leaderName: '교역자', isAdmin: true },
+            { classId: 'C01', className: '사랑반', leaderName: '최변근', isAdmin: false },
+            { classId: 'C02', className: '기쁨반', leaderName: '서종헌', isAdmin: false },
+            { classId: 'C03', className: '은혜반', leaderName: '김수희', isAdmin: false },
+            { classId: 'C04', className: '감사반', leaderName: '구희은', isAdmin: false },
+            { classId: 'C05', className: '평화반', leaderName: '박준호', isAdmin: false },
+            { classId: 'C06', className: '소망반', leaderName: '차상석', isAdmin: false },
+            { classId: 'C07', className: '믿음반', leaderName: '김영수', isAdmin: false },
+            { classId: 'C08', className: '학생반', leaderName: '차한규', isAdmin: false },
+            { classId: 'C09', className: '어린이반', leaderName: '최보라', isAdmin: false },
+            { classId: 'C10', className: '새신자반', leaderName: '고윤호', isAdmin: false }
+          ];
+          this.populateClassSelect();
         }
       }
 

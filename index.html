@@ -173,7 +173,10 @@
             </span>
 
             <div class="flex items-center space-x-1.5">
-              <button onclick="window.appInstance.forceSyncLatestData()" title="최신 동기화" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-300 flex items-center space-x-1 shadow-2xs">
+              <button type="button" onclick="event.preventDefault(); window.appInstance.forceSyncLatestData()" title="최신 동기화" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-300 flex items-center space-x-1 shadow-2xs">
+                <span id="adminRefreshBtnIcon">🔄</span>
+                <span>새로고침</span>
+              </button>
                 <span id="adminRefreshBtnIcon">🔄</span>
                 <span>새로고침</span>
               </button>
@@ -214,7 +217,10 @@
                 <span id="syncStatusIcon">🟢</span>
                 <span id="syncStatusText">자동저장됨</span>
               </div>
-              <button type="button" onclick="window.appInstance.forceSyncLatestData()" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-xs sm:text-sm font-black rounded-lg border border-slate-300 transition flex items-center space-x-1 shadow-2xs">
+              <button type="button" onclick="event.preventDefault(); window.appInstance.forceSyncLatestData()" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-xs sm:text-sm font-black rounded-lg border border-slate-300 transition flex items-center space-x-1 shadow-2xs">
+                <span id="refreshBtnIcon">🔄</span>
+                <span>새로고침</span>
+              </button>
                 <span id="refreshBtnIcon">🔄</span>
                 <span>새로고침</span>
               </button>
@@ -1922,7 +1928,7 @@ ${className} ${leaderName} 리더입니다.
         if (refreshIcon) refreshIcon.classList.add('animate-spin');
         if (adminRefreshIcon) adminRefreshIcon.classList.add('animate-spin');
 
-        this.showToast('🔄 최신 출석 데이터를 불러오는 중...', 'info');
+        this.updateCloudStatusBadge('syncing', '동기화 중...');
 
         try {
           const classId = this.currentUser.classId;
@@ -1960,12 +1966,15 @@ ${className} ${leaderName} 리더입니다.
               this.calculateAndRenderStatistics();
             }
 
+            this.updateCloudStatusBadge('saved', '자동저장됨');
             this.showToast('⚡ 최신 데이터로 동기화되었습니다.', 'success');
           } else {
+            this.updateCloudStatusBadge('saved', '자동저장됨');
             this.showToast('동기화 실패: ' + (json.message || '서버 응답 없음'), 'error');
           }
         } catch(err) {
-          this.showToast('네트워크 오류로 동기화에 실패했습니다.', 'error');
+          this.updateCloudStatusBadge('saved', '자동저장됨');
+          this.showToast('네트워크 상태를 확인해 주세요.', 'error');
         } finally {
           if (refreshIcon) refreshIcon.classList.remove('animate-spin');
           if (adminRefreshIcon) adminRefreshIcon.classList.remove('animate-spin');

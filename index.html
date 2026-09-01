@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="ko">
-  
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -32,9 +31,6 @@
       font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
-    body {
-      overscroll-behavior-y: contain; /* 모바일 아래로 당겨서 새로고침 방지 */
-    }
     .custom-scrollbar::-webkit-scrollbar {
       width: 4px;
       height: 4px;
@@ -60,16 +56,7 @@
       #printContainer { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 10px; background: white; color: black; }
       @page { size: auto; margin: 10mm; }
     }
-    /* 로그인 정보가 있으면 화면 로딩 시 로그인창을 아예 안 띄움 */
-    html.has-session #loginSection { display: none !important; }
-    html.has-session #appSection, html.has-session #userBadgeArea { display: block !important; }
   </style>
-  <script>
-    // 브라우저가 화면을 그리기 전에 로그인 세션 여부를 즉시 검사
-    if (localStorage.getItem('church_auth')) {
-      document.documentElement.classList.add('has-session');
-    }
-  </script>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white pb-6">
 
@@ -186,10 +173,7 @@
             </span>
 
             <div class="flex items-center space-x-1.5">
-              <button type="button" onclick="event.preventDefault(); window.appInstance.forceSyncLatestData()" title="최신 동기화" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-300 flex items-center space-x-1 shadow-2xs">
-                <span id="adminRefreshBtnIcon">🔄</span>
-                <span>새로고침</span>
-              </button>
+              <button onclick="window.appInstance.forceSyncLatestData()" title="최신 동기화" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-300 flex items-center space-x-1 shadow-2xs">
                 <span id="adminRefreshBtnIcon">🔄</span>
                 <span>새로고침</span>
               </button>
@@ -230,10 +214,7 @@
                 <span id="syncStatusIcon">🟢</span>
                 <span id="syncStatusText">자동저장됨</span>
               </div>
-              <button type="button" onclick="event.preventDefault(); window.appInstance.forceSyncLatestData()" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-xs sm:text-sm font-black rounded-lg border border-slate-300 transition flex items-center space-x-1 shadow-2xs">
-                <span id="refreshBtnIcon">🔄</span>
-                <span>새로고침</span>
-              </button>
+              <button type="button" onclick="window.appInstance.forceSyncLatestData()" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-xs sm:text-sm font-black rounded-lg border border-slate-300 transition flex items-center space-x-1 shadow-2xs">
                 <span id="refreshBtnIcon">🔄</span>
                 <span>새로고침</span>
               </button>
@@ -1941,7 +1922,7 @@ ${className} ${leaderName} 리더입니다.
         if (refreshIcon) refreshIcon.classList.add('animate-spin');
         if (adminRefreshIcon) adminRefreshIcon.classList.add('animate-spin');
 
-        this.updateCloudStatusBadge('syncing', '동기화 중...');
+        this.showToast('🔄 최신 출석 데이터를 불러오는 중...', 'info');
 
         try {
           const classId = this.currentUser.classId;
@@ -1979,15 +1960,12 @@ ${className} ${leaderName} 리더입니다.
               this.calculateAndRenderStatistics();
             }
 
-            this.updateCloudStatusBadge('saved', '자동저장됨');
             this.showToast('⚡ 최신 데이터로 동기화되었습니다.', 'success');
           } else {
-            this.updateCloudStatusBadge('saved', '자동저장됨');
             this.showToast('동기화 실패: ' + (json.message || '서버 응답 없음'), 'error');
           }
         } catch(err) {
-          this.updateCloudStatusBadge('saved', '자동저장됨');
-          this.showToast('네트워크 상태를 확인해 주세요.', 'error');
+          this.showToast('네트워크 오류로 동기화에 실패했습니다.', 'error');
         } finally {
           if (refreshIcon) refreshIcon.classList.remove('animate-spin');
           if (adminRefreshIcon) adminRefreshIcon.classList.remove('animate-spin');

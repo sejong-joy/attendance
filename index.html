@@ -50,28 +50,11 @@
       animation: alert-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
 
-    /* Print Stylesheet */
     @media print {
-      body * {
-        visibility: hidden;
-      }
-      #printContainer, #printContainer * {
-        visibility: visible;
-      }
-      #printContainer {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        margin: 0;
-        padding: 10px;
-        background: white;
-        color: black;
-      }
-      @page {
-        size: auto;
-        margin: 10mm;
-      }
+      body * { visibility: hidden; }
+      #printContainer, #printContainer * { visibility: visible; }
+      #printContainer { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 10px; background: white; color: black; }
+      @page { size: auto; margin: 10mm; }
     }
   </style>
 </head>
@@ -181,39 +164,39 @@
       <!-- TAB 1: ATTENDANCE CHECK VIEW -->
       <div id="tabContent-check" class="space-y-2.5">
         
-        <!-- 💡 [관리자 전용] 오늘의 현황 헤더 바 -->
+        <!-- 💡 [관리자 전용] 오늘의 현황 헤더 바 (새로고침이 설교예배 체크 버튼 왼쪽에 위치) -->
         <div id="adminClassStatusBarWrap" class="hidden bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs space-y-2.5">
           <div class="flex items-center justify-between gap-1.5 pb-2 border-b border-slate-100">
+            
             <!-- 좌측: 타이틀 -->
             <span class="text-sm sm:text-base font-black text-slate-900 flex items-center space-x-1.5 flex-shrink-0">
               <span class="text-emerald-600">⚡</span>
               <span>오늘의 현황</span>
             </span>
 
-            <!-- 중앙: 설교 예배 체크 버튼 -->
-            <div class="flex-1 flex justify-center min-w-0 px-1">
+            <!-- 우측 액션 그룹: [새콤새콤 새로고침] + [⛪ 설교 예배 체크] -->
+            <div class="flex items-center space-x-1.5">
+              <button onclick="window.appInstance.forceSyncLatestData()" title="최신 동기화" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-200 flex items-center space-x-1 shadow-2xs">
+                <span id="adminRefreshBtnIcon">🔄</span>
+                <span>새로고침</span>
+              </button>
               <button id="adminWorshipCheckBtn" onclick="window.appInstance.openWorshipCheckModal()" class="px-2.5 sm:px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition flex items-center space-x-1 shadow-2xs">
                 <span>⛪</span>
                 <span>설교 예배 체크</span>
               </button>
             </div>
 
-            <!-- 우측: 새로고침 버튼 -->
-            <button onclick="window.appInstance.forceSyncLatestData()" title="서버 최신 출석 데이터 즉시 동기화" class="px-2.5 sm:px-3 py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-200 flex items-center space-x-1 shadow-2xs flex-shrink-0">
-              <span id="adminRefreshBtnIcon">🔄</span>
-              <span>새로고침</span>
-            </button>
           </div>
 
-          <!-- 그리드 컨테이너: 모바일 2열, PC/태블릿 4열 -->
+          <!-- 그리드 컨테이너 -->
           <div id="classChipsContainer" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5"></div>
         </div>
 
-        <!-- Controls Card: 2단 최적화 레이아웃 (반 선택 폭 조절 + 자동저장됨 아래 새로고침 버튼 분리) -->
+        <!-- Controls Card: 반별 리더 모드 전용 (자동저장됨 아래에 새로고침 버튼 배치) -->
         <div class="bg-white rounded-xl border border-slate-200 p-2.5 sm:p-3.5 shadow-xs">
           <div class="flex items-center justify-between gap-2">
             
-            <!-- 좌측 컨트롤 (년도, 기수, 날짜/과 선택) -->
+            <!-- 좌측 컨트롤 -->
             <div class="flex-1 min-w-0 space-y-1.5">
               <div class="flex items-center space-x-1.5">
                 <select id="yearSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
@@ -227,25 +210,16 @@
                   <option value="3기">3기</option>
                   <option value="4기">4기</option>
                 </select>
-                <!-- 관리자용 반 선택 필터 (슬림) -->
-                <div id="adminClassFilterWrap" class="hidden flex-1 min-w-[110px] max-w-[150px]">
-                  <select id="adminClassFilter" onchange="window.appInstance.renderAttendanceList()" class="w-full px-2 py-1 bg-amber-50 border border-amber-300 rounded-lg text-xs font-black text-amber-900 focus:outline-none truncate">
-                    <option value="ALL">전체 반 보기</option>
-                  </select>
-                </div>
               </div>
               <select id="sabbathSelect" onchange="window.appInstance.onSabbathSelectChange()" class="w-full px-2.5 py-1.5 bg-emerald-50 border border-emerald-300 rounded-xl text-xs sm:text-sm font-black text-emerald-950 focus:ring-2 focus:ring-emerald-500 focus:outline-none truncate shadow-2xs"></select>
             </div>
 
-            <!-- 우측 컨트롤: [위: 자동저장됨 뱃지] / [아래: 독립된 🔄 새로고침 버튼] -->
-            <div class="flex flex-col items-end justify-between self-stretch flex-shrink-0 pl-1 py-0.5 space-y-1">
-              <!-- 윗줄: 자동저장 뱃지 -->
+            <!-- 우측 컨트롤: [위: 자동저장됨 뱃지] / [아래: 새로고침 버튼] (반별 리더 전용) -->
+            <div id="leaderRefreshWrap" class="flex flex-col items-end justify-between self-stretch flex-shrink-0 pl-1 py-0.5 space-y-1">
               <div id="syncStatusBadge" class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-[11px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 transition">
                 <span id="syncStatusIcon">🟢</span>
                 <span id="syncStatusText">자동저장됨</span>
               </div>
-
-              <!-- 아랫줄: 독립된 새로고침 버튼 -->
               <button type="button" onclick="window.appInstance.forceSyncLatestData()" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-xs font-black rounded-lg border border-slate-300 transition flex items-center space-x-1 shadow-2xs">
                 <span id="refreshBtnIcon">🔄</span>
                 <span>새로고침</span>
@@ -255,7 +229,7 @@
           </div>
         </div>
 
-        <!-- 4칸 독립 요약 대시보드 박스 (총원 / 출석 / 지각 / 결석) -->
+        <!-- 4칸 독립 요약 대시보드 박스 -->
         <div class="grid grid-cols-4 gap-2">
           <div class="bg-white rounded-xl border border-slate-200 p-2 sm:p-2.5 text-center shadow-2xs">
             <span class="text-[11px] sm:text-xs font-black text-slate-500 block">총원</span>
@@ -275,7 +249,7 @@
           </div>
         </div>
 
-        <!-- Attendance Member List Card -->
+        <!-- Attendance Member List Card (전화번호 제거됨) -->
         <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-3 sm:p-4">
           <div class="pb-2.5 mb-2.5 border-b border-slate-100 flex items-center justify-between">
             <div class="flex items-center space-x-2">
@@ -444,7 +418,6 @@
         </div>
 
         <div class="p-4 space-y-3 max-h-[75vh] overflow-y-auto custom-scrollbar">
-          <!-- 서식 1: 반별 13주 종합 출석부 -->
           <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl hover:border-emerald-400 transition">
             <div class="flex items-center justify-between mb-1.5">
               <span class="font-black text-slate-900 text-sm sm:text-base flex items-center space-x-1.5">
@@ -464,7 +437,6 @@
             </div>
           </div>
 
-          <!-- 서식 2: 전체 반 종합 결산 보고서 -->
           <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl hover:border-blue-400 transition">
             <div class="flex items-center justify-between mb-1.5">
               <span class="font-black text-slate-900 text-sm sm:text-base flex items-center space-x-1.5">
@@ -497,7 +469,6 @@
             </div>
           </div>
 
-          <!-- 서식 3: 주간 현장 수기 체크표 -->
           <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl hover:border-amber-400 transition">
             <div class="flex items-center justify-between mb-1.5">
               <span class="font-black text-slate-900 text-sm sm:text-base flex items-center space-x-1.5">
@@ -512,7 +483,6 @@
             </button>
           </div>
 
-          <!-- 서식 4: 심방 및 돌봄 대상자 명부 -->
           <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl hover:border-red-400 transition">
             <div class="flex items-center justify-between mb-1.5">
               <span class="font-black text-slate-900 text-sm sm:text-base flex items-center space-x-1.5">
@@ -532,7 +502,6 @@
             </div>
           </div>
 
-          <!-- 관리자 전용 데이터 초기화 -->
           <div id="adminResetSection" class="hidden p-3.5 bg-red-50 border border-red-300 rounded-xl space-y-2">
             <div class="flex items-center justify-between">
               <span class="font-black text-red-900 text-xs sm:text-sm flex items-center space-x-1.5">
@@ -833,7 +802,6 @@
         });
       }
 
-      // 날짜 문자열 강제 정규화 (YYYY-MM-DD)
       normalizeDateStr(input) {
         if (!input) return '';
         if (typeof input === 'string') {
@@ -863,14 +831,14 @@
       setupNetworkListeners() {
         window.addEventListener('online', () => {
           this.isOnline = true;
-          this.updateCloudStatusBadge('syncing', '온라인 복구! 동기화 중...');
+          this.updateCloudStatusBadge('syncing', '온라인 복구!');
           this.showToast('🌐 인터넷이 다시 연결되었습니다.', 'success');
           this.processOfflineQueue();
         });
 
         window.addEventListener('offline', () => {
           this.isOnline = false;
-          this.updateCloudStatusBadge('offline', '오프라인 (기기 저장)');
+          this.updateCloudStatusBadge('offline', '오프라인');
           this.showToast('⚠️ 오프라인 상태입니다.', 'info');
         });
       }
@@ -1344,19 +1312,19 @@
         if (hdrClass) hdrClass.textContent = this.currentUser.className;
         if (hdrLeader) hdrLeader.textContent = `${this.currentUser.leaderName} 리더님`;
 
-        const filterWrap = document.getElementById('adminClassFilterWrap');
         const statusBarWrap = document.getElementById('adminClassStatusBarWrap');
+        const leaderRefreshWrap = document.getElementById('leaderRefreshWrap');
         const adminResetSec = document.getElementById('adminResetSection');
         const adminNewMemberBtn = document.getElementById('adminNewMemberBtn');
 
         if (this.currentUser.isAdmin) {
-          filterWrap?.classList.remove('hidden');
           statusBarWrap?.classList.remove('hidden');
+          leaderRefreshWrap?.classList.add('hidden'); // 반별 리더용 새로고침 숨김 (상단 관리자바로 이동)
           adminResetSec?.classList.remove('hidden');
           adminNewMemberBtn?.classList.remove('hidden');
         } else {
-          filterWrap?.classList.add('hidden');
           statusBarWrap?.classList.add('hidden');
+          leaderRefreshWrap?.classList.remove('hidden'); // 반별 리더용 새로고침 표시
           adminResetSec?.classList.add('hidden');
           adminNewMemberBtn?.classList.add('hidden');
         }
@@ -1825,6 +1793,7 @@ ${className} ${leaderName} 리더입니다.
 
           let quickKakaoBtnHtml = isUrgentActive ? `<button onclick="window.appInstance.copyKakaoCareMessage('${member.memberId}', 3)" title="카톡 심방 안부 문구 복사" class="text-xs font-black text-amber-900 bg-amber-300 hover:bg-amber-400 px-2 py-0.5 rounded-md transition flex items-center space-x-0.5"><span>💬</span><span>카톡</span></button>` : '';
 
+          // 💡 출석 명단 카드에서 전화번호 영역 완전히 제거됨
           row.innerHTML = 
             '<div class="flex items-center justify-between gap-2">' +
               '<div class="flex items-center space-x-2.5 min-w-0">' +
@@ -2431,7 +2400,6 @@ ${className} ${leaderName} 리더입니다.
         const isAdmin = !!(this.currentUser && this.currentUser.isAdmin);
         const myClassId = this.currentUser ? this.currentUser.classId : 'ALL';
         
-        // 일반 리더 로그인 시 해당 반 교인만 필터링
         const targetMembers = (!isAdmin && myClassId !== 'ALL')
           ? this.rawMembers.filter(m => m.classId === myClassId)
           : this.rawMembers;
@@ -2799,7 +2767,7 @@ ${className} ${leaderName} 리더입니다.
                           '<span class="text-[11px] text-slate-500">출 ' + item.present + ' · 지 ' + item.late + ' · 결 ' + item.absent + '</span>' +
                           '<span class="font-black ' + (parseFloat(rate) >= 70 ? 'text-emerald-600' : 'text-red-500') + '">' + rate + '%</span>' +
                         '</div>' +
-                      '</div>'
+                      '</div>' +
                     );
                   }).join('') +
               '</div>' +
@@ -2826,7 +2794,7 @@ ${className} ${leaderName} 리더입니다.
                     '<div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs">' +
                       '<div>' +
                         '<span class="font-black text-slate-900 text-sm">제' + (idx + 1) + '회차 (' + dateStr + ')</span>' +
-                        '<p class="text-[11px] text-slate-500 font-bold mt-0.5">교인 ' + dayRecords.length + '명 기록 (설교 예배 추가: ' + wCount + '명)</p>' +
+                        '<p class="text-[11px] text-slate-500 font-bold mt-0.5">교인 ' + dayRecords.length + '명 기록 (설교 예배: ' + wCount + '명)</p>' +
                       '</div>' +
                       '<div class="flex items-center space-x-1.5 font-black text-xs">' +
                         '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">출석 ' + pCount + '</span>' +
@@ -2963,9 +2931,15 @@ ${className} ${leaderName} 리더입니다.
         tbody.innerHTML = '';
 
         const isAdmin = !!(this.currentUser && this.currentUser.isAdmin);
+        const myClassId = this.currentUser ? this.currentUser.classId : 'ALL';
         const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
 
-        this.rawMembers.forEach(m => {
+        // 💡 반별 리더 로그인 시 교인 명부에서도 본인 반 교인만 필터링
+        const targetMembers = (!isAdmin && myClassId !== 'ALL')
+          ? this.rawMembers.filter(m => m.classId === myClassId)
+          : this.rawMembers;
+
+        targetMembers.forEach(m => {
           const rawPhone = (m.phone || '').trim();
           const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
 

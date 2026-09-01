@@ -1953,7 +1953,16 @@ ${className} ${leaderName} 리더입니다.
         if (refreshIcon) refreshIcon.classList.add('animate-spin');
         if (adminRefreshIcon) adminRefreshIcon.classList.add('animate-spin');
 
-        this.updateCloudStatusBadge('syncing', '동기화 중...');
+        // ★ 해결책의 핵심: 새로고침을 누르면 무조건 폰에 남은 찌꺼기부터 구글로 완전히 쏴버림!
+        const raw = localStorage.getItem('church_offline_queue');
+        if (raw && JSON.parse(raw).length > 0) {
+          this.updateCloudStatusBadge('syncing', '잔여 기록 전송중...');
+          this.showToast('미전송 기록이 있어 구글 시트로 먼저 백업합니다.', 'info');
+          await this.processOfflineQueue(); 
+          await new Promise(r => setTimeout(r, 1000)); // 구글 서버 반영 대기 1초
+        }
+
+        this.updateCloudStatusBadge('syncing', '데이터 동기화 중...');
 
         try {
           const classId = this.currentUser.classId;
@@ -2269,9 +2278,9 @@ ${className} ${leaderName} 리더입니다.
       }
 
       async processOfflineQueue() {
-        if (this.isSyncing) return;
-        if (!navigator.onLine) {
-          this.updateCloudStatusBadge('offline');
+        // 이미 동기화가 돌고 있다면, 튕겨내지 않고 '다 끝나면 한 번 더 확인해!'라고 꼬리표를 남김
+        if (this.isSyncing) {
+          this.queueNeedsRecheck = true; 
           return;
         }
 
@@ -2287,9 +2296,10 @@ ${className} ${leaderName} 리더입니다.
         }
 
         this.isSyncing = true;
-        this.updateCloudStatusBadge('syncing', '동기화 중...');
+        this.queueNeedsRecheck = false;
+        this.updateCloudStatusBadge('syncing', '구글시트 저장중...');
 
-        // ★ 방어 로직 핵심: 지금 구글로 전송을 시작할 데이터들의 'ID'만 따로 캡처해 둡니다.
+        // 지금 구글로 전송을 시작할 데이터들의 ID만 따로 캡처
         const sentRecordIds = queue.map(q => q.recordId);
 
         try {
@@ -2305,6 +2315,7 @@ ${className} ${leaderName} 리더입니다.
           for (const key in grouped) {
             const [gDate, gQuarter] = key.split('|');
             const payload = {
+              action: 'saveAttendanceRecords',
               date: gDate,
               quarter: gQuarter,
               checkedBy: this.currentUser?.leaderName || '리더',
@@ -2316,49 +2327,46 @@ ${className} ${leaderName} 리더입니다.
               body: JSON.stringify(payload)
             });
             const json = await res.json();
-            
             if (!json.success) allSuccess = false;
           }
 
           if (allSuccess) {
-            // ★ 대참사 방지: 전체 대기실을 날리지 않고, 방금 전송 성공한 애들만 골라서 뺍니다.
             try {
               const currentRaw = localStorage.getItem('church_offline_queue');
               if (currentRaw) {
                 let currentQueue = JSON.parse(currentRaw);
-                
-                // 전송 도중(3초 사이)에 새롭게 터치되어 들어온 데이터만 살아남게 필터링
+                // 전송 중(약 2초)에 사용자가 추가로 클릭해서 폰에 들어온 데이터만 살려둠
                 currentQueue = currentQueue.filter(q => !sentRecordIds.includes(q.recordId));
                 
                 if (currentQueue.length > 0) {
-                  // 새로 들어온 애들이 있다면 대기실에 남기고, 1초 뒤에 2차 전송 시작!
                   localStorage.setItem('church_offline_queue', JSON.stringify(currentQueue));
-                  setTimeout(() => this.processOfflineQueue(), 1000);
+                  this.queueNeedsRecheck = true; 
                 } else {
-                  // 남은 애들이 없으면 그제야 대기실을 깔끔하게 비움
                   localStorage.removeItem('church_offline_queue');
                 }
               }
             } catch(e) {}
-
             this.updateCloudStatusBadge('saved');
           } else {
-            // 서버 혼잡으로 튕기면 삭제하지 않고 3초 뒤 전체 재시도
-            this.updateCloudStatusBadge('syncing', '대기 중..');
-            setTimeout(() => this.processOfflineQueue(), 3000); 
+            this.updateCloudStatusBadge('syncing', '재시도 대기중..');
+            await new Promise(r => setTimeout(r, 3000));
+            this.queueNeedsRecheck = true;
           }
         } catch (err) {
-          // 인터넷 끊김 방어 로직
           if (!navigator.onLine) {
             this.updateCloudStatusBadge('offline');
           } else {
-            this.updateCloudStatusBadge('syncing', '대기 중..');
-            setTimeout(() => this.processOfflineQueue(), 4000);
+            this.updateCloudStatusBadge('syncing', '통신지연 재시도..');
+            await new Promise(r => setTimeout(r, 4000));
+            this.queueNeedsRecheck = true;
           }
         } finally {
           this.isSyncing = false;
+          // 방금 전송 중에 새로 추가된 기록이 있다면 0.5초 뒤 끈질기게 다시 돕니다 (무한 좀비 로직)
+          if (this.queueNeedsRecheck) {
+            setTimeout(() => this.processOfflineQueue(), 500);
+          }
         }
-      }
 
       async setReason(memberId, reason) {
         if (!this.currentAttendance[memberId]) {

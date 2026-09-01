@@ -62,7 +62,8 @@
 
     /* 로그인 세션이 있으면 새로고침 시 로그인창을 아예 안 띄우고 메인 유지 */
     html.has-session #loginSection { display: none !important; }
-    html.has-session #appSection, html.has-session #userBadgeArea { display: block !important; }
+    html.has-session #appSection { display: block !important; }
+    html.has-session #userBadgeArea { display: flex !important; } /* 👈 block이 아닌 flex로 변경! */
   </style>
 
   <script>

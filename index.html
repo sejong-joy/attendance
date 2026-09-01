@@ -181,10 +181,9 @@
       <!-- TAB 1: ATTENDANCE CHECK VIEW -->
       <div id="tabContent-check" class="space-y-2.5">
         
-        <!-- 💡 [관리자 전용] 오늘의 현황 헤더 바 (⚡ 오늘의 현황 + [⛪ 설교 예배 체크] + [🔄 새로고침]) -->
+        <!-- 💡 [관리자 전용] 오늘의 현황 헤더 바 -->
         <div id="adminClassStatusBarWrap" class="hidden bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs space-y-2.5">
           <div class="flex items-center justify-between gap-1.5 pb-2 border-b border-slate-100">
-            
             <!-- 좌측: 타이틀 -->
             <span class="text-sm sm:text-base font-black text-slate-900 flex items-center space-x-1.5 flex-shrink-0">
               <span class="text-emerald-600">⚡</span>
@@ -201,7 +200,7 @@
 
             <!-- 우측: 새로고침 버튼 -->
             <button onclick="window.appInstance.forceSyncLatestData()" title="서버 최신 출석 데이터 즉시 동기화" class="px-2.5 sm:px-3 py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-200 flex items-center space-x-1 shadow-2xs flex-shrink-0">
-              <span id="refreshBtnIcon">🔄</span>
+              <span id="adminRefreshBtnIcon">🔄</span>
               <span>새로고침</span>
             </button>
           </div>
@@ -210,43 +209,50 @@
           <div id="classChipsContainer" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5"></div>
         </div>
 
-        <!-- Controls Card: 2단 최적화 레이아웃 (공간 넉넉화) -->
-        <div class="bg-white rounded-xl border border-slate-200 p-2.5 sm:p-3.5 shadow-xs space-y-2 sm:space-y-2.5">
-          
-          <!-- 1단 (윗줄): 년도 + 기수 (좌측) / ☁️ 자동 저장됨 (우측) -->
-          <div class="flex items-center justify-between gap-1.5 sm:gap-2">
-            <div class="flex items-center space-x-1.5 sm:space-x-2">
-              <select id="yearSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-2 sm:px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-2xs">
-                <option value="2025">2025년</option>
-                <option value="2026" selected>2026년</option>
-                <option value="2027">2027년</option>
-              </select>
-              <select id="quarterSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-2 sm:px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-black text-emerald-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-2xs">
-                <option value="1기">1기</option>
-                <option value="2기">2기</option>
-                <option value="3기">3기</option>
-                <option value="4기">4기</option>
-              </select>
+        <!-- Controls Card: 2단 최적화 레이아웃 (반 선택 폭 조절 + 자동저장됨 아래 새로고침 버튼 분리) -->
+        <div class="bg-white rounded-xl border border-slate-200 p-2.5 sm:p-3.5 shadow-xs">
+          <div class="flex items-center justify-between gap-2">
+            
+            <!-- 좌측 컨트롤 (년도, 기수, 날짜/과 선택) -->
+            <div class="flex-1 min-w-0 space-y-1.5">
+              <div class="flex items-center space-x-1.5">
+                <select id="yearSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                  <option value="2025">2025년</option>
+                  <option value="2026" selected>2026년</option>
+                  <option value="2027">2027년</option>
+                </select>
+                <select id="quarterSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-black text-emerald-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                  <option value="1기">1기</option>
+                  <option value="2기">2기</option>
+                  <option value="3기">3기</option>
+                  <option value="4기">4기</option>
+                </select>
+                <!-- 관리자용 반 선택 필터 (슬림) -->
+                <div id="adminClassFilterWrap" class="hidden flex-1 min-w-[110px] max-w-[150px]">
+                  <select id="adminClassFilter" onchange="window.appInstance.renderAttendanceList()" class="w-full px-2 py-1 bg-amber-50 border border-amber-300 rounded-lg text-xs font-black text-amber-900 focus:outline-none truncate">
+                    <option value="ALL">전체 반 보기</option>
+                  </select>
+                </div>
+              </div>
+              <select id="sabbathSelect" onchange="window.appInstance.onSabbathSelectChange()" class="w-full px-2.5 py-1.5 bg-emerald-50 border border-emerald-300 rounded-xl text-xs sm:text-sm font-black text-emerald-950 focus:ring-2 focus:ring-emerald-500 focus:outline-none truncate shadow-2xs"></select>
             </div>
 
-            <!-- 자동 저장됨 배지 (터치 시 강제 새로고침 지원) -->
-            <button onclick="window.appInstance.forceSyncLatestData()" id="syncStatusBadge" class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition shadow-2xs flex-shrink-0 cursor-pointer hover:bg-emerald-100">
-              <span id="syncStatusIcon">☁️</span>
-              <span id="syncStatusText">자동 저장됨</span>
-            </button>
-          </div>
+            <!-- 우측 컨트롤: [위: 자동저장됨 뱃지] / [아래: 독립된 🔄 새로고침 버튼] -->
+            <div class="flex flex-col items-end justify-between self-stretch flex-shrink-0 pl-1 py-0.5 space-y-1">
+              <!-- 윗줄: 자동저장 뱃지 -->
+              <div id="syncStatusBadge" class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-[11px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 transition">
+                <span id="syncStatusIcon">🟢</span>
+                <span id="syncStatusText">자동저장됨</span>
+              </div>
 
-          <!-- 2단 (아랫줄): 큼직한 제O과 O월O일 (좌측) / 반 필터 (우측 넓게 배치) -->
-          <div class="flex items-center justify-between gap-1.5 sm:gap-2">
-            <select id="sabbathSelect" onchange="window.appInstance.onSabbathSelectChange()" class="flex-1 px-3 py-1.5 sm:py-2 bg-emerald-50 border border-emerald-300 rounded-xl text-sm sm:text-base font-black text-emerald-950 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-xs truncate"></select>
-
-            <div id="adminClassFilterWrap" class="hidden flex-shrink-0 min-w-[130px] sm:min-w-[160px]">
-              <select id="adminClassFilter" onchange="window.appInstance.renderAttendanceList()" class="w-full px-2.5 py-1.5 sm:py-2 bg-amber-50 border border-amber-300 rounded-xl text-xs sm:text-sm font-black text-amber-900 focus:ring-2 focus:ring-amber-500 focus:outline-none shadow-2xs">
-                <option value="ALL">전체 반 보기</option>
-              </select>
+              <!-- 아랫줄: 독립된 새로고침 버튼 -->
+              <button type="button" onclick="window.appInstance.forceSyncLatestData()" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-xs font-black rounded-lg border border-slate-300 transition flex items-center space-x-1 shadow-2xs">
+                <span id="refreshBtnIcon">🔄</span>
+                <span>새로고침</span>
+              </button>
             </div>
-          </div>
 
+          </div>
         </div>
 
         <!-- 4칸 독립 요약 대시보드 박스 (총원 / 출석 / 지각 / 결석) -->
@@ -289,7 +295,7 @@
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
           <div onclick="window.appInstance.openStatDetailModal('members')" class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-400 transition cursor-pointer select-none">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-500">총 등록 교인</span>
+              <span id="statTotalLabel" class="text-xs font-bold text-slate-500">등록 교인</span>
               <span class="text-[10px] text-slate-400">🔍</span>
             </div>
             <p id="statTotalMembers" class="text-2xl font-black text-slate-900 mt-0.5">0명</p>
@@ -317,7 +323,7 @@
           </div>
         </div>
 
-        <!-- 슬림화된 주차별 그래프 -->
+        <!-- 주차별 그래프 -->
         <div class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-xs">
           <h3 class="text-xs sm:text-sm font-black text-slate-900 mb-2 flex items-center justify-between">
             <span>📈 주차별 출석 인원 추이</span>
@@ -367,7 +373,7 @@
             </button>
           </div>
 
-          <!-- 교인 명부 테이블 (순수 정규 교인만 표시) -->
+          <!-- 교인 명부 테이블 -->
           <div class="overflow-x-auto mt-2 custom-scrollbar">
             <table class="w-full text-left text-xs sm:text-sm font-medium">
               <thead class="bg-slate-50 text-slate-600 font-black border-b border-slate-100">
@@ -387,7 +393,7 @@
 
     </section>
 
-    <!-- 💡 [설교 예배 출석 체크 모달] (다중 선택 후 일괄 저장) -->
+    <!-- [설교 예배 출석 체크 모달] -->
     <div id="worshipCheckModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3.5 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border border-indigo-200 w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-200" id="worshipCheckModalBox">
         <div class="px-5 py-3.5 bg-indigo-50 border-b border-indigo-100 flex items-center justify-between">
@@ -827,6 +833,25 @@
         });
       }
 
+      // 날짜 문자열 강제 정규화 (YYYY-MM-DD)
+      normalizeDateStr(input) {
+        if (!input) return '';
+        if (typeof input === 'string') {
+          const match = input.match(/\d{4}-\d{2}-\d{2}/);
+          if (match) return match[0];
+        }
+        try {
+          const d = new Date(input);
+          if (!isNaN(d.getTime())) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+          }
+        } catch(e) {}
+        return String(input).trim();
+      }
+
       getClassName(classId) {
         if (!classId) return '-';
         if (classId === 'ADMIN' || classId === 'ALL') return '전체 반';
@@ -857,15 +882,15 @@
         if (!badge || !icon || !text) return;
 
         if (state === 'saved') {
-          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200/80 transition shadow-2xs flex-shrink-0 cursor-pointer hover:bg-emerald-100';
-          icon.textContent = '☁️';
-          text.textContent = customText || '자동 저장됨';
+          badge.className = 'inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-[11px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 transition';
+          icon.textContent = '🟢';
+          text.textContent = customText || '자동저장됨';
         } else if (state === 'syncing') {
-          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-blue-50 text-blue-800 border border-blue-200 transition shadow-2xs flex-shrink-0 cursor-pointer';
+          badge.className = 'inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-[11px] font-black bg-blue-50 text-blue-700 border border-blue-200 transition';
           icon.textContent = '🔄';
           text.textContent = customText || '저장 중...';
         } else if (state === 'offline') {
-          badge.className = 'inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-black bg-amber-50 text-amber-800 border border-amber-300 transition animate-pulse shadow-2xs flex-shrink-0 cursor-pointer';
+          badge.className = 'inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-[11px] font-black bg-amber-50 text-amber-800 border border-amber-300 transition animate-pulse';
           icon.textContent = '⚠️';
           text.textContent = customText || '오프라인';
         }
@@ -1057,7 +1082,10 @@
               this.currentUser = cached.user;
               this.rawMembers = (cached.members || []).filter(m => m.status !== '방문자');
               this.rawVisitors = cached.visitors || (cached.members || []).filter(m => m.status === '방문자');
-              this.rawRecords = cached.records || [];
+              this.rawRecords = (cached.records || []).map(r => ({
+                ...r,
+                date: this.normalizeDateStr(r.date)
+              }));
               this.updateAbsentAlertMap(cached.absentAlerts || []);
               this.calculateConsecutiveAbsentees();
 
@@ -1085,7 +1113,10 @@
             this.currentUser = json.user;
             this.rawMembers = (json.members || []).filter(m => m.status !== '방문자');
             this.rawVisitors = json.visitors || (json.members || []).filter(m => m.status === '방문자');
-            this.rawRecords = json.records || [];
+            this.rawRecords = (json.records || []).map(r => ({
+              ...r,
+              date: this.normalizeDateStr(r.date)
+            }));
             this.updateAbsentAlertMap(json.absentAlerts || []);
             this.calculateConsecutiveAbsentees();
 
@@ -1238,6 +1269,10 @@
               const data = change.doc.data();
               const recordId = change.doc.id;
 
+              if (data && data.date) {
+                data.date = this.normalizeDateStr(data.date);
+              }
+
               const idx = this.rawRecords.findIndex(r => r.recordId === recordId || (data && r.date === data.date && r.memberId === data.memberId));
               if (change.type === "added" || change.type === "modified") {
                 if (data) {
@@ -1339,7 +1374,7 @@
         const container = document.getElementById('classChipsContainer');
         if (!container) return;
 
-        const curDate = document.getElementById('sabbathSelect')?.value;
+        const curDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
         const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
         
         container.innerHTML = '';
@@ -1359,7 +1394,7 @@
         const ssRate = totalRegularMembers > 0 ? ((ssPresentCount / totalRegularMembers) * 100).toFixed(1) : '0.0';
         const totalOverallRate = totalRegularMembers > 0 ? ((totalWorshipAttended / totalRegularMembers) * 100).toFixed(1) : '0.0';
 
-        const todayVisitors = this.rawVisitors.filter(v => v.date === curDate || (v.visitDate && v.visitDate === curDate));
+        const todayVisitors = this.rawVisitors.filter(v => this.normalizeDateStr(v.date) === curDate || this.normalizeDateStr(v.visitDate) === curDate);
         const todayVisitorCount = todayVisitors.length;
 
         const isMasterSelected = this.selectedFilterClass === 'ALL';
@@ -1648,8 +1683,9 @@ ${className} ${leaderName} 리더입니다.
       }
 
       loadAttendanceForSelectedDate(targetDate) {
+        const normDate = this.normalizeDateStr(targetDate);
         this.currentAttendance = {};
-        const dateRecords = this.rawRecords.filter(r => r.date === targetDate);
+        const dateRecords = this.rawRecords.filter(r => this.normalizeDateStr(r.date) === normDate);
 
         this.rawMembers.forEach(m => {
           const found = dateRecords.find(r => r.memberId === m.memberId);
@@ -1678,7 +1714,7 @@ ${className} ${leaderName} 리더입니다.
         const countBadge = document.getElementById('memberCountBadge');
         if (!container) return;
 
-        const curDate = document.getElementById('sabbathSelect')?.value;
+        const curDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
         const activeFilter = (this.currentUser && this.currentUser.isAdmin) 
           ? (this.selectedFilterClass || document.getElementById('adminClassFilter')?.value || 'ALL')
           : this.currentUser.classId;
@@ -1687,7 +1723,7 @@ ${className} ${leaderName} 리더입니다.
           if (titleEl) titleEl.textContent = `🏷️ ${curDate} 현장 방문자 방명록`;
           if (subTipEl) subTipEl.textContent = `당일 방문하신 손님 명단입니다`;
 
-          const todayVisitors = this.rawVisitors.filter(v => v.date === curDate || (v.visitDate && v.visitDate === curDate));
+          const todayVisitors = this.rawVisitors.filter(v => this.normalizeDateStr(v.date) === curDate || this.normalizeDateStr(v.visitDate) === curDate);
           if (countBadge) countBadge.textContent = `${todayVisitors.length}명`;
           container.innerHTML = '';
 
@@ -1835,7 +1871,7 @@ ${className} ${leaderName} 리더입니다.
         }
 
         const currentStatus = this.currentAttendance[memberId].status;
-        const targetDate = document.getElementById('sabbathSelect')?.value;
+        const targetDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
         const quarter = document.getElementById('quarterSelect')?.value;
         const member = this.rawMembers.find(m => m.memberId === memberId);
         if (!member || !targetDate) return;
@@ -1845,7 +1881,7 @@ ${className} ${leaderName} 리더입니다.
         const finalStatus = isCancelling ? null : status;
         this.currentAttendance[memberId].status = finalStatus;
 
-        const idx = this.rawRecords.findIndex(r => r.date === targetDate && r.memberId === memberId);
+        const idx = this.rawRecords.findIndex(r => this.normalizeDateStr(r.date) === targetDate && r.memberId === memberId);
 
         if (isCancelling) {
           if (idx >= 0) this.rawRecords.splice(idx, 1);
@@ -1933,7 +1969,9 @@ ${className} ${leaderName} 리더입니다.
         if (!this.currentUser) return;
         
         const refreshIcon = document.getElementById('refreshBtnIcon');
+        const adminRefreshIcon = document.getElementById('adminRefreshBtnIcon');
         if (refreshIcon) refreshIcon.classList.add('animate-spin');
+        if (adminRefreshIcon) adminRefreshIcon.classList.add('animate-spin');
 
         this.showToast('🔄 서버에서 최신 출석 데이터를 불러오는 중...', 'info');
 
@@ -1952,7 +1990,10 @@ ${className} ${leaderName} 리더입니다.
           if (json.success) {
             this.rawMembers = (json.members || []).filter(m => m.status !== '방문자');
             this.rawVisitors = json.visitors || (json.members || []).filter(m => m.status === '방문자');
-            this.rawRecords = json.records || [];
+            this.rawRecords = (json.records || []).map(r => ({
+              ...r,
+              date: this.normalizeDateStr(r.date)
+            }));
             this.updateAbsentAlertMap(json.absentAlerts || []);
             this.calculateConsecutiveAbsentees();
 
@@ -1978,6 +2019,7 @@ ${className} ${leaderName} 리더입니다.
           this.showToast('네트워크 오류로 동기화에 실패했습니다.', 'error');
         } finally {
           if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+          if (adminRefreshIcon) adminRefreshIcon.classList.remove('animate-spin');
         }
       }
 
@@ -1988,12 +2030,12 @@ ${className} ${leaderName} 리더입니다.
         const searchInput = document.getElementById('worshipSearchInput');
         if (searchInput) searchInput.value = '';
 
-        const curDate = document.getElementById('sabbathSelect')?.value;
+        const curDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
         if (!curDate) return;
 
         this.worshipPendingSet = new Set();
         this.rawRecords.forEach(r => {
-          if (r.date === curDate && r.worshipAttended) {
+          if (this.normalizeDateStr(r.date) === curDate && r.worshipAttended) {
             this.worshipPendingSet.add(r.memberId);
           }
         });
@@ -2020,11 +2062,11 @@ ${className} ${leaderName} 리더입니다.
         const countBadge = document.getElementById('worshipCountBadge');
         if (!container) return;
 
-        const curDate = document.getElementById('sabbathSelect')?.value;
+        const curDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
         if (!curDate) return;
 
         const candidates = this.rawMembers.filter(m => {
-          const rec = this.rawRecords.find(r => r.date === curDate && r.memberId === m.memberId);
+          const rec = this.rawRecords.find(r => this.normalizeDateStr(r.date) === curDate && r.memberId === m.memberId);
           if (rec && (rec.status === '출석' || rec.status === '지각')) {
             return false;
           }
@@ -2126,7 +2168,7 @@ ${className} ${leaderName} 리더입니다.
       }
 
       async saveWorshipBatchAttendance() {
-        const targetDate = document.getElementById('sabbathSelect')?.value;
+        const targetDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
         const quarter = document.getElementById('quarterSelect')?.value;
         if (!targetDate) return;
 
@@ -2135,7 +2177,7 @@ ${className} ${leaderName} 리더입니다.
         try {
           const batch = (isFirebaseReady && db && navigator.onLine) ? writeBatch(db) : null;
           const candidates = this.rawMembers.filter(m => {
-            const rec = this.rawRecords.find(r => r.date === targetDate && r.memberId === m.memberId);
+            const rec = this.rawRecords.find(r => this.normalizeDateStr(r.date) === targetDate && r.memberId === m.memberId);
             return !(rec && (rec.status === '출석' || rec.status === '지각'));
           });
 
@@ -2143,7 +2185,7 @@ ${className} ${leaderName} 리더입니다.
             const memberId = member.memberId;
             const isAttended = this.worshipPendingSet.has(memberId);
             const recordId = `${targetDate}_${memberId}`;
-            let rec = this.rawRecords.find(r => r.date === targetDate && r.memberId === memberId);
+            let rec = this.rawRecords.find(r => this.normalizeDateStr(r.date) === targetDate && r.memberId === memberId);
 
             if (isAttended) {
               if (!rec) {
@@ -2314,11 +2356,11 @@ ${className} ${leaderName} 리더입니다.
         }
         this.currentAttendance[memberId].reason = reason;
 
-        const targetDate = document.getElementById('sabbathSelect')?.value;
+        const targetDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
         if (!targetDate) return;
 
         const recordId = `${targetDate}_${memberId}`;
-        const existing = this.rawRecords.find(r => r.date === targetDate && r.memberId === memberId);
+        const existing = this.rawRecords.find(r => this.normalizeDateStr(r.date) === targetDate && r.memberId === memberId);
         if (existing) existing.reason = reason;
 
         if (isFirebaseReady && db && navigator.onLine) {
@@ -2346,8 +2388,8 @@ ${className} ${leaderName} 리더입니다.
           : (this.currentUser ? this.currentUser.classId : 'ALL');
 
         if (activeFilter === 'C12' || activeFilter === 'VISITOR') {
-          const curDate = document.getElementById('sabbathSelect')?.value;
-          const todayVisitors = this.rawVisitors.filter(v => v.date === curDate || (v.visitDate && v.visitDate === curDate));
+          const curDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
+          const todayVisitors = this.rawVisitors.filter(v => this.normalizeDateStr(v.date) === curDate || this.normalizeDateStr(v.visitDate) === curDate);
           
           const sumTot = document.getElementById('summaryTotalBox');
           const sumPres = document.getElementById('summaryPresentBox');
@@ -2386,19 +2428,29 @@ ${className} ${leaderName} 리더입니다.
       }
 
       calculateAndRenderStatistics() {
-        const totalMembers = this.rawMembers.length;
+        const isAdmin = !!(this.currentUser && this.currentUser.isAdmin);
+        const myClassId = this.currentUser ? this.currentUser.classId : 'ALL';
+        
+        // 일반 리더 로그인 시 해당 반 교인만 필터링
+        const targetMembers = (!isAdmin && myClassId !== 'ALL')
+          ? this.rawMembers.filter(m => m.classId === myClassId)
+          : this.rawMembers;
+
         const totMemEl = document.getElementById('statTotalMembers');
-        if (totMemEl) totMemEl.textContent = `${totalMembers}명`;
+        const totLblEl = document.getElementById('statTotalLabel');
+        if (totMemEl) totMemEl.textContent = `${targetMembers.length}명`;
+        if (totLblEl) totLblEl.textContent = isAdmin ? '총 등록 교인' : '반 등록 교인';
 
         const curQuarter = document.getElementById('quarterSelect')?.value || '3기';
 
         const validRecords = this.rawRecords.filter(r => {
           const isQuarterMatch = !r.quarter || r.quarter === curQuarter;
           const isValidStatus = r.status === '출석' || r.status === '지각' || r.status === '결석';
-          return isQuarterMatch && isValidStatus;
+          const isMemberMatch = targetMembers.some(m => m.memberId === r.memberId);
+          return isQuarterMatch && isValidStatus && isMemberMatch;
         });
 
-        const uniqueDates = [...new Set(validRecords.map(r => r.date))].sort();
+        const uniqueDates = [...new Set(validRecords.map(r => this.normalizeDateStr(r.date)))].filter(Boolean).sort();
         const totSabEl = document.getElementById('statTotalSabbaths');
         if (totSabEl) totSabEl.textContent = `${uniqueDates.length}회`;
 
@@ -2406,7 +2458,7 @@ ${className} ${leaderName} 리더입니다.
         let totalCheckedCount = 0;
 
         const memberStatsMap = {};
-        this.rawMembers.forEach(m => {
+        targetMembers.forEach(m => {
           memberStatsMap[m.memberId] = {
             memberId: m.memberId,
             name: m.name,
@@ -2458,7 +2510,7 @@ ${className} ${leaderName} 리더입니다.
         if (careEl) careEl.textContent = `${careCount}명`;
 
         this.renderMemberStatsTable(memberStatsMap, uniqueDates.length);
-        this.renderWeeklyTrendChart(uniqueDates);
+        this.renderWeeklyTrendChart(uniqueDates, targetMembers);
       }
 
       renderMemberStatsTable(statsMap, totalWeeks) {
@@ -2518,7 +2570,7 @@ ${className} ${leaderName} 리더입니다.
 
         const nameEl = document.getElementById('modalMemberName');
         const subEl = document.getElementById('modalMemberSub');
-        if (nameEl) nameEl.textContent = `${member.name} (${member.role || '성도'})`;
+        if (nameEl) nameEl.textContent = `${member.name} (${member.phone || '연락처 없음'})`;
         if (subEl) subEl.textContent = `${this.getClassName(member.classId)} · ${year}년 ${quarter} 출석 현황`;
 
         const sabbaths = this.getQuarterSabbaths(year, quarter);
@@ -2530,7 +2582,7 @@ ${className} ${leaderName} 리더입니다.
 
         sabbaths.forEach((item, idx) => {
           const lessonNo = idx + 1;
-          const rec = this.rawRecords.find(r => r.memberId === memberId && r.date === item.dateStr);
+          const rec = this.rawRecords.find(r => r.memberId === memberId && this.normalizeDateStr(r.date) === item.dateStr);
           
           let iconHtml = '<span class="text-slate-300 font-bold text-base">-</span>';
           let borderClass = 'border-slate-200 bg-white';
@@ -2603,18 +2655,25 @@ ${className} ${leaderName} 리더입니다.
 
         if (!modal || !box || !bodyEl) return;
 
+        const isAdmin = !!(this.currentUser && this.currentUser.isAdmin);
+        const myClassId = this.currentUser ? this.currentUser.classId : 'ALL';
+        const targetMembers = (!isAdmin && myClassId !== 'ALL')
+          ? this.rawMembers.filter(m => m.classId === myClassId)
+          : this.rawMembers;
+
         const curQuarter = document.getElementById('quarterSelect')?.value || '3기';
 
         const validRecords = this.rawRecords.filter(r => {
           const isQuarterMatch = !r.quarter || r.quarter === curQuarter;
           const isValidStatus = r.status === '출석' || r.status === '지각' || r.status === '결석';
-          return isQuarterMatch && isValidStatus;
+          const isMemberMatch = targetMembers.some(m => m.memberId === r.memberId);
+          return isQuarterMatch && isValidStatus && isMemberMatch;
         });
 
-        const uniqueDates = [...new Set(validRecords.map(r => r.date))].sort();
+        const uniqueDates = [...new Set(validRecords.map(r => this.normalizeDateStr(r.date)))].filter(Boolean).sort();
 
         const memberStatsMap = {};
-        this.rawMembers.forEach(m => {
+        targetMembers.forEach(m => {
           memberStatsMap[m.memberId] = {
             memberId: m.memberId,
             name: m.name,
@@ -2653,13 +2712,13 @@ ${className} ${leaderName} 리더입니다.
 
         if (type === 'members') {
           iconEl.textContent = '👥';
-          titleEl.textContent = `등록 교인 명단 (${this.rawMembers.length}명)`;
+          titleEl.textContent = `${isAdmin ? '총 등록 교인' : this.getClassName(myClassId) + ' 등록 교인'} (${targetMembers.length}명)`;
           subEl.textContent = '현재 반 및 직분별 정규 등록 현황';
-          if (footerEl) footerEl.textContent = `활동 ${this.rawMembers.filter(m => m.status === '활동').length}명 · 새가족 ${this.rawMembers.filter(m => m.status === '새가족').length}명 (방문자 완전 분리)`;
+          if (footerEl) footerEl.textContent = `활동 ${targetMembers.filter(m => m.status === '활동').length}명 · 새가족 ${targetMembers.filter(m => m.status === '새가족').length}명`;
 
           bodyEl.innerHTML = 
             '<div class="space-y-2">' +
-              this.rawMembers.map(m => {
+              targetMembers.map(m => {
                 const cleanPhone = (m.phone || '').replace(/[^0-9]/g, '');
                 return (
                   '<div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">' +
@@ -2757,7 +2816,7 @@ ${className} ${leaderName} 리더입니다.
             bodyEl.innerHTML = 
               '<div class="space-y-2">' +
                 uniqueDates.map((dateStr, idx) => {
-                  const dayRecords = validRecords.filter(r => r.date === dateStr);
+                  const dayRecords = validRecords.filter(r => this.normalizeDateStr(r.date) === dateStr);
                   const pCount = dayRecords.filter(r => r.status === '출석').length;
                   const lCount = dayRecords.filter(r => r.status === '지각').length;
                   const aCount = dayRecords.filter(r => r.status === '결석').length;
@@ -2767,7 +2826,7 @@ ${className} ${leaderName} 리더입니다.
                     '<div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs">' +
                       '<div>' +
                         '<span class="font-black text-slate-900 text-sm">제' + (idx + 1) + '회차 (' + dateStr + ')</span>' +
-                        '<p class="text-[11px] text-slate-500 font-bold mt-0.5">정규 교인 ' + dayRecords.length + '명 기록 (설교 예배 추가 참석: ' + wCount + '명)</p>' +
+                        '<p class="text-[11px] text-slate-500 font-bold mt-0.5">교인 ' + dayRecords.length + '명 기록 (설교 예배 추가: ' + wCount + '명)</p>' +
                       '</div>' +
                       '<div class="flex items-center space-x-1.5 font-black text-xs">' +
                         '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">출석 ' + pCount + '</span>' +
@@ -2820,11 +2879,11 @@ ${className} ${leaderName} 리더입니다.
                       '<div>' +
                         '<div class="flex items-center space-x-1.5 flex-wrap">' +
                           '<span class="font-black text-slate-900 text-sm sm:text-base">' + m.name + '</span>' +
-                          '<span class="text-xs font-bold text-slate-600 bg-white border border-slate-200 px-1.5 py-0.5 rounded">' + (member.role || '성도') + '</span>' +
+                          '<span class="text-xs font-bold text-slate-600 bg-white border border-slate-200 px-1.5 py-0.5 rounded">' + (m.role || '성도') + '</span>' +
                           '<span class="text-[11px] font-black bg-red-100 text-red-700 px-1.5 py-0.5 rounded">' + rate + '%</span>' +
                         '</div>' +
                         '<p class="text-xs text-slate-600 font-bold mt-0.5">' +
-                          this.getClassName(m.classId) + ' · 결석 ' + m.absent + '회 (설교 예배 참석: ' + m.worshipOnly + '회)' +
+                          this.getClassName(m.classId) + ' · 결석 ' + m.absent + '회 (설교 예배: ' + m.worshipOnly + '회)' +
                         '</p>' +
                       '</div>' +
                       '<div class="flex items-center gap-1.5 w-full sm:w-auto min-w-[210px]">' +
@@ -2851,15 +2910,23 @@ ${className} ${leaderName} 리더입니다.
         if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
       }
 
-      renderWeeklyTrendChart(uniqueDates) {
+      renderWeeklyTrendChart(uniqueDates, targetMembers) {
         const chartEl = document.getElementById('weeklyChart');
         if (!chartEl) return;
         const ctx = chartEl.getContext('2d');
         if (this.weeklyChartInstance) this.weeklyChartInstance.destroy();
 
-        const labels = uniqueDates.map(d => d.slice(5));
+        const labels = uniqueDates.map(d => {
+          const match = d.match(/\d{4}-(\d{2}-\d{2})/);
+          return match ? match[1] : d;
+        });
+
         const counts = uniqueDates.map(d => {
-          return this.rawRecords.filter(r => r.date === d && (r.status === '출석' || r.status === '지각')).length;
+          return this.rawRecords.filter(r => {
+            const isDateMatch = this.normalizeDateStr(r.date) === d;
+            const isMemberMatch = targetMembers.some(m => m.memberId === r.memberId);
+            return isDateMatch && isMemberMatch && (r.status === '출석' || r.status === '지각');
+          }).length;
         });
 
         this.weeklyChartInstance = new Chart(ctx, {
@@ -3246,7 +3313,7 @@ ${className} ${leaderName} 리더입니다.
         const status = document.getElementById('newMemberStatus')?.value || '방문자';
         const note = document.getElementById('newMemberNote')?.value?.trim() || '';
         const targetClassId = document.getElementById('newMemberClassSelect')?.value;
-        const curDate = document.getElementById('sabbathSelect')?.value;
+        const curDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
 
         if (!name) {
           this.showToast('성명을 입력해주세요.', 'error');
@@ -3390,7 +3457,7 @@ ${className} ${leaderName} 리더입니다.
                   ${targetMembers.map(m => {
                     let p = 0, l = 0, a = 0, w = 0;
                     const weekTds = sabbaths.map(s => {
-                      const rec = this.rawRecords.find(r => r.memberId === m.memberId && r.date === s.dateStr);
+                      const rec = this.rawRecords.find(r => r.memberId === m.memberId && this.normalizeDateStr(r.date) === s.dateStr);
                       if (rec && rec.status === '출석') { p++; return '<td style="border: 1px solid #cbd5e1; color: #059669; font-weight: bold;">⭕</td>'; }
                       if (rec && rec.status === '지각') { l++; return '<td style="border: 1px solid #cbd5e1; color: #d97706; font-weight: bold;">△</td>'; }
                       if (rec && rec.status === '결석') { 
@@ -3480,7 +3547,7 @@ ${className} ${leaderName} 리더입니다.
 
                       const weekCounts = sabbaths.map(s => {
                         const cnt = cMembers.filter(m => {
-                          const r = validRecs.find(rec => rec.memberId === m.memberId && rec.date === s.dateStr);
+                          const r = validRecs.find(rec => rec.memberId === m.memberId && this.normalizeDateStr(rec.date) === s.dateStr);
                           return r && (r.status === '출석' || r.status === '지각');
                         }).length;
                         return `<td style="border: 1px solid #cbd5e1; padding: 3px; font-weight: ${cnt > 0 ? 'bold' : 'normal'}; color: ${cnt > 0 ? '#059669' : '#94a3b8'};">${cnt}</td>`;
@@ -3515,7 +3582,7 @@ ${className} ${leaderName} 리더입니다.
             `;
           } else {
             const quarters = ['1기', '2기', '3기', '4기'];
-            const yearRecs = this.rawRecords.filter(r => r.date && r.date.startsWith(year) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
+            const yearRecs = this.rawRecords.filter(r => r.date && this.normalizeDateStr(r.date).startsWith(year) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
 
             html = `
               <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
@@ -3579,7 +3646,7 @@ ${className} ${leaderName} 리더입니다.
             `;
           }
         } else if (type === 3) {
-          const curDate = document.getElementById('sabbathSelect')?.value || '';
+          const curDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value) || '';
           html = `
             <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
               <div style="border-bottom: 2px solid #111; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-end;">
@@ -3615,7 +3682,7 @@ ${className} ${leaderName} 리더입니다.
             </div>
           `;
         } else if (type === 4) {
-          const careList = this.rawMembers.filter(m => {
+          const careList = targetMembers.filter(m => {
             const mRecs = this.rawRecords.filter(r => r.memberId === m.memberId && (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
             if (mRecs.length < 2) return false;
             let sc = 0;
@@ -3735,7 +3802,7 @@ ${className} ${leaderName} 리더입니다.
             ];
 
             sabbaths.forEach(s => {
-              const rec = this.rawRecords.find(r => r.memberId === m.memberId && r.date === s.dateStr);
+              const rec = this.rawRecords.find(r => r.memberId === m.memberId && this.normalizeDateStr(r.date) === s.dateStr);
               if (rec && rec.status === '출석') {
                 p++;
                 rowCells.push({ v: '⭕', s: stylePresent });
@@ -3822,7 +3889,7 @@ ${className} ${leaderName} 리더입니다.
 
               const weekCells = sabbaths.map(s => {
                 const cnt = cMembers.filter(m => {
-                  const r = validRecs.find(rec => rec.memberId === m.memberId && rec.date === s.dateStr);
+                  const r = validRecs.find(rec => rec.memberId === m.memberId && this.normalizeDateStr(rec.date) === s.dateStr);
                   return r && (r.status === '출석' || r.status === '지각');
                 }).length;
                 return { v: cnt, s: { font: { bold: cnt > 0, color: { rgb: cnt > 0 ? "059669" : "94A3B8" } }, alignment: { horizontal: "center" } } };
@@ -3858,7 +3925,7 @@ ${className} ${leaderName} 리더입니다.
 
           } else {
             const quarters = ['1기', '2기', '3기', '4기'];
-            const yearRecs = this.rawRecords.filter(r => r.date && r.date.startsWith(year) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
+            const yearRecs = this.rawRecords.filter(r => r.date && this.normalizeDateStr(r.date).startsWith(year) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
 
             const sheetData = [
               [{ v: `${year}년도 안식일학교 연간(1개년) 종합 결산 보고서`, s: { font: { bold: true, sz: 14 } } }],
@@ -3915,7 +3982,7 @@ ${className} ${leaderName} 리더입니다.
           }
 
         } else if (type === 4) {
-          const careList = this.rawMembers.filter(m => {
+          const careList = targetMembers.filter(m => {
             const mRecs = this.rawRecords.filter(r => r.memberId === m.memberId && (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
             if (mRecs.length < 2) return false;
             let sc = 0;

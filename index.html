@@ -112,7 +112,7 @@
 
           <div>
             <label class="block text-xs sm:text-sm font-black text-slate-700 mb-1.5">접속 비밀번호 (PIN)</label>
-            <input type="password" id="pinInput" placeholder="비밀번호 입력 (예: joy2026!)" autocomplete="current-password" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-base sm:text-lg font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none tracking-wider transition">
+            <input type="password" id="pinInput" placeholder="비밀번호 입력 (예: 1000, 1001)" autocomplete="current-password" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-base sm:text-lg font-black text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none tracking-wider transition">
           </div>
 
           <button type="submit" id="loginSubmitBtn" class="w-full py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-base sm:text-lg font-black tracking-tight rounded-xl shadow-lg shadow-emerald-200 transition flex items-center justify-center space-x-2">
@@ -174,7 +174,7 @@
               <span>오늘의 현황</span>
             </span>
 
-            <!-- 우측 액션 그룹: [새콤새콤 새로고침] + [⛪ 설교 예배 체크] -->
+            <!-- 우측 액션 그룹: [새로고침] + [⛪ 설교 예배 체크] -->
             <div class="flex items-center space-x-1.5">
               <button onclick="window.appInstance.forceSyncLatestData()" title="최신 동기화" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-200 flex items-center space-x-1 shadow-2xs">
                 <span id="adminRefreshBtnIcon">🔄</span>
@@ -793,7 +793,7 @@
 
       async init() {
         this.initCurrentYearAndQuarter();
-        this.loadClassesList();
+        await this.loadClassesList();
         this.checkSavedSession();
         this.setupNetworkListeners();
 
@@ -968,7 +968,6 @@
       }
 
       async loadClassesList() {
-        // 1단계: 로컬 캐시가 있으면 0.01초 만에 즉시 화면에 띄움
         const cachedClasses = localStorage.getItem('church_cached_classes');
         if (cachedClasses) {
           try {
@@ -980,7 +979,6 @@
           } catch(e) {}
         }
 
-        // 2단계: 구글 시트 백엔드에서 실시간 목록 호출
         try {
           const res = await fetch(`${SHEETS_API_URL}?action=getClasses`);
           const json = await res.json();
@@ -994,20 +992,19 @@
           console.warn("서버 반 목록 로드 실패, 기본값으로 복구합니다:", err);
         }
 
-        // 3단계: 만약 시트에서 빈 목록이 오거나 연결 실패 시 즉시 기본 반 목록으로 복구 (멈춤 100% 방지)
         if (!this.classList || this.classList.length === 0) {
           this.classList = [
-            { classId: 'ADMIN', className: '관리자 (교역자/전체)', leaderName: '교역자', isAdmin: true },
+            { classId: 'ADMIN', className: '관리자(전체)', leaderName: '교역자', isAdmin: true },
             { classId: 'C01', className: '사랑반', leaderName: '최변근', isAdmin: false },
             { classId: 'C02', className: '기쁨반', leaderName: '서종헌', isAdmin: false },
             { classId: 'C03', className: '은혜반', leaderName: '김수희', isAdmin: false },
-            { classId: 'C04', className: '감사반', leaderName: '구희은', isAdmin: false },
-            { classId: 'C05', className: '평화반', leaderName: '박준호', isAdmin: false },
-            { classId: 'C06', className: '소망반', leaderName: '차상석', isAdmin: false },
-            { classId: 'C07', className: '믿음반', leaderName: '김영수', isAdmin: false },
-            { classId: 'C08', className: '학생반', leaderName: '차한규', isAdmin: false },
-            { classId: 'C09', className: '어린이반', leaderName: '최보라', isAdmin: false },
-            { classId: 'C10', className: '새신자반', leaderName: '고윤호', isAdmin: false }
+            { classId: 'C04', className: '감사반', leaderName: '조영주', isAdmin: false },
+            { classId: 'C05', className: '소망반', leaderName: '이종문', isAdmin: false },
+            { classId: 'C06', className: '믿음반', leaderName: '차상석', isAdmin: false },
+            { classId: 'C07', className: '새신자반', leaderName: '고윤호', isAdmin: false },
+            { classId: 'C08', className: '학생반', leaderName: '신정호', isAdmin: false },
+            { classId: 'C09', className: '어린이반', leaderName: '방은지', isAdmin: false },
+            { classId: 'C10', className: '청년반', leaderName: '노준섭', isAdmin: false }
           ];
           this.populateClassSelect();
         }
@@ -1015,33 +1012,17 @@
 
       populateClassSelect() {
         const select = document.getElementById('classSelect');
-        const adminFilter = document.getElementById('adminClassFilter');
         if (!select) return;
 
         const curVal = select.value;
         select.innerHTML = '<option value="">-- 출석할 반을 선택하세요 --</option>';
-        if (adminFilter) adminFilter.innerHTML = '<option value="ALL">전체 반 보기</option>';
 
         this.classList.forEach(c => {
           const opt = document.createElement('option');
           opt.value = c.classId;
           opt.textContent = `${c.className} (${c.leaderName} 리더)`;
           select.appendChild(opt);
-
-          if (adminFilter && c.classId !== 'ADMIN') {
-            const filterOpt = document.createElement('option');
-            filterOpt.value = c.classId;
-            filterOpt.textContent = c.className;
-            adminFilter.appendChild(filterOpt);
-          }
         });
-
-        if (adminFilter) {
-          const visitorOpt = document.createElement('option');
-          visitorOpt.value = 'C12';
-          visitorOpt.textContent = '🏷️ 방문자 (당일 방명록)';
-          adminFilter.appendChild(visitorOpt);
-        }
 
         if (curVal) select.value = curVal;
       }
@@ -1335,12 +1316,12 @@
 
         if (this.currentUser.isAdmin) {
           statusBarWrap?.classList.remove('hidden');
-          leaderRefreshWrap?.classList.add('hidden'); // 반별 리더용 새로고침 숨김 (상단 관리자바로 이동)
+          leaderRefreshWrap?.classList.add('hidden');
           adminResetSec?.classList.remove('hidden');
           adminNewMemberBtn?.classList.remove('hidden');
         } else {
           statusBarWrap?.classList.add('hidden');
-          leaderRefreshWrap?.classList.remove('hidden'); // 반별 리더용 새로고침 표시
+          leaderRefreshWrap?.classList.remove('hidden');
           adminResetSec?.classList.add('hidden');
           adminNewMemberBtn?.classList.add('hidden');
         }
@@ -1484,8 +1465,6 @@
 
       selectMonitoringClass(classId) {
         this.selectedFilterClass = classId;
-        const filterSelect = document.getElementById('adminClassFilter');
-        if (filterSelect) filterSelect.value = classId;
         this.renderAttendanceList();
         this.renderClassMonitoringBar();
       }
@@ -1700,7 +1679,7 @@ ${className} ${leaderName} 리더입니다.
 
         const curDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
         const activeFilter = (this.currentUser && this.currentUser.isAdmin) 
-          ? (this.selectedFilterClass || document.getElementById('adminClassFilter')?.value || 'ALL')
+          ? (this.selectedFilterClass || 'ALL')
           : this.currentUser.classId;
 
         if (activeFilter === 'C12' || activeFilter === 'VISITOR') {
@@ -1809,7 +1788,6 @@ ${className} ${leaderName} 리더입니다.
 
           let quickKakaoBtnHtml = isUrgentActive ? `<button onclick="window.appInstance.copyKakaoCareMessage('${member.memberId}', 3)" title="카톡 심방 안부 문구 복사" class="text-xs font-black text-amber-900 bg-amber-300 hover:bg-amber-400 px-2 py-0.5 rounded-md transition flex items-center space-x-0.5"><span>💬</span><span>카톡</span></button>` : '';
 
-          // 💡 출석 명단 카드에서 전화번호 영역 완전히 제거됨
           row.innerHTML = 
             '<div class="flex items-center justify-between gap-2">' +
               '<div class="flex items-center space-x-2.5 min-w-0">' +
@@ -2369,7 +2347,7 @@ ${className} ${leaderName} 리더입니다.
         
         let filtered = this.rawMembers;
         const activeFilter = (this.currentUser && this.currentUser.isAdmin) 
-          ? (this.selectedFilterClass || document.getElementById('adminClassFilter')?.value || 'ALL')
+          ? (this.selectedFilterClass || 'ALL')
           : (this.currentUser ? this.currentUser.classId : 'ALL');
 
         if (activeFilter === 'C12' || activeFilter === 'VISITOR') {
@@ -2783,7 +2761,7 @@ ${className} ${leaderName} 리더입니다.
                           '<span class="text-[11px] text-slate-500">출 ' + item.present + ' · 지 ' + item.late + ' · 결 ' + item.absent + '</span>' +
                           '<span class="font-black ' + (parseFloat(rate) >= 70 ? 'text-emerald-600' : 'text-red-500') + '">' + rate + '%</span>' +
                         '</div>' +
-                      '</div>' +
+                      '</div>'
                     );
                   }).join('') +
               '</div>' +
@@ -2950,7 +2928,6 @@ ${className} ${leaderName} 리더입니다.
         const myClassId = this.currentUser ? this.currentUser.classId : 'ALL';
         const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
 
-        // 💡 반별 리더 로그인 시 교인 명부에서도 본인 반 교인만 필터링
         const targetMembers = (!isAdmin && myClassId !== 'ALL')
           ? this.rawMembers.filter(m => m.classId === myClassId)
           : this.rawMembers;
@@ -2961,7 +2938,7 @@ ${className} ${leaderName} 리더입니다.
 
           let formattedPhoneHtml = '<span class="text-slate-400">-</span>';
           if (cleanPhone.length === 11) {
-            formattedPhoneHtml = `<a href="tel:${cleanPhone}" class="text-emerald-700 hover:underline font-black text-xs sm:text-sm leading-tight inline-block">📞 ${cleanPhone.slice(0,3)}-${cleanPhone.slice(3,7)}<br>&nbsp;&nbsp;&nbsp;&nbsp;-${cleanPhone.slice(7,11)}</a>`;
+            formattedPhoneHtml = `<a href="tel:${cleanPhone}" class="text-emerald-700 hover:underline font-black text-xs sm:text-sm leading-tight inline-block">📞 ${cleanPhone.slice(0,3)}-${cleanPhone.slice(3,7)}-${cleanPhone.slice(7,11)}</a>`;
           } else if (cleanPhone.length > 0) {
             formattedPhoneHtml = `<a href="tel:${cleanPhone}" class="text-emerald-700 hover:underline font-black text-xs sm:text-sm leading-tight inline-block">📞 ${rawPhone}</a>`;
           }
@@ -3388,7 +3365,7 @@ ${className} ${leaderName} 리더입니다.
         const quarter = document.getElementById('quarterSelect')?.value || '3기';
         const isYearly = document.querySelector('input[name="reportPeriod"]:checked')?.value === 'year';
         const activeFilter = (this.currentUser && this.currentUser.isAdmin)
-          ? (this.selectedFilterClass || document.getElementById('adminClassFilter')?.value || 'ALL')
+          ? (this.selectedFilterClass || 'ALL')
           : this.currentUser.classId;
 
         const className = this.getClassName(activeFilter);
@@ -3736,7 +3713,7 @@ ${className} ${leaderName} 리더입니다.
         const quarter = document.getElementById('quarterSelect')?.value || '3기';
         const isYearly = document.querySelector('input[name="reportPeriod"]:checked')?.value === 'year';
         const activeFilter = (this.currentUser && this.currentUser.isAdmin)
-          ? (this.selectedFilterClass || document.getElementById('adminClassFilter')?.value || 'ALL')
+          ? (this.selectedFilterClass || 'ALL')
           : this.currentUser.classId;
 
         const className = this.getClassName(activeFilter);

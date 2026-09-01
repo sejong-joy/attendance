@@ -74,31 +74,37 @@
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white pb-6">
 
   <!-- Top Navigation Bar -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-2xs backdrop-blur-md bg-white/95">
-    <div class="max-w-6xl mx-auto px-3 h-14 sm:h-16 flex items-center justify-between">
-      <div class="flex items-center space-x-2">
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs backdrop-blur-md bg-white/95">
+    <div class="max-w-6xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between gap-2">
+      
+      <!-- 좌측: 로고 & 타이틀 (단축 적용) -->
+      <div class="flex items-center space-x-2 min-w-0 flex-shrink">
         <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-xl shadow-md shadow-emerald-200 flex-shrink-0">
           ⛪
         </div>
-        <div>
-          <h1 class="text-base sm:text-lg font-black text-slate-900 leading-tight whitespace-nowrap">세종 조이 안식일학교</h1>
-          <p class="text-xs text-slate-600 font-bold">스마트 출석 및 교인 돌봄 시스템</p>
+        <div class="min-w-0">
+          <h1 class="text-base sm:text-lg font-black text-slate-900 leading-tight truncate">세종 조이 안식일학교</h1>
+          <p class="text-xs text-slate-600 font-bold leading-tight">스마트 출석 시스템</p>
         </div>
       </div>
 
-      <!-- User Badge & Actions -->
-      <div id="userBadgeArea" class="hidden flex items-center space-x-1.5">
-        <button onclick="window.appInstance.openExportModal()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-900 text-xs sm:text-sm font-black rounded-lg border border-slate-300 transition flex items-center space-x-1 shadow-2xs">
+      <!-- 우측: [인쇄/엑셀] + [관리자 정보] + [로그아웃] (완벽한 1열 가로 나란히 배치) -->
+      <div id="userBadgeArea" class="hidden flex items-center space-x-1.5 sm:space-x-2.5 flex-shrink-0">
+        <button onclick="window.appInstance.openExportModal()" class="h-9 sm:h-10 px-2.5 sm:px-3 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-xs sm:text-sm font-black rounded-xl border border-slate-300 transition flex items-center space-x-1 shadow-2xs whitespace-nowrap">
           <span>🖨️ 인쇄/엑셀</span>
         </button>
-        <div class="text-right hidden sm:block">
-          <span id="headerClassName" class="text-xs font-black text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-300">반명</span>
-          <p id="headerLeaderName" class="text-xs text-slate-800 font-black mt-0.5">리더님</p>
+
+        <!-- PC/태블릿에서 표시되는 사용자 정보 뱃지 -->
+        <div class="hidden md:flex flex-col items-end justify-center">
+          <span id="headerClassName" class="text-xs font-black text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-300 whitespace-nowrap">반명</span>
+          <p id="headerLeaderName" class="text-xs text-slate-800 font-black mt-0.5 whitespace-nowrap">리더님</p>
         </div>
-        <button id="logoutBtn" class="px-2.5 py-1.5 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap text-slate-700 hover:text-red-600 hover:bg-red-50 rounded-lg border border-slate-300 transition">
+
+        <button id="logoutBtn" class="h-9 sm:h-10 px-2.5 sm:px-3 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap text-slate-700 hover:text-red-600 hover:bg-red-50 rounded-xl border border-slate-300 transition flex items-center justify-center shadow-2xs">
           로그아웃
         </button>
       </div>
+
     </div>
   </header>
 
@@ -186,8 +192,8 @@
             </span>
 
             <div class="flex items-center space-x-1.5">
-              <button type="button" onclick="event.preventDefault(); window.appInstance.forceSyncLatestData()" title="최신 동기화" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-300 flex items-center space-x-1 shadow-2xs">
-                <span id="adminRefreshBtnIcon">🔄</span>
+              <button type="button" onclick="event.preventDefault(); window.appInstance.forceSyncLatestData()" title="최신 동기화" class="h-10 px-3.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-sm sm:text-base font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-300 flex items-center space-x-1.5 shadow-xs">
+                <span id="adminRefreshBtnIcon" class="text-base">🔄</span>
                 <span>새로고침</span>
               </button>
               <button id="adminWorshipCheckBtn" onclick="window.appInstance.openWorshipCheckModal()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition flex items-center space-x-1 shadow-2xs">
@@ -227,8 +233,8 @@
                 <span id="syncStatusIcon">🟢</span>
                 <span id="syncStatusText">자동저장됨</span>
               </div>
-              <button type="button" onclick="event.preventDefault(); window.appInstance.forceSyncLatestData()" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-xs sm:text-sm font-black rounded-lg border border-slate-300 transition flex items-center space-x-1 shadow-2xs">
-                <span id="refreshBtnIcon">🔄</span>
+              <button type="button" onclick="event.preventDefault(); window.appInstance.forceSyncLatestData()" class="h-10 px-3.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-sm sm:text-base font-black rounded-xl border-2 border-slate-300 transition flex items-center space-x-1.5 shadow-xs">
+                <span id="refreshBtnIcon" class="text-base">🔄</span>
                 <span>새로고침</span>
               </button>
             </div>

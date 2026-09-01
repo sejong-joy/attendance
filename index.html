@@ -2260,12 +2260,12 @@ ${className} ${leaderName} 리더입니다.
           return;
         }
 
-        this.updateCloudStatusBadge('syncing');
+        this.updateCloudStatusBadge('syncing', '동기화 대기...');
 
         if (this.autoSyncTimer) clearTimeout(this.autoSyncTimer);
         this.autoSyncTimer = setTimeout(() => {
           this.processOfflineQueue();
-        }, 1200);
+        }, 800); // 👈 기존 1200을 800으로 변경하여 더 빠르게 구글로 쏘도록 단축!
       }
 
       async processOfflineQueue() {

@@ -2287,7 +2287,7 @@ ${className} ${leaderName} 리더입니다.
         }
 
         this.isSyncing = true;
-        this.updateCloudStatusBadge('syncing');
+        this.updateCloudStatusBadge('syncing', '동기화 중...');
 
         try {
           const grouped = queue.reduce((acc, rec) => {
@@ -2313,20 +2313,26 @@ ${className} ${leaderName} 리더입니다.
               body: JSON.stringify(payload)
             });
             const json = await res.json();
+            
             if (!json.success) allSuccess = false;
           }
 
           if (allSuccess) {
+            // 성공 시 큐(대기열) 비우고 완료 표시!
             localStorage.removeItem('church_offline_queue');
             this.updateCloudStatusBadge('saved');
           } else {
-            this.updateCloudStatusBadge('saved', '저장 대기');
+            // 구글 서버 혼잡으로 튕겼을 때 -> 대기열을 비우지 않고 3초 뒤 자동 재시도
+            this.updateCloudStatusBadge('syncing', '대기 중..');
+            setTimeout(() => this.processOfflineQueue(), 3000); 
           }
         } catch (err) {
+          // 인터넷 끊김 또는 서버 완전 오류 시 -> 4초 뒤 무한 자동 재시도
           if (!navigator.onLine) {
             this.updateCloudStatusBadge('offline');
           } else {
-            this.updateCloudStatusBadge('saved', '대기 중');
+            this.updateCloudStatusBadge('syncing', '대기 중..');
+            setTimeout(() => this.processOfflineQueue(), 4000);
           }
         } finally {
           this.isSyncing = false;

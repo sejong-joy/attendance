@@ -32,7 +32,7 @@
       -webkit-tap-highlight-color: transparent;
     }
     body {
-      overscroll-behavior-y: contain; /* 모바일 아래로 당겨서 새로고침 방지 */
+      overscroll-behavior-y: contain; 
     }
     .custom-scrollbar::-webkit-scrollbar {
       width: 4px;
@@ -60,14 +60,13 @@
       @page { size: auto; margin: 10mm; }
     }
 
-    /* 로그인 세션이 있으면 화면 로딩 시 로그인창을 아예 안 띄우고 메인 유지 (깜빡임 완벽 방지) */
+    /* 로그인 세션 유지 시 깜빡임 방지 */
     html.has-session #loginSection { display: none !important; }
     html.has-session #appSection { display: block !important; }
-    html.has-session #userBadgeArea { display: flex !important; } /* 우측 상단 버튼 나란히 정렬 */
+    html.has-session #userBadgeArea { display: flex !important; } 
   </style>
 
   <script>
-    // 브라우저가 화면을 그리기 전에 로그인 세션 여부를 즉시 검사
     if (localStorage.getItem('church_auth')) {
       document.documentElement.classList.add('has-session');
     }
@@ -90,7 +89,7 @@
         </div>
       </div>
 
-      <!-- 우측: 사용자 정보 & 액션 버튼 (가로 나란히 정렬) -->
+      <!-- 우측: 사용자 정보 & 액션 버튼 -->
       <div id="userBadgeArea" class="hidden flex items-center space-x-1.5 sm:space-x-2.5 flex-shrink-0">
         <button onclick="window.appInstance.openExportModal()" class="h-9 sm:h-10 px-2.5 sm:px-3 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-xs sm:text-sm font-black rounded-xl border border-slate-300 transition flex items-center space-x-1 shadow-2xs whitespace-nowrap">
           <span>🖨️ 인쇄/엑셀</span>
@@ -141,7 +140,7 @@
         </form>
 
         <div class="mt-5 pt-4 border-t border-slate-100 text-center">
-          <p class="text-xs text-slate-500 font-bold">💡 실시간 동기화로 체크 즉시 모든 리더/교역자 화면에 0.05초 만에 반영됩니다.</p>
+          <p class="text-xs text-slate-500 font-bold">💡 실시간 동기화로 체크 즉시 모든 리더/교역자 화면에 반영됩니다.</p>
         </div>
       </div>
     </section>
@@ -149,7 +148,7 @@
     <!-- 2. MAIN APP DASHBOARD -->
     <section id="appSection" class="hidden space-y-2.5 sm:space-y-3">
 
-      <!-- 🚨 3주 연속 결석자 긴급 알림 배너 -->
+      <!-- 🚨 긴급 알림 배너 -->
       <div id="absentAlertBanner" class="hidden bg-gradient-to-r from-red-50 to-amber-50 border-l-4 border-red-500 rounded-xl p-2.5 sm:p-3 shadow-xs">
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-2">
@@ -167,7 +166,7 @@
         </div>
       </div>
 
-      <!-- Navigation Tabs -->
+      <!-- Navigation Tabs (시니어 최적화) -->
       <div class="flex items-center space-x-0.5 sm:space-x-1 bg-slate-200/90 p-1 rounded-2xl w-full sm:w-max shadow-inner">
         <button onclick="window.appInstance.switchTab('check')" id="tabBtn-check" class="tab-btn flex-1 sm:flex-initial px-2 sm:px-5 py-2.5 rounded-xl text-lg sm:text-xl font-black tracking-tight whitespace-nowrap bg-white text-emerald-800 shadow-sm transition">
           ✍️ 출석 체크
@@ -206,10 +205,9 @@
           <div id="classChipsContainer" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
         </div>
 
-        <!-- Controls Card: 반별 리더 모드 전용 -->
+        <!-- Controls Card -->
         <div class="bg-white rounded-xl border border-slate-200 p-2 sm:p-3 shadow-xs">
           <div class="flex items-center justify-between gap-2">
-            
             <div class="flex-1 min-w-0 space-y-1">
               <div class="flex items-center space-x-1.5">
                 <select id="yearSelect" onchange="window.appInstance.onQuarterOrYearChange()" class="px-2 py-1 bg-slate-50 border border-slate-300 rounded-lg text-sm sm:text-base font-black text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
@@ -238,27 +236,26 @@
                 <span>새로고침</span>
               </button>
             </div>
-
           </div>
         </div>
 
-        <!-- 4칸 요약 대시보드 박스 -->
+        <!-- 4칸 요약 대시보드 박스 (시니어 폰트 확대) -->
         <div class="grid grid-cols-4 gap-1.5">
           <div class="bg-white rounded-xl border border-slate-200 p-1.5 sm:p-2 text-center shadow-2xs">
-            <span class="text-xs sm:text-sm font-black text-slate-600 block">총원</span>
-            <p id="summaryTotalBox" class="text-xl sm:text-2xl font-black text-slate-950 mt-0.5">0</p>
+            <span class="text-sm sm:text-base font-black text-slate-600 block">총원</span>
+            <p id="summaryTotalBox" class="text-2xl sm:text-3xl font-black text-slate-950 mt-1">0</p>
           </div>
           <div class="bg-emerald-50/80 rounded-xl border border-emerald-300 p-1.5 sm:p-2 text-center shadow-2xs">
-            <span class="text-xs sm:text-sm font-black text-emerald-800 block">출석</span>
-            <p id="summaryPresentBox" class="text-xl sm:text-2xl font-black text-emerald-700 mt-0.5">0</p>
+            <span class="text-sm sm:text-base font-black text-emerald-800 block">출석</span>
+            <p id="summaryPresentBox" class="text-2xl sm:text-3xl font-black text-emerald-700 mt-1">0</p>
           </div>
           <div class="bg-amber-50/80 rounded-xl border border-amber-300 p-1.5 sm:p-2 text-center shadow-2xs">
-            <span class="text-xs sm:text-sm font-black text-amber-800 block">지각</span>
-            <p id="summaryLateBox" class="text-xl sm:text-2xl font-black text-amber-700 mt-0.5">0</p>
+            <span class="text-sm sm:text-base font-black text-amber-800 block">지각</span>
+            <p id="summaryLateBox" class="text-2xl sm:text-3xl font-black text-amber-700 mt-1">0</p>
           </div>
           <div class="bg-red-50/80 rounded-xl border border-red-300 p-1.5 sm:p-2 text-center shadow-2xs">
-            <span class="text-xs sm:text-sm font-black text-red-700 block">결석</span>
-            <p id="summaryAbsentBox" class="text-xl sm:text-2xl font-black text-red-600 mt-0.5">0</p>
+            <span class="text-sm sm:text-base font-black text-red-700 block">결석</span>
+            <p id="summaryAbsentBox" class="text-2xl sm:text-3xl font-black text-red-600 mt-1">0</p>
           </div>
         </div>
 
@@ -272,7 +269,7 @@
             <span id="attendanceListSubTip" class="text-xs text-slate-500 font-bold">버튼을 눌러 출석을 기록하세요</span>
           </div>
 
-          <div id="attendanceList" class="grid grid-cols-1 gap-2"></div>
+          <div id="attendanceList" class="grid grid-cols-1 gap-2.5"></div>
         </div>
       </div>
 
@@ -364,7 +361,8 @@
                   <th class="py-2 px-2.5 whitespace-nowrap">이름</th>
                   <th class="py-2 px-2.5 whitespace-nowrap">소속반</th>
                   <th class="py-2 px-2 whitespace-nowrap">직분</th>
-                  <th class="py-2 px-2.5 whitespace-nowrap">연락처</th>
+                  <!-- 🎯 연락처 제목 가운데 정렬 -->
+                  <th class="py-2 px-2.5 text-center whitespace-nowrap">연락처</th>
                   <th class="py-2 px-2 text-center whitespace-nowrap">상태</th>
                 </tr>
               </thead>
@@ -427,6 +425,7 @@
         </div>
 
         <div class="p-3 sm:p-4 space-y-2.5 max-h-[75vh] overflow-y-auto custom-scrollbar">
+          <!-- 각종 인쇄 메뉴들 (기존과 동일) -->
           <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl hover:border-emerald-400 transition">
             <div class="flex items-center justify-between mb-1">
               <span class="font-black text-slate-900 text-base sm:text-lg flex items-center space-x-1.5">
@@ -1719,24 +1718,24 @@ ${className} ${leaderName} 리더입니다.
             
             card.innerHTML = `
               <div class="flex items-center space-x-3">
-                <div class="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-lg shadow-2xs flex-shrink-0">
+                <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-xl shadow-2xs flex-shrink-0">
                   🏷️
                 </div>
                 <div>
                   <div class="flex items-center space-x-2 flex-wrap">
-                    <span class="font-black text-slate-900 text-xl sm:text-2xl">${visitor.name}</span>
+                    <span class="font-black text-slate-900 text-2xl sm:text-3xl">${visitor.name}</span>
                     <span class="text-xs sm:text-sm font-black text-blue-900 bg-blue-100 border border-blue-300 px-2 py-0.5 rounded">방문자</span>
                     <span class="text-xs sm:text-sm text-slate-600 font-bold">${visitor.role || visitor.affiliation || '손님'}</span>
                   </div>
-                  <p class="text-xs sm:text-sm text-slate-700 font-bold mt-0.5">
+                  <p class="text-sm sm:text-base text-slate-700 font-bold mt-0.5">
                     📞 ${visitor.phone || '연락처 없음'} ${visitor.notes ? ` · ${visitor.notes}` : ''}
                   </p>
                 </div>
               </div>
               <div class="flex items-center space-x-2 self-end sm:self-center">
-                ${cleanPhone ? `<a href="tel:${cleanPhone}" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-black rounded-lg shadow-2xs transition">📞 통화</a>` : ''}
-                ${cleanPhone ? `<a href="sms:${cleanPhone}" class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 text-xs sm:text-sm font-black rounded-lg shadow-2xs transition">💬 문자</a>` : ''}
-                <button onclick="window.appInstance.promoteVisitorToMember('${visitor.visitorId || idx}', '${visitor.name}', '${visitor.phone || ''}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-black rounded-lg shadow-2xs transition">
+                ${cleanPhone ? `<a href="tel:${cleanPhone}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm sm:text-base font-black rounded-lg shadow-2xs transition">📞 통화</a>` : ''}
+                ${cleanPhone ? `<a href="sms:${cleanPhone}" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 text-sm sm:text-base font-black rounded-lg shadow-2xs transition">💬 문자</a>` : ''}
+                <button onclick="window.appInstance.promoteVisitorToMember('${visitor.visitorId || idx}', '${visitor.name}', '${visitor.phone || ''}')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base font-black rounded-lg shadow-2xs transition">
                   🌱 새가족 등록
                 </button>
               </div>
@@ -1785,55 +1784,58 @@ ${className} ${leaderName} 리더입니다.
             borderStyle = 'border-2 border-indigo-300 bg-indigo-50/40';
           }
 
-          row.className = `p-2.5 sm:p-3 rounded-2xl transition shadow-xs flex flex-col gap-2 ${borderStyle}`;
+          row.className = `p-3 rounded-2xl transition shadow-xs flex flex-col gap-2.5 ${borderStyle}`;
 
+          // [시니어 최적화] 아바타 & 폰트 크기 확대
           let avatarIcon = isUrgentActive ? '🚨' : (isCareHandled ? '💬' : (isWorshipOnly ? '⛪' : (isNewFamily ? '🌱' : member.name.slice(0, 1))));
           let avatarClass = isUrgentActive ? 'bg-red-600 text-white' : (isCareHandled ? 'bg-blue-600 text-white' : (isWorshipOnly ? 'bg-indigo-600 text-white' : (isNewFamily ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-900 border border-emerald-300')));
 
-          let urgentBadgeHtml = isUrgentActive ? '<span class="text-xs sm:text-sm font-black text-white bg-red-600 px-2 py-0.5 rounded-md animate-pulse">🚨 3주 결석</span>' : '';
+          let urgentBadgeHtml = isUrgentActive ? '<span class="text-sm font-black text-white bg-red-600 px-2 py-0.5 rounded-md animate-pulse">🚨 3주 결석</span>' : '';
           
           let careBadgeHtml = isCareHandled 
-            ? `<button type="button" onclick="window.appInstance.openCareModal('${member.memberId}')" class="text-xs sm:text-sm font-black text-blue-900 bg-blue-100 hover:bg-blue-200 border border-blue-300 px-2 py-0.5 rounded-md transition flex items-center space-x-1"><span>💬 ${careNote.reason}</span><span class="text-xs text-blue-600">✏️</span></button>` 
+            ? `<button type="button" onclick="window.appInstance.openCareModal('${member.memberId}')" class="text-sm font-black text-blue-900 bg-blue-100 hover:bg-blue-200 border border-blue-300 px-2 py-0.5 rounded-md transition flex items-center space-x-1"><span>💬 ${careNote.reason}</span><span class="text-xs text-blue-600">✏️</span></button>` 
             : '';
           
           let worshipBadgeHtml = isWorshipOnly
-            ? '<span class="text-xs sm:text-sm font-black text-indigo-900 bg-indigo-100 border border-indigo-300 px-2 py-0.5 rounded-md">⛪ 예배 참석</span>'
+            ? '<span class="text-sm font-black text-indigo-900 bg-indigo-100 border border-indigo-300 px-2 py-0.5 rounded-md">⛪ 예배 참석</span>'
             : '';
 
-          let urgentCareBtnHtml = isUrgentActive ? `<button onclick="window.appInstance.openCareModal('${member.memberId}')" class="text-xs sm:text-sm font-black text-red-800 bg-white border border-red-400 px-2 py-0.5 rounded-md hover:bg-red-50 transition">✍️ 심방완료</button>` : '';
+          let urgentCareBtnHtml = isUrgentActive ? `<button onclick="window.appInstance.openCareModal('${member.memberId}')" class="text-sm font-black text-red-800 bg-white border border-red-400 px-2 py-1 rounded-md hover:bg-red-50 transition">✍️ 심방완료</button>` : '';
 
-          let quickKakaoBtnHtml = isUrgentActive ? `<button onclick="window.appInstance.copyKakaoCareMessage('${member.memberId}', 3)" title="카톡 심방 안부 문구 복사" class="text-xs sm:text-sm font-black text-amber-950 bg-amber-300 hover:bg-amber-400 px-2 py-0.5 rounded-md transition flex items-center space-x-0.5"><span>💬</span><span>카톡</span></button>` : '';
+          let quickKakaoBtnHtml = isUrgentActive ? `<button onclick="window.appInstance.copyKakaoCareMessage('${member.memberId}', 3)" title="카톡 심방 안부 문구 복사" class="text-sm font-black text-amber-950 bg-amber-300 hover:bg-amber-400 px-2 py-1 rounded-md transition flex items-center space-x-0.5"><span>💬</span><span>카톡</span></button>` : '';
 
           row.innerHTML = `
             <div class="flex items-center justify-between gap-2">
-              <div class="flex items-center space-x-2.5 min-w-0">
-                <div class="w-11 h-11 rounded-xl ${avatarClass} flex items-center justify-center font-black text-lg flex-shrink-0 shadow-2xs">
+              <div class="flex items-center space-x-3 min-w-0">
+                <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl ${avatarClass} flex items-center justify-center font-black text-xl sm:text-2xl flex-shrink-0 shadow-2xs">
                   ${avatarIcon}
                 </div>
                 <div class="min-w-0">
-                  <div class="flex items-center space-x-1.5 flex-wrap">
-                    <span class="font-black text-slate-950 text-xl sm:text-2xl leading-tight truncate">${member.name}</span>
-                    <span class="text-xs sm:text-sm font-bold text-slate-700 bg-slate-100 border border-slate-300 px-1.5 py-0.5 rounded">${member.role || '성도'}</span>
-                    ${isNewFamily ? '<span class="text-xs sm:text-sm font-black text-amber-900 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded">새가족</span>' : ''}
+                  <div class="flex items-center space-x-2 flex-wrap">
+                    <span class="font-black text-slate-950 text-2xl sm:text-3xl leading-tight truncate">${member.name}</span>
+                    <span class="text-sm font-bold text-slate-700 bg-slate-100 border border-slate-300 px-1.5 py-0.5 rounded">${member.role || '성도'}</span>
+                    ${isNewFamily ? '<span class="text-sm font-black text-amber-900 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded">새가족</span>' : ''}
                     ${urgentBadgeHtml}
                     ${careBadgeHtml}
                     ${worshipBadgeHtml}
                   </div>
-                  ${isUrgentActive ? `<div class="flex items-center space-x-1.5 mt-1">${urgentCareBtnHtml}${quickKakaoBtnHtml}</div>` : ''}
+                  ${isUrgentActive ? `<div class="flex items-center space-x-2 mt-1.5">${urgentCareBtnHtml}${quickKakaoBtnHtml}</div>` : ''}
                 </div>
               </div>
-              <div class="flex-shrink-0 w-32 sm:w-44">
-                <input type="text" value="${state.reason || ''}" onchange="window.appInstance.setReason('${member.memberId}', this.value)" placeholder="결석 사유 입력" class="w-full text-sm sm:text-base font-bold px-2.5 py-1.5 bg-slate-50 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">
+              <div class="flex-shrink-0 w-32 sm:w-48">
+                <input type="text" value="${state.reason || ''}" onchange="window.appInstance.setReason('${member.memberId}', this.value)" placeholder="결석 사유 입력" class="w-full text-sm sm:text-base font-bold px-3 py-2 bg-slate-50 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">
               </div>
             </div>
-            <div class="w-full grid grid-cols-3 gap-1.5 pt-1.5 border-t border-slate-100">
-              <button onclick="window.appInstance.setStatus('${member.memberId}', '출석')" class="status-btn-${member.memberId}-출석 w-full h-11 sm:h-12 flex items-center justify-center text-lg sm:text-xl font-black tracking-tight whitespace-nowrap rounded-xl transition shadow-2xs leading-none ${state.status === '출석' ? 'bg-emerald-600 text-white ring-2 ring-emerald-400' : 'bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200'}">
+            
+            <!-- [시니어 최적화] 출석/지각/결석 버튼 높이와 폰트 크기 대폭 확대 -->
+            <div class="w-full grid grid-cols-3 gap-2 pt-1.5 border-t border-slate-100">
+              <button onclick="window.appInstance.setStatus('${member.memberId}', '출석')" class="status-btn-${member.memberId}-출석 w-full h-12 sm:h-14 flex items-center justify-center text-xl sm:text-2xl font-black tracking-tight whitespace-nowrap rounded-xl transition shadow-2xs leading-none ${state.status === '출석' ? 'bg-emerald-600 text-white ring-2 ring-emerald-400' : 'bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200'}">
                 ⭕ 출석
               </button>
-              <button onclick="window.appInstance.setStatus('${member.memberId}', '지각')" class="status-btn-${member.memberId}-지각 w-full h-11 sm:h-12 flex items-center justify-center text-lg sm:text-xl font-black tracking-tight whitespace-nowrap rounded-xl transition shadow-2xs leading-none ${state.status === '지각' ? 'bg-amber-500 text-white ring-2 ring-amber-300' : 'bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200'}">
+              <button onclick="window.appInstance.setStatus('${member.memberId}', '지각')" class="status-btn-${member.memberId}-지각 w-full h-12 sm:h-14 flex items-center justify-center text-xl sm:text-2xl font-black tracking-tight whitespace-nowrap rounded-xl transition shadow-2xs leading-none ${state.status === '지각' ? 'bg-amber-500 text-white ring-2 ring-amber-300' : 'bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200'}">
                 △ 지각
               </button>
-              <button onclick="window.appInstance.setStatus('${member.memberId}', '결석')" class="status-btn-${member.memberId}-결석 w-full h-11 sm:h-12 flex items-center justify-center text-lg sm:text-xl font-black tracking-tight whitespace-nowrap rounded-xl transition shadow-2xs leading-none ${state.status === '결석' ? 'bg-red-500 text-white ring-2 ring-red-300' : 'bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200'}">
+              <button onclick="window.appInstance.setStatus('${member.memberId}', '결석')" class="status-btn-${member.memberId}-결석 w-full h-12 sm:h-14 flex items-center justify-center text-xl sm:text-2xl font-black tracking-tight whitespace-nowrap rounded-xl transition shadow-2xs leading-none ${state.status === '결석' ? 'bg-red-500 text-white ring-2 ring-red-300' : 'bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200'}">
                 ❌ 결석
               </button>
             </div>
@@ -3020,7 +3022,8 @@ ${className} ${leaderName} 리더입니다.
             '<td class="py-2.5 px-2.5 font-black text-slate-950 text-base sm:text-lg whitespace-nowrap">' + m.name + '</td>' +
             '<td class="py-2.5 px-2.5 whitespace-nowrap">' + classCellHtml + '</td>' +
             '<td class="py-2.5 px-2 text-slate-700 text-xs sm:text-sm whitespace-nowrap">' + (m.role || '-') + '</td>' +
-            '<td class="py-2.5 px-2.5 whitespace-nowrap">' + formattedPhoneHtml + '</td>' +
+            // 🎯 교인명부 연락처 실제 데이터 셀 가운데 정렬
+            '<td class="py-2.5 px-2.5 text-center whitespace-nowrap">' + formattedPhoneHtml + '</td>' +
             '<td class="py-2.5 px-2 text-center whitespace-nowrap">' +
               '<span class="px-2 py-0.5 rounded text-xs sm:text-sm font-black ' +
                 (m.status === '활동' ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-amber-100 text-amber-900 border border-amber-300') + '">' +

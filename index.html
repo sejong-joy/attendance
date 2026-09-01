@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+  
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -31,6 +32,9 @@
       font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
+    body {
+      overscroll-behavior-y: contain; /* 모바일 아래로 당겨서 새로고침 방지 */
+    }
     .custom-scrollbar::-webkit-scrollbar {
       width: 4px;
       height: 4px;
@@ -56,7 +60,16 @@
       #printContainer { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 10px; background: white; color: black; }
       @page { size: auto; margin: 10mm; }
     }
+    /* 로그인 정보가 있으면 화면 로딩 시 로그인창을 아예 안 띄움 */
+    html.has-session #loginSection { display: none !important; }
+    html.has-session #appSection, html.has-session #userBadgeArea { display: block !important; }
   </style>
+  <script>
+    // 브라우저가 화면을 그리기 전에 로그인 세션 여부를 즉시 검사
+    if (localStorage.getItem('church_auth')) {
+      document.documentElement.classList.add('has-session');
+    }
+  </script>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white pb-6">
 

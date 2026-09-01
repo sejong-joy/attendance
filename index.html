@@ -31,6 +31,9 @@
       font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
+    body {
+      overscroll-behavior-y: contain; /* 모바일 아래로 당겨서 새로고침 방지 */
+    }
     .custom-scrollbar::-webkit-scrollbar {
       width: 4px;
       height: 4px;
@@ -56,7 +59,17 @@
       #printContainer { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 10px; background: white; color: black; }
       @page { size: auto; margin: 10mm; }
     }
+
+    /* 로그인 세션이 있으면 새로고침 시 로그인창을 아예 안 띄우고 메인 유지 */
+    html.has-session #loginSection { display: none !important; }
+    html.has-session #appSection, html.has-session #userBadgeArea { display: block !important; }
   </style>
+
+  <script>
+    if (localStorage.getItem('church_auth')) {
+      document.documentElement.classList.add('has-session');
+    }
+  </script>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white pb-6">
 
@@ -148,7 +161,7 @@
         </div>
       </div>
 
-      <!-- Navigation Tabs (폰트 확대) -->
+      <!-- Navigation Tabs -->
       <div class="flex items-center space-x-1 bg-slate-200/90 p-1 rounded-2xl w-full sm:w-max shadow-inner">
         <button onclick="window.appInstance.switchTab('check')" id="tabBtn-check" class="tab-btn flex-1 sm:flex-initial px-4 py-2 rounded-xl text-base sm:text-lg font-black tracking-tight whitespace-nowrap bg-white text-emerald-800 shadow-xs transition">
           ✍️ 출석 체크
@@ -173,7 +186,7 @@
             </span>
 
             <div class="flex items-center space-x-1.5">
-              <button onclick="window.appInstance.forceSyncLatestData()" title="최신 동기화" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-300 flex items-center space-x-1 shadow-2xs">
+              <button type="button" onclick="event.preventDefault(); window.appInstance.forceSyncLatestData()" title="최신 동기화" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-300 flex items-center space-x-1 shadow-2xs">
                 <span id="adminRefreshBtnIcon">🔄</span>
                 <span>새로고침</span>
               </button>
@@ -187,7 +200,7 @@
           <div id="classChipsContainer" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
         </div>
 
-        <!-- Controls Card: 반별 리더 모드 전용 (여백 최소화 & 드롭다운 폰트 최대화) -->
+        <!-- Controls Card: 반별 리더 모드 전용 -->
         <div class="bg-white rounded-xl border border-slate-200 p-2 sm:p-3 shadow-xs">
           <div class="flex items-center justify-between gap-2">
             
@@ -214,7 +227,7 @@
                 <span id="syncStatusIcon">🟢</span>
                 <span id="syncStatusText">자동저장됨</span>
               </div>
-              <button type="button" onclick="window.appInstance.forceSyncLatestData()" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-xs sm:text-sm font-black rounded-lg border border-slate-300 transition flex items-center space-x-1 shadow-2xs">
+              <button type="button" onclick="event.preventDefault(); window.appInstance.forceSyncLatestData()" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-xs sm:text-sm font-black rounded-lg border border-slate-300 transition flex items-center space-x-1 shadow-2xs">
                 <span id="refreshBtnIcon">🔄</span>
                 <span>새로고침</span>
               </button>
@@ -223,7 +236,7 @@
           </div>
         </div>
 
-        <!-- 4칸 독립 요약 대시보드 박스 (여백 최소화 & 숫자 초대형 확대) -->
+        <!-- 4칸 요약 대시보드 박스 -->
         <div class="grid grid-cols-4 gap-1.5">
           <div class="bg-white rounded-xl border border-slate-200 p-1.5 sm:p-2 text-center shadow-2xs">
             <span class="text-xs sm:text-sm font-black text-slate-600 block">총원</span>
@@ -243,7 +256,7 @@
           </div>
         </div>
 
-        <!-- Attendance Member List Card (이름 & 버튼 초대형 확대) -->
+        <!-- Attendance Member List Card -->
         <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-2.5 sm:p-3.5">
           <div class="pb-2 mb-2 border-b border-slate-100 flex items-center justify-between">
             <div class="flex items-center space-x-1.5">
@@ -357,7 +370,7 @@
 
     </section>
 
-    <!-- [설교 예배 출석 체크 모달 - 폰트 확대 & 여백 최적화] -->
+    <!-- [설교 예배 출석 체크 모달] -->
     <div id="worshipCheckModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-2.5 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border border-indigo-200 w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-200" id="worshipCheckModalBox">
         <div class="px-4 py-3 bg-indigo-50 border-b border-indigo-100 flex items-center justify-between">
@@ -548,7 +561,7 @@
       </div>
     </div>
 
-    <!-- Urgent Absentee 3-Week Modal (폰트 확대) -->
+    <!-- Urgent Absentee 3-Week Modal -->
     <div id="urgentAlertModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-2.5 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border-2 border-red-400 w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-200" id="urgentModalBox">
         <div class="px-4 py-3 bg-red-50 border-b border-red-100 flex items-center justify-between">
@@ -603,7 +616,7 @@
       </div>
     </div>
 
-    <!-- Member Attendance Detail Modal (과별 팝업 폰트 & 기호 초대형 확대) -->
+    <!-- Member Attendance Detail Modal -->
     <div id="memberDetailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-2.5 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-200" id="memberModalBox">
         <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
@@ -635,7 +648,7 @@
       </div>
     </div>
 
-    <!-- Stat Card Detail Modal (폰트 확대) -->
+    <!-- Stat Card Detail Modal -->
     <div id="statDetailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-2.5 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-xl overflow-hidden transform scale-95 transition-transform duration-200" id="statModalBox">
         <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
@@ -717,11 +730,11 @@
     <!-- [인쇄 전용 컨테이너] -->
     <div id="printContainer" class="hidden print:block"></div>
 
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center transition-opacity duration-200 opacity-0 pointer-events-none">
-      <div class="bg-white p-5 rounded-2xl shadow-2xl flex flex-col items-center space-y-2.5 max-w-xs text-center">
-        <div class="w-8 h-8 border-3 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
-        <p id="loadingMessage" class="text-sm font-black text-slate-900">동기화 중입니다...</p>
+    <!-- Loading Overlay (중앙 빙글빙글 스피너) -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-50 flex items-center justify-center transition-opacity duration-200 opacity-0 pointer-events-none">
+      <div class="bg-white/95 p-4 sm:p-5 rounded-2xl shadow-2xl flex flex-col items-center space-y-2 max-w-xs text-center border border-slate-200">
+        <div class="w-9 h-9 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
+        <p id="loadingMessage" class="text-sm font-black text-slate-900">최신 데이터 동기화 중...</p>
       </div>
     </div>
 
@@ -783,6 +796,12 @@
 
       async init() {
         this.initCurrentYearAndQuarter();
+
+        // 새로고침 시 화면을 유지한 채 로딩 스피너 표시
+        if (localStorage.getItem('church_auth')) {
+          this.showLoading('최신 출석 데이터 갱신 중...');
+        }
+
         await this.loadClassesList();
         this.checkSavedSession();
         this.setupNetworkListeners();
@@ -1022,6 +1041,7 @@
         const pinCode = savedPin || document.getElementById('pinInput')?.value?.trim();
 
         if (!classId || !pinCode) {
+          this.hideLoading();
           this.showToast('반과 비밀번호(PIN)를 모두 입력해 주세요.', 'error');
           return;
         }
@@ -1062,7 +1082,7 @@
           const res = await fetch(url);
           const json = await res.json();
 
-          if (!hasLoadedFromCache) this.hideLoading();
+          this.hideLoading();
 
           if (json.success) {
             this.currentUser = json.user;
@@ -1100,8 +1120,8 @@
             }
           }
         } catch (err) {
+          this.hideLoading();
           if (!hasLoadedFromCache) {
-            this.hideLoading();
             const found = this.classList.find(c => c.classId === classId);
             if (found) {
               this.currentUser = found;
@@ -1134,7 +1154,10 @@
             this.handleLogin(classId, pinCode);
           } catch (e) {
             localStorage.removeItem('church_auth');
+            this.hideLoading();
           }
+        } else {
+          this.hideLoading();
         }
       }
 
@@ -1148,6 +1171,7 @@
           this.unsubscribeCareNotes = null;
         }
         localStorage.removeItem('church_auth');
+        document.documentElement.classList.remove('has-session');
         this.currentUser = null;
         document.getElementById('appSection')?.classList.add('hidden');
         document.getElementById('userBadgeArea')?.classList.add('hidden');
@@ -1537,8 +1561,8 @@ ${className} ${leaderName} 리더입니다.
             let kakaoBtnHtml = `<button onclick="window.appInstance.copyKakaoCareMessage('${item.memberId}', ${item.consecutiveWeeks || 3})" class="h-9 px-3 bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-sm tracking-tight whitespace-nowrap rounded-lg transition shadow-2xs flex items-center justify-center space-x-0.5"><span>💬</span><span>카톡</span></button>`;
 
             let phoneButtonsHtml = cleanPhone 
-              ? '<a href="tel:' + cleanPhone + '" class="h-9 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm tracking-tight whitespace-nowrap rounded-lg transition shadow-xs flex items-center justify-center"><span>📞 전화</span></a>' +
-                '<a href="sms:' + cleanPhone + '" class="h-9 px-3 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-black text-sm tracking-tight whitespace-nowrap rounded-lg transition flex items-center justify-center"><span>💬 문자</span></a>'
+              ? '<a href="tel:${cleanPhone}" class="h-9 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm tracking-tight whitespace-nowrap rounded-lg transition shadow-xs flex items-center justify-center"><span>📞 전화</span></a>' +
+                '<a href="sms:${cleanPhone}" class="h-9 px-3 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-black text-sm tracking-tight whitespace-nowrap rounded-lg transition flex items-center justify-center"><span>💬 문자</span></a>'
               : '';
 
             let careBtnText = careNote ? '사유 수정' : '심방 완료';
@@ -1922,7 +1946,7 @@ ${className} ${leaderName} 리더입니다.
         if (refreshIcon) refreshIcon.classList.add('animate-spin');
         if (adminRefreshIcon) adminRefreshIcon.classList.add('animate-spin');
 
-        this.showToast('🔄 최신 출석 데이터를 불러오는 중...', 'info');
+        this.updateCloudStatusBadge('syncing', '동기화 중...');
 
         try {
           const classId = this.currentUser.classId;
@@ -1960,12 +1984,15 @@ ${className} ${leaderName} 리더입니다.
               this.calculateAndRenderStatistics();
             }
 
+            this.updateCloudStatusBadge('saved', '자동저장됨');
             this.showToast('⚡ 최신 데이터로 동기화되었습니다.', 'success');
           } else {
+            this.updateCloudStatusBadge('saved', '자동저장됨');
             this.showToast('동기화 실패: ' + (json.message || '서버 응답 없음'), 'error');
           }
         } catch(err) {
-          this.showToast('네트워크 오류로 동기화에 실패했습니다.', 'error');
+          this.updateCloudStatusBadge('saved', '자동저장됨');
+          this.showToast('네트워크 상태를 확인해 주세요.', 'error');
         } finally {
           if (refreshIcon) refreshIcon.classList.remove('animate-spin');
           if (adminRefreshIcon) adminRefreshIcon.classList.remove('animate-spin');
@@ -2685,8 +2712,8 @@ ${className} ${leaderName} 리더입니다.
                     '</div>' +
                     (cleanPhone ? 
                       '<div class="flex space-x-1">' +
-                        '<a href="tel:' + cleanPhone + '" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs sm:text-sm font-black rounded-lg border border-emerald-300 transition">📞 통화</a>' +
-                        '<a href="sms:' + cleanPhone + '" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs sm:text-sm font-black rounded-lg transition">문자</a>' +
+                        '<a href="tel:${cleanPhone}" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs sm:text-sm font-black rounded-lg border border-emerald-300 transition">📞 통화</a>' +
+                        '<a href="sms:${cleanPhone}" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs sm:text-sm font-black rounded-lg transition">문자</a>' +
                       '</div>' : '') +
                   '</div>'
                 );
@@ -3777,7 +3804,7 @@ ${className} ${leaderName} 리더입니다.
 
             const totChecked = p + l + a;
             const score = (p * 1.0) + (l * 0.5);
-            const rate = totChecked > 0 ? ((score / totalChecked) * 100).toFixed(0) + '%' : '-';
+            const rate = totChecked > 0 ? ((score / totChecked) * 100).toFixed(0) + '%' : '-';
 
             rowCells.push(
               { v: p, s: { font: { bold: true, color: { rgb: "059669" } }, alignment: { horizontal: "center" } } },

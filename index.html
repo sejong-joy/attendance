@@ -2289,6 +2289,9 @@ ${className} ${leaderName} 리더입니다.
         this.isSyncing = true;
         this.updateCloudStatusBadge('syncing', '동기화 중...');
 
+        // ★ 방어 로직 핵심: 지금 구글로 전송을 시작할 데이터들의 'ID'만 따로 캡처해 둡니다.
+        const sentRecordIds = queue.map(q => q.recordId);
+
         try {
           const grouped = queue.reduce((acc, rec) => {
             const key = rec.date + '|' + (rec.quarter || '1기');
@@ -2318,16 +2321,34 @@ ${className} ${leaderName} 리더입니다.
           }
 
           if (allSuccess) {
-            // 성공 시 큐(대기열) 비우고 완료 표시!
-            localStorage.removeItem('church_offline_queue');
+            // ★ 대참사 방지: 전체 대기실을 날리지 않고, 방금 전송 성공한 애들만 골라서 뺍니다.
+            try {
+              const currentRaw = localStorage.getItem('church_offline_queue');
+              if (currentRaw) {
+                let currentQueue = JSON.parse(currentRaw);
+                
+                // 전송 도중(3초 사이)에 새롭게 터치되어 들어온 데이터만 살아남게 필터링
+                currentQueue = currentQueue.filter(q => !sentRecordIds.includes(q.recordId));
+                
+                if (currentQueue.length > 0) {
+                  // 새로 들어온 애들이 있다면 대기실에 남기고, 1초 뒤에 2차 전송 시작!
+                  localStorage.setItem('church_offline_queue', JSON.stringify(currentQueue));
+                  setTimeout(() => this.processOfflineQueue(), 1000);
+                } else {
+                  // 남은 애들이 없으면 그제야 대기실을 깔끔하게 비움
+                  localStorage.removeItem('church_offline_queue');
+                }
+              }
+            } catch(e) {}
+
             this.updateCloudStatusBadge('saved');
           } else {
-            // 구글 서버 혼잡으로 튕겼을 때 -> 대기열을 비우지 않고 3초 뒤 자동 재시도
+            // 서버 혼잡으로 튕기면 삭제하지 않고 3초 뒤 전체 재시도
             this.updateCloudStatusBadge('syncing', '대기 중..');
             setTimeout(() => this.processOfflineQueue(), 3000); 
           }
         } catch (err) {
-          // 인터넷 끊김 또는 서버 완전 오류 시 -> 4초 뒤 무한 자동 재시도
+          // 인터넷 끊김 방어 로직
           if (!navigator.onLine) {
             this.updateCloudStatusBadge('offline');
           } else {

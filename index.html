@@ -60,13 +60,14 @@
       @page { size: auto; margin: 10mm; }
     }
 
-    /* 로그인 세션이 있으면 새로고침 시 로그인창을 아예 안 띄우고 메인 유지 */
+    /* 로그인 세션이 있으면 화면 로딩 시 로그인창을 아예 안 띄우고 메인 유지 (깜빡임 완벽 방지) */
     html.has-session #loginSection { display: none !important; }
     html.has-session #appSection { display: block !important; }
-    html.has-session #userBadgeArea { display: flex !important; } /* 👈 block이 아닌 flex로 변경! */
+    html.has-session #userBadgeArea { display: flex !important; } /* 우측 상단 버튼 나란히 정렬 */
   </style>
 
   <script>
+    // 브라우저가 화면을 그리기 전에 로그인 세션 여부를 즉시 검사
     if (localStorage.getItem('church_auth')) {
       document.documentElement.classList.add('has-session');
     }
@@ -78,7 +79,7 @@
   <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs backdrop-blur-md bg-white/95">
     <div class="max-w-6xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between gap-2">
       
-      <!-- 좌측: 로고 & 타이틀 (단축 적용) -->
+      <!-- 좌측: 로고 & 타이틀 -->
       <div class="flex items-center space-x-2 min-w-0 flex-shrink">
         <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-xl shadow-md shadow-emerald-200 flex-shrink-0">
           ⛪
@@ -89,13 +90,12 @@
         </div>
       </div>
 
-      <!-- 우측: [인쇄/엑셀] + [관리자 정보] + [로그아웃] (완벽한 1열 가로 나란히 배치) -->
+      <!-- 우측: 사용자 정보 & 액션 버튼 (가로 나란히 정렬) -->
       <div id="userBadgeArea" class="hidden flex items-center space-x-1.5 sm:space-x-2.5 flex-shrink-0">
         <button onclick="window.appInstance.openExportModal()" class="h-9 sm:h-10 px-2.5 sm:px-3 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-xs sm:text-sm font-black rounded-xl border border-slate-300 transition flex items-center space-x-1 shadow-2xs whitespace-nowrap">
           <span>🖨️ 인쇄/엑셀</span>
         </button>
 
-        <!-- PC/태블릿에서 표시되는 사용자 정보 뱃지 -->
         <div class="hidden md:flex flex-col items-end justify-center">
           <span id="headerClassName" class="text-xs font-black text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-300 whitespace-nowrap">반명</span>
           <p id="headerLeaderName" class="text-xs text-slate-800 font-black mt-0.5 whitespace-nowrap">리더님</p>
@@ -105,7 +105,6 @@
           로그아웃
         </button>
       </div>
-
     </div>
   </header>
 
@@ -197,7 +196,7 @@
                 <span id="adminRefreshBtnIcon" class="text-base">🔄</span>
                 <span>새로고침</span>
               </button>
-              <button id="adminWorshipCheckBtn" onclick="window.appInstance.openWorshipCheckModal()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs sm:text-sm font-black tracking-tight whitespace-nowrap rounded-xl transition flex items-center space-x-1 shadow-2xs">
+              <button id="adminWorshipCheckBtn" onclick="window.appInstance.openWorshipCheckModal()" class="h-10 px-3.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-sm sm:text-base font-black tracking-tight whitespace-nowrap rounded-xl transition flex items-center space-x-1.5 shadow-xs">
                 <span>⛪</span>
                 <span>설교 예배 체크</span>
               </button>
@@ -234,7 +233,7 @@
                 <span id="syncStatusIcon">🟢</span>
                 <span id="syncStatusText">자동저장됨</span>
               </div>
-              <button type="button" onclick="event.preventDefault(); window.appInstance.forceSyncLatestData()" class="h-10 px-3.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-sm sm:text-base font-black rounded-xl border-2 border-slate-300 transition flex items-center space-x-1.5 shadow-xs">
+              <button type="button" onclick="event.preventDefault(); window.appInstance.forceSyncLatestData()" class="h-10 px-3.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-sm sm:text-base font-black rounded-xl border border-slate-300 transition flex items-center space-x-1.5 shadow-xs">
                 <span id="refreshBtnIcon" class="text-base">🔄</span>
                 <span>새로고침</span>
               </button>
@@ -737,7 +736,7 @@
     <!-- [인쇄 전용 컨테이너] -->
     <div id="printContainer" class="hidden print:block"></div>
 
-    <!-- Loading Overlay (중앙 빙글빙글 스피너) -->
+    <!-- Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-50 flex items-center justify-center transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white/95 p-4 sm:p-5 rounded-2xl shadow-2xl flex flex-col items-center space-y-2 max-w-xs text-center border border-slate-200">
         <div class="w-9 h-9 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
@@ -796,6 +795,7 @@
         this.autoSyncTimer = null;
         this.isOnline = navigator.onLine;
         this.isSyncing = false;
+        this.queueNeedsRecheck = false;
         this.selectedFilterClass = 'ALL';
         this.pendingResetType = null;
         this.worshipPendingSet = new Set();
@@ -804,7 +804,6 @@
       async init() {
         this.initCurrentYearAndQuarter();
 
-        // 새로고침 시 화면을 유지한 채 로딩 스피너 표시
         if (localStorage.getItem('church_auth')) {
           this.showLoading('최신 출석 데이터 갱신 중...');
         }
@@ -1568,8 +1567,8 @@ ${className} ${leaderName} 리더입니다.
             let kakaoBtnHtml = `<button onclick="window.appInstance.copyKakaoCareMessage('${item.memberId}', ${item.consecutiveWeeks || 3})" class="h-9 px-3 bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-sm tracking-tight whitespace-nowrap rounded-lg transition shadow-2xs flex items-center justify-center space-x-0.5"><span>💬</span><span>카톡</span></button>`;
 
             let phoneButtonsHtml = cleanPhone 
-              ? '<a href="tel:${cleanPhone}" class="h-9 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm tracking-tight whitespace-nowrap rounded-lg transition shadow-xs flex items-center justify-center"><span>📞 전화</span></a>' +
-                '<a href="sms:${cleanPhone}" class="h-9 px-3 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-black text-sm tracking-tight whitespace-nowrap rounded-lg transition flex items-center justify-center"><span>💬 문자</span></a>'
+              ? `<a href="tel:${cleanPhone}" class="h-9 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm tracking-tight whitespace-nowrap rounded-lg transition shadow-xs flex items-center justify-center"><span>📞 전화</span></a>` +
+                `<a href="sms:${cleanPhone}" class="h-9 px-3 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-black text-sm tracking-tight whitespace-nowrap rounded-lg transition flex items-center justify-center"><span>💬 문자</span></a>`
               : '';
 
             let careBtnText = careNote ? '사유 수정' : '심방 완료';
@@ -1708,7 +1707,7 @@ ${className} ${leaderName} 리더입니다.
           container.innerHTML = '';
 
           if (todayVisitors.length === 0) {
-            container.innerHTML = '<div class="p-8 text-center text-slate-500 text-sm font-bold bg-slate-50 rounded-2xl border border-dashed border-slate-300">선택한 날짜(' + curDate + ')에 등록된 방문자가 없습니다. 🍃</div>';
+            container.innerHTML = `<div class="p-8 text-center text-slate-500 text-sm font-bold bg-slate-50 rounded-2xl border border-dashed border-slate-300">선택한 날짜(${curDate})에 등록된 방문자가 없습니다. 🍃</div>`;
             this.updateAttendanceSummary();
             return;
           }
@@ -1794,50 +1793,51 @@ ${className} ${leaderName} 리더입니다.
           let urgentBadgeHtml = isUrgentActive ? '<span class="text-xs sm:text-sm font-black text-white bg-red-600 px-2 py-0.5 rounded-md animate-pulse">🚨 3주 결석</span>' : '';
           
           let careBadgeHtml = isCareHandled 
-            ? '<button type="button" onclick="window.appInstance.openCareModal(\'' + member.memberId + '\')" class="text-xs sm:text-sm font-black text-blue-900 bg-blue-100 hover:bg-blue-200 border border-blue-300 px-2 py-0.5 rounded-md transition flex items-center space-x-1"><span>💬 ' + careNote.reason + '</span><span class="text-xs text-blue-600">✏️</span></button>' 
+            ? `<button type="button" onclick="window.appInstance.openCareModal('${member.memberId}')" class="text-xs sm:text-sm font-black text-blue-900 bg-blue-100 hover:bg-blue-200 border border-blue-300 px-2 py-0.5 rounded-md transition flex items-center space-x-1"><span>💬 ${careNote.reason}</span><span class="text-xs text-blue-600">✏️</span></button>` 
             : '';
           
           let worshipBadgeHtml = isWorshipOnly
             ? '<span class="text-xs sm:text-sm font-black text-indigo-900 bg-indigo-100 border border-indigo-300 px-2 py-0.5 rounded-md">⛪ 예배 참석</span>'
             : '';
 
-          let urgentCareBtnHtml = isUrgentActive ? '<button onclick="window.appInstance.openCareModal(\'' + member.memberId + '\')" class="text-xs sm:text-sm font-black text-red-800 bg-white border border-red-400 px-2 py-0.5 rounded-md hover:bg-red-50 transition">✍️ 심방완료</button>' : '';
+          let urgentCareBtnHtml = isUrgentActive ? `<button onclick="window.appInstance.openCareModal('${member.memberId}')" class="text-xs sm:text-sm font-black text-red-800 bg-white border border-red-400 px-2 py-0.5 rounded-md hover:bg-red-50 transition">✍️ 심방완료</button>` : '';
 
           let quickKakaoBtnHtml = isUrgentActive ? `<button onclick="window.appInstance.copyKakaoCareMessage('${member.memberId}', 3)" title="카톡 심방 안부 문구 복사" class="text-xs sm:text-sm font-black text-amber-950 bg-amber-300 hover:bg-amber-400 px-2 py-0.5 rounded-md transition flex items-center space-x-0.5"><span>💬</span><span>카톡</span></button>` : '';
 
-          row.innerHTML = 
-            '<div class="flex items-center justify-between gap-2">' +
-              '<div class="flex items-center space-x-2.5 min-w-0">' +
-                '<div class="w-11 h-11 rounded-xl ' + avatarClass + ' flex items-center justify-center font-black text-lg flex-shrink-0 shadow-2xs">' +
-                  avatarIcon +
-                '</div>' +
-                '<div class="min-w-0">' +
-                  '<div class="flex items-center space-x-1.5 flex-wrap">' +
-                    '<span class="font-black text-slate-950 text-xl sm:text-2xl leading-tight truncate">' + member.name + '</span>' +
-                    '<span class="text-xs sm:text-sm font-bold text-slate-700 bg-slate-100 border border-slate-300 px-1.5 py-0.5 rounded">' + (member.role || '성도') + '</span>' +
-                    (isNewFamily ? '<span class="text-xs sm:text-sm font-black text-amber-900 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded">새가족</span>' : '') +
-                    urgentBadgeHtml +
-                    careBadgeHtml +
-                    worshipBadgeHtml +
-                  '</div>' +
-                  (isUrgentActive ? '<div class="flex items-center space-x-1.5 mt-1">' + urgentCareBtnHtml + quickKakaoBtnHtml + '</div>' : '') +
-                '</div>' +
-              '</div>' +
-              '<div class="flex-shrink-0 w-32 sm:w-44">' +
-                '<input type="text" value="' + (state.reason || '') + '" onchange="window.appInstance.setReason(\'' + member.memberId + '\', this.value)" placeholder="결석 사유 입력" class="w-full text-sm sm:text-base font-bold px-2.5 py-1.5 bg-slate-50 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">' +
-              '</div>' +
-            '</div>' +
-            '<div class="w-full grid grid-cols-3 gap-1.5 pt-1.5 border-t border-slate-100">' +
-              '<button onclick="window.appInstance.setStatus(\'' + member.memberId + '\', \'출석\')" class="status-btn-' + member.memberId + '-출석 w-full h-11 sm:h-12 flex items-center justify-center text-lg sm:text-xl font-black tracking-tight whitespace-nowrap rounded-xl transition shadow-2xs leading-none ' + (state.status === '출석' ? 'bg-emerald-600 text-white ring-2 ring-emerald-400' : 'bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200') + '">' +
-                '⭕ 출석' +
-              '</button>' +
-              '<button onclick="window.appInstance.setStatus(\'' + member.memberId + '\', \'지각\')" class="status-btn-' + member.memberId + '-지각 w-full h-11 sm:h-12 flex items-center justify-center text-lg sm:text-xl font-black tracking-tight whitespace-nowrap rounded-xl transition shadow-2xs leading-none ' + (state.status === '지각' ? 'bg-amber-500 text-white ring-2 ring-amber-300' : 'bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200') + '">' +
-                '△ 지각' +
-              '</button>' +
-              '<button onclick="window.appInstance.setStatus(\'' + member.memberId + '\', \'결석\')" class="status-btn-' + member.memberId + '-결석 w-full h-11 sm:h-12 flex items-center justify-center text-lg sm:text-xl font-black tracking-tight whitespace-nowrap rounded-xl transition shadow-2xs leading-none ' + (state.status === '결석' ? 'bg-red-500 text-white ring-2 ring-red-300' : 'bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200') + '">' +
-                '❌ 결석' +
-              '</button>' +
-            '</div>';
+          row.innerHTML = `
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center space-x-2.5 min-w-0">
+                <div class="w-11 h-11 rounded-xl ${avatarClass} flex items-center justify-center font-black text-lg flex-shrink-0 shadow-2xs">
+                  ${avatarIcon}
+                </div>
+                <div class="min-w-0">
+                  <div class="flex items-center space-x-1.5 flex-wrap">
+                    <span class="font-black text-slate-950 text-xl sm:text-2xl leading-tight truncate">${member.name}</span>
+                    <span class="text-xs sm:text-sm font-bold text-slate-700 bg-slate-100 border border-slate-300 px-1.5 py-0.5 rounded">${member.role || '성도'}</span>
+                    ${isNewFamily ? '<span class="text-xs sm:text-sm font-black text-amber-900 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded">새가족</span>' : ''}
+                    ${urgentBadgeHtml}
+                    ${careBadgeHtml}
+                    ${worshipBadgeHtml}
+                  </div>
+                  ${isUrgentActive ? `<div class="flex items-center space-x-1.5 mt-1">${urgentCareBtnHtml}${quickKakaoBtnHtml}</div>` : ''}
+                </div>
+              </div>
+              <div class="flex-shrink-0 w-32 sm:w-44">
+                <input type="text" value="${state.reason || ''}" onchange="window.appInstance.setReason('${member.memberId}', this.value)" placeholder="결석 사유 입력" class="w-full text-sm sm:text-base font-bold px-2.5 py-1.5 bg-slate-50 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">
+              </div>
+            </div>
+            <div class="w-full grid grid-cols-3 gap-1.5 pt-1.5 border-t border-slate-100">
+              <button onclick="window.appInstance.setStatus('${member.memberId}', '출석')" class="status-btn-${member.memberId}-출석 w-full h-11 sm:h-12 flex items-center justify-center text-lg sm:text-xl font-black tracking-tight whitespace-nowrap rounded-xl transition shadow-2xs leading-none ${state.status === '출석' ? 'bg-emerald-600 text-white ring-2 ring-emerald-400' : 'bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200'}">
+                ⭕ 출석
+              </button>
+              <button onclick="window.appInstance.setStatus('${member.memberId}', '지각')" class="status-btn-${member.memberId}-지각 w-full h-11 sm:h-12 flex items-center justify-center text-lg sm:text-xl font-black tracking-tight whitespace-nowrap rounded-xl transition shadow-2xs leading-none ${state.status === '지각' ? 'bg-amber-500 text-white ring-2 ring-amber-300' : 'bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200'}">
+                △ 지각
+              </button>
+              <button onclick="window.appInstance.setStatus('${member.memberId}', '결석')" class="status-btn-${member.memberId}-결석 w-full h-11 sm:h-12 flex items-center justify-center text-lg sm:text-xl font-black tracking-tight whitespace-nowrap rounded-xl transition shadow-2xs leading-none ${state.status === '결석' ? 'bg-red-500 text-white ring-2 ring-red-300' : 'bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200'}">
+                ❌ 결석
+              </button>
+            </div>
+          `;
 
           container.appendChild(row);
         });
@@ -1943,76 +1943,6 @@ ${className} ${leaderName} 리더입니다.
         this.renderAttendanceList();
         this.renderClassMonitoringBar();
         this.triggerAutoSheetSync();
-      }
-
-      async forceSyncLatestData() {
-        if (!this.currentUser) return;
-        
-        const refreshIcon = document.getElementById('refreshBtnIcon');
-        const adminRefreshIcon = document.getElementById('adminRefreshBtnIcon');
-        if (refreshIcon) refreshIcon.classList.add('animate-spin');
-        if (adminRefreshIcon) adminRefreshIcon.classList.add('animate-spin');
-
-        // ★ 해결책의 핵심: 새로고침을 누르면 무조건 폰에 남은 찌꺼기부터 구글로 완전히 쏴버림!
-        const raw = localStorage.getItem('church_offline_queue');
-        if (raw && JSON.parse(raw).length > 0) {
-          this.updateCloudStatusBadge('syncing', '잔여 기록 전송중...');
-          this.showToast('미전송 기록이 있어 구글 시트로 먼저 백업합니다.', 'info');
-          await this.processOfflineQueue(); 
-          await new Promise(r => setTimeout(r, 1000)); // 구글 서버 반영 대기 1초
-        }
-
-        this.updateCloudStatusBadge('syncing', '데이터 동기화 중...');
-
-        try {
-          const classId = this.currentUser.classId;
-          const authData = localStorage.getItem('church_auth');
-          let pinCode = '';
-          if (authData) {
-            try { pinCode = JSON.parse(authData).pinCode; } catch(e){}
-          }
-
-          const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}`;
-          const res = await fetch(url);
-          const json = await res.json();
-
-          if (json.success) {
-            this.rawMembers = (json.members || []).filter(m => m.status !== '방문자');
-            this.rawVisitors = json.visitors || (json.members || []).filter(m => m.status === '방문자');
-            this.rawRecords = (json.records || []).map(r => ({
-              ...r,
-              date: this.normalizeDateStr(r.date)
-            }));
-            this.updateAbsentAlertMap(json.absentAlerts || []);
-            this.calculateConsecutiveAbsentees();
-
-            const cacheKey = `church_cache_${classId}`;
-            localStorage.setItem(cacheKey, JSON.stringify(json));
-
-            const curDate = document.getElementById('sabbathSelect')?.value;
-            if (curDate) this.loadAttendanceForSelectedDate(curDate);
-            this.renderMemberDirectory();
-            this.renderClassMonitoringBar();
-            this.updateAbsentBanner();
-
-            const statsContent = document.getElementById('tabContent-stats');
-            if (statsContent && !statsContent.classList.contains('hidden')) {
-              this.calculateAndRenderStatistics();
-            }
-
-            this.updateCloudStatusBadge('saved', '자동저장됨');
-            this.showToast('⚡ 최신 데이터로 동기화되었습니다.', 'success');
-          } else {
-            this.updateCloudStatusBadge('saved', '자동저장됨');
-            this.showToast('동기화 실패: ' + (json.message || '서버 응답 없음'), 'error');
-          }
-        } catch(err) {
-          this.updateCloudStatusBadge('saved', '자동저장됨');
-          this.showToast('네트워크 상태를 확인해 주세요.', 'error');
-        } finally {
-          if (refreshIcon) refreshIcon.classList.remove('animate-spin');
-          if (adminRefreshIcon) adminRefreshIcon.classList.remove('animate-spin');
-        }
       }
 
       openWorshipCheckModal() {
@@ -2274,11 +2204,10 @@ ${className} ${leaderName} 리더입니다.
         if (this.autoSyncTimer) clearTimeout(this.autoSyncTimer);
         this.autoSyncTimer = setTimeout(() => {
           this.processOfflineQueue();
-        }, 800); // 👈 기존 1200을 800으로 변경하여 더 빠르게 구글로 쏘도록 단축!
+        }, 800); 
       }
 
       async processOfflineQueue() {
-        // 이미 동기화가 돌고 있다면, 튕겨내지 않고 '다 끝나면 한 번 더 확인해!'라고 꼬리표를 남김
         if (this.isSyncing) {
           this.queueNeedsRecheck = true; 
           return;
@@ -2299,7 +2228,6 @@ ${className} ${leaderName} 리더입니다.
         this.queueNeedsRecheck = false;
         this.updateCloudStatusBadge('syncing', '구글시트 저장중...');
 
-        // 지금 구글로 전송을 시작할 데이터들의 ID만 따로 캡처
         const sentRecordIds = queue.map(q => q.recordId);
 
         try {
@@ -2335,7 +2263,6 @@ ${className} ${leaderName} 리더입니다.
               const currentRaw = localStorage.getItem('church_offline_queue');
               if (currentRaw) {
                 let currentQueue = JSON.parse(currentRaw);
-                // 전송 중(약 2초)에 사용자가 추가로 클릭해서 폰에 들어온 데이터만 살려둠
                 currentQueue = currentQueue.filter(q => !sentRecordIds.includes(q.recordId));
                 
                 if (currentQueue.length > 0) {
@@ -2362,11 +2289,80 @@ ${className} ${leaderName} 리더입니다.
           }
         } finally {
           this.isSyncing = false;
-          // 방금 전송 중에 새로 추가된 기록이 있다면 0.5초 뒤 끈질기게 다시 돕니다 (무한 좀비 로직)
           if (this.queueNeedsRecheck) {
             setTimeout(() => this.processOfflineQueue(), 500);
           }
         }
+      }
+
+      async forceSyncLatestData() {
+        if (!this.currentUser) return;
+        
+        const refreshIcon = document.getElementById('refreshBtnIcon');
+        const adminRefreshIcon = document.getElementById('adminRefreshBtnIcon');
+        if (refreshIcon) refreshIcon.classList.add('animate-spin');
+        if (adminRefreshIcon) adminRefreshIcon.classList.add('animate-spin');
+
+        const raw = localStorage.getItem('church_offline_queue');
+        if (raw && JSON.parse(raw).length > 0) {
+          this.updateCloudStatusBadge('syncing', '잔여 기록 전송중...');
+          this.showToast('미전송 기록이 있어 구글 시트로 먼저 백업합니다.', 'info');
+          await this.processOfflineQueue(); 
+          await new Promise(r => setTimeout(r, 1000)); 
+        }
+
+        this.updateCloudStatusBadge('syncing', '데이터 동기화 중...');
+
+        try {
+          const classId = this.currentUser.classId;
+          const authData = localStorage.getItem('church_auth');
+          let pinCode = '';
+          if (authData) {
+            try { pinCode = JSON.parse(authData).pinCode; } catch(e){}
+          }
+
+          const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}`;
+          const res = await fetch(url);
+          const json = await res.json();
+
+          if (json.success) {
+            this.rawMembers = (json.members || []).filter(m => m.status !== '방문자');
+            this.rawVisitors = json.visitors || (json.members || []).filter(m => m.status === '방문자');
+            this.rawRecords = (json.records || []).map(r => ({
+              ...r,
+              date: this.normalizeDateStr(r.date)
+            }));
+            this.updateAbsentAlertMap(json.absentAlerts || []);
+            this.calculateConsecutiveAbsentees();
+
+            const cacheKey = `church_cache_${classId}`;
+            localStorage.setItem(cacheKey, JSON.stringify(json));
+
+            const curDate = document.getElementById('sabbathSelect')?.value;
+            if (curDate) this.loadAttendanceForSelectedDate(curDate);
+            this.renderMemberDirectory();
+            this.renderClassMonitoringBar();
+            this.updateAbsentBanner();
+
+            const statsContent = document.getElementById('tabContent-stats');
+            if (statsContent && !statsContent.classList.contains('hidden')) {
+              this.calculateAndRenderStatistics();
+            }
+
+            this.updateCloudStatusBadge('saved', '자동저장됨');
+            this.showToast('⚡ 최신 데이터로 동기화되었습니다.', 'success');
+          } else {
+            this.updateCloudStatusBadge('saved', '자동저장됨');
+            this.showToast('동기화 실패: ' + (json.message || '서버 응답 없음'), 'error');
+          }
+        } catch(err) {
+          this.updateCloudStatusBadge('saved', '자동저장됨');
+          this.showToast('네트워크 상태를 확인해 주세요.', 'error');
+        } finally {
+          if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+          if (adminRefreshIcon) adminRefreshIcon.classList.remove('animate-spin');
+        }
+      }
 
       async setReason(memberId, reason) {
         if (!this.currentAttendance[memberId]) {
@@ -2754,8 +2750,8 @@ ${className} ${leaderName} 리더입니다.
                     '</div>' +
                     (cleanPhone ? 
                       '<div class="flex space-x-1">' +
-                        '<a href="tel:${cleanPhone}" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs sm:text-sm font-black rounded-lg border border-emerald-300 transition">📞 통화</a>' +
-                        '<a href="sms:${cleanPhone}" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs sm:text-sm font-black rounded-lg transition">문자</a>' +
+                        `<a href="tel:${cleanPhone}" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs sm:text-sm font-black rounded-lg border border-emerald-300 transition">📞 통화</a>` +
+                        `<a href="sms:${cleanPhone}" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs sm:text-sm font-black rounded-lg transition">문자</a>` +
                       '</div>' : '') +
                   '</div>'
                 );

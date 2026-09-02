@@ -1529,7 +1529,7 @@ ${className} ${leaderName} 리더입니다.
           const isNewFamily = member.status === '새가족';
           const isWorshipOnly = (state.status === '결석' && state.worshipAttended);
           
-          // 👑 [수정] 이름 매칭으로 리더 판별
+          // 👑 반_설정 시트의 이름과 매칭하여 리더/부리더 정확히 판별
           const cls = this.classList.find(c => c.classId === member.classId) || {};
           const isLeader = (member.name === cls.leaderName || member.name === cls.subLeader);
 
@@ -1559,10 +1559,8 @@ ${className} ${leaderName} 리더입니다.
             ? '<span class="text-sm font-black text-indigo-900 bg-indigo-100 border border-indigo-300 px-2 py-0.5 rounded-md">⛪ 예배 참석</span>'
             : '';
 
-          // 👑 [3번 안건] 직분 표시줄에 리더인 경우 👑 뱃지 출력 반영
-          let roleBadgeHtml = isLeader 
-            ? `<span class="text-sm font-black text-amber-900 bg-amber-200 border border-amber-400 px-1.5 py-0.5 rounded whitespace-nowrap">👑 ${member.role}</span>`
-            : `<span class="text-sm font-bold text-slate-700 bg-slate-100 border border-slate-300 px-1.5 py-0.5 rounded whitespace-nowrap">${member.role || '성도'}</span>`;
+          // 👑 튀는 노란색을 없애고 기존 회색 뱃지에 왕관만 추가!
+          let roleBadgeHtml = `<span class="text-sm font-bold text-slate-700 bg-slate-100 border border-slate-300 px-1.5 py-0.5 rounded whitespace-nowrap">${isLeader ? '👑 ' : ''}${member.role || '성도'}</span>`;
 
           let urgentCareBtnHtml = isUrgentActive ? `<button onclick="window.appInstance.openCareModal('${member.memberId}')" class="text-sm font-black text-red-800 bg-white border border-red-400 px-2 py-1 rounded-md hover:bg-red-50 transition">✍️ 심방완료</button>` : '';
 
@@ -2791,12 +2789,10 @@ ${className} ${leaderName} 리더입니다.
             classCellHtml = `<span class="px-2 py-0.5 rounded-lg text-xs sm:text-sm font-black bg-slate-100 text-slate-800 border border-slate-200 whitespace-nowrap">${this.getClassName(m.classId)}</span>`;
           }
 
-          // 👑 [수정] 이름 매칭으로 리더 판별
+          // 👑 명부 탭: 이름 매칭 리더 판별 + 깔끔한 회색 왕관 뱃지
           const cls = this.classList.find(c => c.classId === m.classId) || {};
           const isLeader = (m.name === cls.leaderName || m.name === cls.subLeader);
-          let roleBadgeHtml = isLeader 
-            ? `<span class="text-xs sm:text-sm font-black text-amber-900 bg-amber-200 border border-amber-400 px-1.5 py-0.5 rounded whitespace-nowrap">👑 ${m.role}</span>`
-            : `<span class="text-xs sm:text-sm text-slate-700 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded whitespace-nowrap">${m.role || '-'}</span>`;
+          let roleBadgeHtml = `<span class="text-xs sm:text-sm font-bold text-slate-700 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded whitespace-nowrap">${isLeader ? '👑 ' : ''}${m.role || '-'}</span>`;
 
           tr.innerHTML = 
             '<td class="py-2.5 px-2.5 font-black text-slate-950 text-base sm:text-lg whitespace-nowrap">' + m.name + '</td>' +
@@ -3613,14 +3609,20 @@ ${className} ${leaderName} 리더입니다.
                 </thead>
                 <tbody>
                   ${targetMembers.map((m, idx) => {
-                    const isLeader = m.role && (m.role.includes('리더') || m.role.includes('부리더'));
-                    const nameDisp = isLeader ? `<b>${m.name}</b> <span style="font-size:10px;">👑</span>` : `<b>${m.name}</b>`;
+                    // 👑 이름으로 리더/부리더 판별
+                    const cls = this.classList.find(c => c.classId === m.classId) || {};
+                    const isLeader = (m.name === cls.leaderName || m.name === cls.subLeader);
+                    
+                    const nameDisp = `<b>${m.name}</b>`;
+                    // 👑 직분 옆에 깔끔하게 왕관 표시
+                    const roleDisp = isLeader ? `👑 ${m.role || '-'}` : (m.role || '-');
+                    
                     return `
                       <tr style="height: 38px;">
                         <td style="border: 1px solid #c7d2fe; color: #64748b;">${idx + 1}</td>
                         <td style="border: 1px solid #c7d2fe; padding: 6px;">${nameDisp}</td>
                         <td style="border: 1px solid #c7d2fe;">${this.getClassName(m.classId)}</td>
-                        <td style="border: 1px solid #c7d2fe; color: ${isLeader ? '#9a3412' : '#475569'};">${m.role || '-'}</td>
+                        <td style="border: 1px solid #c7d2fe; color: #475569; font-weight: ${isLeader ? 'bold' : 'normal'};">${roleDisp}</td>
                         <td style="border: 1px solid #c7d2fe; font-weight: bold; color: #374151;">${m.phone || '-'}</td>
                         <td style="border: 1px solid #c7d2fe; color: ${m.status === '새가족' ? '#d97706' : '#047857'}; font-weight: bold;">${m.status || '활동'}</td>
                         <td style="border: 1px solid #c7d2fe; padding: 6px; text-align: left; font-size: 10px; color: #64748b;">${m.notes || ''}</td>

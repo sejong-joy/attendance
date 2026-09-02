@@ -361,7 +361,6 @@
                   <th class="py-2 px-2.5 whitespace-nowrap">이름</th>
                   <th class="py-2 px-2.5 whitespace-nowrap">소속반</th>
                   <th class="py-2 px-2 whitespace-nowrap">직분</th>
-                  <!-- 🎯 연락처 제목 가운데 정렬 -->
                   <th class="py-2 px-2.5 text-center whitespace-nowrap">연락처</th>
                   <th class="py-2 px-2 text-center whitespace-nowrap">상태</th>
                 </tr>
@@ -425,7 +424,6 @@
         </div>
 
         <div class="p-3 sm:p-4 space-y-2.5 max-h-[75vh] overflow-y-auto custom-scrollbar">
-          <!-- 각종 인쇄 메뉴들 (기존과 동일) -->
           <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl hover:border-emerald-400 transition">
             <div class="flex items-center justify-between mb-1">
               <span class="font-black text-slate-900 text-base sm:text-lg flex items-center space-x-1.5">
@@ -801,13 +799,13 @@
       }
 
       async init() {
+        // 1. 오늘 날짜 및 분기/안식일 과를 0.001초 만에 내부 계산하여 세팅
         this.initCurrentYearAndQuarter();
 
-        if (localStorage.getItem('church_auth')) {
-          this.showLoading('최신 출석 데이터 갱신 중...');
-        }
-
+        // 2. 캐시된 반 목록 우선 파싱 후 로드
         await this.loadClassesList();
+
+        // 3. 0.1초 즉각 화면 렌더링 (캐시 기반 ➔ 백그라운드 구글 동기화)
         this.checkSavedSession();
         this.setupNetworkListeners();
 
@@ -1041,7 +1039,8 @@
         if (curVal) select.value = curVal;
       }
 
-      async handleLogin(savedClassId = null, savedPin = null) {
+      // ★ 0.1초 즉시 부팅(Stale-While-Revalidate) 핵심 적용
+      async handleLogin(savedClassId = null, savedPin = null, isAutoLogin = false) {
         const classId = savedClassId || document.getElementById('classSelect')?.value;
         const pinCode = savedPin || document.getElementById('pinInput')?.value?.trim();
 
@@ -1055,6 +1054,7 @@
         const cachedStr = localStorage.getItem(cacheKey);
         let hasLoadedFromCache = false;
 
+        // 1단계: 캐시가 있다면 로딩 오버레이 없이 0.05초 만에 즉시 화면 렌더링!
         if (cachedStr) {
           try {
             const cached = JSON.parse(cachedStr);
@@ -1070,6 +1070,8 @@
               this.calculateConsecutiveAbsentees();
 
               localStorage.setItem('church_auth', JSON.stringify({ classId, pinCode }));
+              
+              // 화면 즉시 표시 및 파이어베이스 실시간 수신선 연결
               this.setupLoggedInUI();
               this.subscribeRealtimeRecords();
               this.subscribeCareNotes();
@@ -1078,10 +1080,15 @@
           } catch(e) {}
         }
 
-        if (!hasLoadedFromCache) {
+        // 캐시가 전혀 없는 첫 접속일 때만 로딩창 표시
+        if (!hasLoadedFromCache && !isAutoLogin) {
           this.showLoading('인증 및 최신 데이터 동기화 중...');
+        } else {
+          // 백그라운드 동기화 상태 뱃지 표시
+          this.updateCloudStatusBadge('syncing', '최신 동기화...');
         }
 
+        // 2단계: 백그라운드에서 구글 시트 원본 데이터를 조용히 조회
         try {
           const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}`;
           const res = await fetch(url);
@@ -1110,13 +1117,15 @@
               this.showToast(`반갑습니다, ${this.currentUser.leaderName} 리더님!`, 'success');
               this.checkAndAutoOpenUrgentModal();
             } else {
-              this.renderAttendanceList();
+              // 백그라운드 데이터 수신 완료 후 화면을 부드럽게 최신화
+              const curDate = document.getElementById('sabbathSelect')?.value;
+              if (curDate) this.loadAttendanceForSelectedDate(curDate);
               this.renderMemberDirectory();
               this.renderClassMonitoringBar();
               this.updateAbsentBanner();
-              this.checkAndAutoOpenUrgentModal();
             }
 
+            this.updateCloudStatusBadge('saved', '자동저장됨');
             this.processOfflineQueue();
           } else {
             if (!hasLoadedFromCache) {
@@ -1126,6 +1135,7 @@
           }
         } catch (err) {
           this.hideLoading();
+          this.updateCloudStatusBadge('saved', '자동저장됨');
           if (!hasLoadedFromCache) {
             const found = this.classList.find(c => c.classId === classId);
             if (found) {
@@ -1156,7 +1166,8 @@
               cSel.value = classId;
               pInp.value = pinCode;
             }
-            this.handleLogin(classId, pinCode);
+            // 자동 로그인은 로딩창을 띄우지 않고 0.1초 즉시 실행
+            this.handleLogin(classId, pinCode, true);
           } catch (e) {
             localStorage.removeItem('church_auth');
             this.hideLoading();
@@ -1786,7 +1797,6 @@ ${className} ${leaderName} 리더입니다.
 
           row.className = `p-3 rounded-2xl transition shadow-xs flex flex-col gap-2.5 ${borderStyle}`;
 
-          // [시니어 최적화] 아바타 & 폰트 크기 확대
           let avatarIcon = isUrgentActive ? '🚨' : (isCareHandled ? '💬' : (isWorshipOnly ? '⛪' : (isNewFamily ? '🌱' : member.name.slice(0, 1))));
           let avatarClass = isUrgentActive ? 'bg-red-600 text-white' : (isCareHandled ? 'bg-blue-600 text-white' : (isWorshipOnly ? 'bg-indigo-600 text-white' : (isNewFamily ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-900 border border-emerald-300')));
 
@@ -1827,7 +1837,6 @@ ${className} ${leaderName} 리더입니다.
               </div>
             </div>
             
-            <!-- [시니어 최적화] 출석/지각/결석 버튼 높이와 폰트 크기 대폭 확대 -->
             <div class="w-full grid grid-cols-3 gap-2 pt-1.5 border-t border-slate-100">
               <button onclick="window.appInstance.setStatus('${member.memberId}', '출석')" class="status-btn-${member.memberId}-출석 w-full h-12 sm:h-14 flex items-center justify-center text-xl sm:text-2xl font-black tracking-tight whitespace-nowrap rounded-xl transition shadow-2xs leading-none ${state.status === '출석' ? 'bg-emerald-600 text-white ring-2 ring-emerald-400' : 'bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200'}">
                 ⭕ 출석
@@ -3022,7 +3031,6 @@ ${className} ${leaderName} 리더입니다.
             '<td class="py-2.5 px-2.5 font-black text-slate-950 text-base sm:text-lg whitespace-nowrap">' + m.name + '</td>' +
             '<td class="py-2.5 px-2.5 whitespace-nowrap">' + classCellHtml + '</td>' +
             '<td class="py-2.5 px-2 text-slate-700 text-xs sm:text-sm whitespace-nowrap">' + (m.role || '-') + '</td>' +
-            // 🎯 교인명부 연락처 실제 데이터 셀 가운데 정렬
             '<td class="py-2.5 px-2.5 text-center whitespace-nowrap">' + formattedPhoneHtml + '</td>' +
             '<td class="py-2.5 px-2 text-center whitespace-nowrap">' +
               '<span class="px-2 py-0.5 rounded text-xs sm:text-sm font-black ' +

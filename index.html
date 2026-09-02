@@ -542,19 +542,28 @@
         }, { passive: true });
       }
 
-      // 👑 [수정] '직분' 대신 '반_설정'의 담당리더/부리더 이름과 정확히 매칭하여 1순위 정렬
+      // 👑 [수정] 리더 1번, 부리더 2번, 일반 성도 가나다순 완벽 정렬
       sortMembersList(membersArray) {
         if (!Array.isArray(membersArray)) return [];
         return membersArray.sort((a, b) => {
           const clsA = this.classList.find(c => c.classId === a.classId) || {};
           const clsB = this.classList.find(c => c.classId === b.classId) || {};
           
-          const isLeaderA = (a.name === clsA.leaderName || a.name === clsA.subLeader) ? 1 : 0;
-          const isLeaderB = (b.name === clsB.leaderName || b.name === clsB.subLeader) ? 1 : 0;
+          // 점수 부여: 담당리더 = 2점, 부리더 = 1점, 그 외 = 0점
+          let scoreA = 0;
+          if (a.name === clsA.leaderName) scoreA = 2;
+          else if (a.name === clsA.subLeader) scoreA = 1;
+
+          let scoreB = 0;
+          if (b.name === clsB.leaderName) scoreB = 2;
+          else if (b.name === clsB.subLeader) scoreB = 1;
           
-          if (isLeaderA !== isLeaderB) {
-            return isLeaderB - isLeaderA; // 리더가 위로 올라감
+          // 점수가 다르면 무조건 점수가 높은 사람(리더)이 위로 올라감
+          if (scoreA !== scoreB) {
+            return scoreB - scoreA; 
           }
+          
+          // 점수가 같다면 (둘 다 일반 성도라면) 이름 가나다순으로 정렬
           const nameA = a.name || '';
           const nameB = b.name || '';
           return nameA.localeCompare(nameB, 'ko-KR');

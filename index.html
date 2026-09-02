@@ -27,8 +27,13 @@
       -webkit-tap-highlight-color: transparent;
     }
     
-    /* 📱 [수정] 모바일 '당겨서 새로고침' 완전 차단 (앱처럼 딱 붙게 만듦) */
-    body { overscroll-behavior-y: none; }
+        /* 📱 모바일 '당겨서 새로고침' 및 오버스크롤 바운스 완전 차단 */
+    html, body {
+      overscroll-behavior-y: none !important;
+      overscroll-behavior: none !important;
+      touch-action: pan-x pan-y; /* 핀치 줌 및 브라우저 기본 제스처 차단, 일반 스크롤만 허용 */
+    }
+
     
     .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 9999px; }

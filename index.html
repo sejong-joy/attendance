@@ -36,48 +36,23 @@
     }
     .pulse-danger { animation: alert-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 
-    /* 🖨️ [수정] 빈 페이지 완전 차단 및 인쇄 컨테이너만 정확히 노출 */
+   /* 🖨️ [수정] 앱 화면 인쇄 완전 차단 및 보고서만 출력 */
     @media print {
-      /* 화면용 앱 UI 요소들만 정확하게 콕 집어서 완전히 삭제 (공간 차지 안 함) */
-      header, 
-      #loginSection, 
-      #appSection, 
-      #worshipCheckModal, 
-      #exportModal, 
-      #resetConfirmModal, 
-      #urgentAlertModal, 
-      #careVisitModal, 
-      #memberDetailModal, 
-      #statDetailModal, 
-      #newMemberModal, 
-      #loadingOverlay, 
-      #toast { 
-        display: none !important; 
-      }
+      /* 1. 상단 헤더 숨기기 */
+      header { display: none !important; }
       
-      /* 부모 껍데기의 여백을 없애서 꽉 차게 만들기 */
+      /* 2. main 안의 모든 요소(출석화면, 모달 등) 강제 숨기기 */
+      main > * { display: none !important; }
+      
+      /* 3. 오직 인쇄용 컨테이너만 보여주기 */
+      main > #printContainer { display: block !important; }
+      
+      /* 4. 부모 껍데기 여백 제거 */
       main { padding: 0 !important; margin: 0 !important; max-width: none !important; }
-
-      /* 인쇄 컨테이너 노출 */
-      #printContainer { 
-        display: block !important; 
-        position: relative !important; 
-        width: 100%; 
-        margin: 0; 
-        padding: 0; 
-        background: white; 
-        color: black; 
-      }
       
+      /* 5. 페이지 여백 및 테이블 잘림 방지 */
       @page { size: auto; margin: 10mm; }
-      html, body { 
-        height: auto !important; 
-        min-height: 0 !important; 
-        overflow: visible !important; 
-        margin: 0 !important; 
-        padding: 0 !important; 
-        background-color: white !important; 
-      }
+      html, body { height: auto !important; min-height: 0 !important; overflow: visible !important; margin: 0 !important; padding: 0 !important; background-color: white !important; }
       table { page-break-inside: auto; width: 100%; }
       tr { page-break-inside: avoid; page-break-after: auto; }
       thead { display: table-header-group; }

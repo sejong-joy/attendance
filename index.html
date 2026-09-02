@@ -36,16 +36,48 @@
     }
     .pulse-danger { animation: alert-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 
-    /* 🖨️ [수정] 빈 페이지 출력 완전 차단 CSS */
+    /* 🖨️ [수정] 빈 페이지 완전 차단 및 인쇄 컨테이너만 정확히 노출 */
     @media print {
-      /* 인쇄 컨테이너를 제외한 모든 앱 화면을 아예 공간까지 삭제 */
-      body > *:not(#printContainer) { display: none !important; }
+      /* 화면용 앱 UI 요소들만 정확하게 콕 집어서 완전히 삭제 (공간 차지 안 함) */
+      header, 
+      #loginSection, 
+      #appSection, 
+      #worshipCheckModal, 
+      #exportModal, 
+      #resetConfirmModal, 
+      #urgentAlertModal, 
+      #careVisitModal, 
+      #memberDetailModal, 
+      #statDetailModal, 
+      #newMemberModal, 
+      #loadingOverlay, 
+      #toast { 
+        display: none !important; 
+      }
       
-      #printContainer { display: block !important; position: relative !important; width: 100%; margin: 0; padding: 0; background: white; color: black; }
-      #printContainer * { visibility: visible; }
+      /* 부모 껍데기의 여백을 없애서 꽉 차게 만들기 */
+      main { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+
+      /* 인쇄 컨테이너 노출 */
+      #printContainer { 
+        display: block !important; 
+        position: relative !important; 
+        width: 100%; 
+        margin: 0; 
+        padding: 0; 
+        background: white; 
+        color: black; 
+      }
       
       @page { size: auto; margin: 10mm; }
-      html, body { height: auto !important; min-height: 0 !important; overflow: visible !important; margin: 0 !important; padding: 0 !important; background-color: white !important; }
+      html, body { 
+        height: auto !important; 
+        min-height: 0 !important; 
+        overflow: visible !important; 
+        margin: 0 !important; 
+        padding: 0 !important; 
+        background-color: white !important; 
+      }
       table { page-break-inside: auto; width: 100%; }
       tr { page-break-inside: avoid; page-break-after: auto; }
       thead { display: table-header-group; }

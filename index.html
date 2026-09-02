@@ -836,12 +836,12 @@
         const cachedStr = localStorage.getItem(cacheKey);
         let hasLoadedFromCache = false;
 
+        // 🚨 [보안 패치 1] 저장된 캐시가 있더라도 입력한 핀번호와 일치할 때만 캐시 진입 허용
         if (cachedStr) {
           try {
             const cached = JSON.parse(cachedStr);
-            if (cached.user) {
+            if (cached.user && cached.pinCode === pinCode) {
               this.currentUser = cached.user;
-              // 👑 [3번 안건] 명부 정렬 로직 적용
               this.rawMembers = this.sortMembersList((cached.members || []).filter(m => m.status !== '방문자'));
               this.rawVisitors = cached.visitors || (cached.members || []).filter(m => m.status === '방문자');
               this.rawRecords = (cached.records || []).map(r => ({
@@ -873,7 +873,6 @@
 
           if (json.success) {
             this.currentUser = json.user;
-            // 👑 [3번 안건] 명부 정렬 로직 적용
             this.rawMembers = this.sortMembersList((json.members || []).filter(m => m.status !== '방문자'));
             this.rawVisitors = json.visitors || (json.members || []).filter(m => m.status === '방문자');
             this.rawRecords = (json.records || []).map(r => ({
@@ -883,6 +882,8 @@
             this.updateAbsentAlertMap(json.absentAlerts || []);
             this.calculateConsecutiveAbsentees();
 
+            // 🚨 [보안 패치 2] 로그인 성공한 정상 핀번호를 캐시에 함께 저장
+            json.pinCode = pinCode;
             localStorage.setItem(cacheKey, JSON.stringify(json));
             localStorage.setItem('church_auth', JSON.stringify({ classId, pinCode }));
 
@@ -902,28 +903,19 @@
 
             this.processOfflineQueue();
           } else {
-            if (!hasLoadedFromCache) {
+            // 🚨 [보안 패치 3] 서버에서 비밀번호 인증 실패 판정 시 화면 강제 퇴장
+            if (hasLoadedFromCache) {
+              this.handleLogout(); 
+            } else {
               localStorage.removeItem('church_auth');
-              this.showToast(json.message || '비밀번호가 일치하지 않습니다.', 'error');
             }
+            this.showToast(json.message || '비밀번호가 일치하지 않습니다.', 'error');
           }
         } catch (err) {
           this.hideLoading();
           if (!hasLoadedFromCache) {
-            const found = this.classList.find(c => c.classId === classId);
-            if (found) {
-              this.currentUser = found;
-              this.rawMembers = this.sortMembersList(this.getMockMembers(classId));
-              this.rawVisitors = [];
-              this.rawRecords = [];
-              this.calculateConsecutiveAbsentees();
-              this.setupLoggedInUI();
-              this.subscribeRealtimeRecords();
-              this.subscribeCareNotes();
-              this.showToast(`반갑습니다, ${this.currentUser.leaderName} 리더님!`, 'success');
-            } else {
-              this.showToast('서버 연결 실패. 네트워크 상태를 확인하세요.', 'error');
-            }
+            // 🚨 [보안 패치 4] 오프라인 목데이터(가짜 회원) 자동 진입 구멍 완전 제거
+            this.showToast('네트워크 연결이 불안정하거나 인증에 실패했습니다.', 'error');
           }
         }
       }

@@ -36,14 +36,17 @@
     }
     .pulse-danger { animation: alert-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 
-    /* 🖨️ [안건] 인쇄 시 빈 페이지 잘림 방지 CSS 완벽 적용 */
+    /* 🖨️ [수정] 빈 페이지 출력 완전 차단 CSS */
     @media print {
-      body * { visibility: hidden; }
-      #printContainer, #printContainer * { visibility: visible; }
-      #printContainer { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; background: white; color: black; }
-      @page { size: auto; margin: 8mm; }
-      html, body { height: auto !important; min-height: auto !important; overflow: visible !important; margin: 0 !important; padding: 0 !important; }
-      table { page-break-inside: auto; }
+      /* 인쇄 컨테이너를 제외한 모든 앱 화면을 아예 공간까지 삭제 */
+      body > *:not(#printContainer) { display: none !important; }
+      
+      #printContainer { display: block !important; position: relative !important; width: 100%; margin: 0; padding: 0; background: white; color: black; }
+      #printContainer * { visibility: visible; }
+      
+      @page { size: auto; margin: 10mm; }
+      html, body { height: auto !important; min-height: 0 !important; overflow: visible !important; margin: 0 !important; padding: 0 !important; background-color: white !important; }
+      table { page-break-inside: auto; width: 100%; }
       tr { page-break-inside: avoid; page-break-after: auto; }
       thead { display: table-header-group; }
     }
@@ -3227,10 +3230,10 @@ ${className} ${leaderName} 리더입니다.
         `;
 
         if (type === 1) {
-          // 🖨️ 1번 양식 (13주 출석부 - 가로) 여백/글자 확대
+          // 🖨️ 1번 양식 (13주 출석부) - 성명/직분 1줄 고정 (nowrap 적용)
           html = `
-            <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
-              <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
+            <div style="font-family: 'Noto Sans KR', sans-serif; padding: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px;">
                 <div>
                   <h2 style="font-size: 24px; font-weight: 900; margin: 0; color: #111827;">${year}년 ${quarter} 안식일학교 출석부 (${className})</h2>
                   <p style="font-size: 13px; color: #4b5563; margin: 4px 0 0 0;">세종 조이 안식일학교 · 출력일: ${new Date().toLocaleDateString('ko-KR')}</p>
@@ -3240,19 +3243,19 @@ ${className} ${leaderName} 리더입니다.
 
               <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: center;">
                 <thead>
-                  <tr style="background-color: #f8fafc;">
-                    <th style="border: 1px solid #cbd5e1; padding: 10px;">성명</th>
-                    <th style="border: 1px solid #cbd5e1; padding: 10px;">직분</th>
+                  <tr style="background-color: #f8fafc; height: 40px;">
+                    <th style="border: 1px solid #cbd5e1; padding: 6px 4px; white-space: nowrap; width: 65px;">성명</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px 4px; white-space: nowrap; width: 45px;">직분</th>
                     ${sabbaths.map((s, idx) => `
-                      <th style="border: 1px solid #cbd5e1; padding: 6px; font-size: 12px; width: 34px;">
-                        제${idx + 1}과<br><span style="font-size: 10px; color: #64748b;">${s.monthNum}/${s.dayNum}</span>
+                      <th style="border: 1px solid #cbd5e1; padding: 4px; font-size: 11px; width: 34px;">
+                        제${idx + 1}과<br><span style="font-size: 9px; color: #64748b;">${s.monthNum}/${s.dayNum}</span>
                       </th>
                     `).join('')}
-                    <th style="border: 1px solid #cbd5e1; padding: 8px; color: #047857;">출</th>
-                    <th style="border: 1px solid #cbd5e1; padding: 8px; color: #b45309;">지</th>
-                    <th style="border: 1px solid #cbd5e1; padding: 8px; color: #4338ca;">예배</th>
-                    <th style="border: 1px solid #cbd5e1; padding: 8px; color: #b91c1c;">결</th>
-                    <th style="border: 1px solid #cbd5e1; padding: 8px;">출석률</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; color: #047857; white-space: nowrap;">출</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; color: #b45309; white-space: nowrap;">지</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; color: #4338ca; white-space: nowrap;">예배</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; color: #b91c1c; white-space: nowrap;">결</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; white-space: nowrap;">출석률</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -3279,8 +3282,8 @@ ${className} ${leaderName} 리더입니다.
 
                     return `
                       <tr style="height: 42px;">
-                        <td style="border: 1px solid #cbd5e1; padding: 6px 10px; font-weight: bold; text-align: left; font-size: 14px;">${m.name}</td>
-                        <td style="border: 1px solid #cbd5e1; padding: 6px 10px; color: #64748b;">${m.role || '성도'}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: 900; text-align: center; font-size: 14px; white-space: nowrap;">${m.name}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 4px; color: #475569; white-space: nowrap;">${m.role || '성도'}</td>
                         ${weekTds}
                         <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #047857;">${p}</td>
                         <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #b45309;">${l}</td>

@@ -542,19 +542,19 @@
         }, { passive: true });
       }
 
-      // 👑 [3번 안건] 리더 최상단 + 가나다순 정렬 함수
+      // 👑 [수정] '직분' 대신 '반_설정'의 담당리더/부리더 이름과 정확히 매칭하여 1순위 정렬
       sortMembersList(membersArray) {
         if (!Array.isArray(membersArray)) return [];
         return membersArray.sort((a, b) => {
-          const roleA = a.role || '';
-          const roleB = b.role || '';
-          const isLeaderA = (roleA.includes('리더') || roleA.includes('부리더')) ? 1 : 0;
-          const isLeaderB = (roleB.includes('리더') || roleB.includes('부리더')) ? 1 : 0;
+          const clsA = this.classList.find(c => c.classId === a.classId) || {};
+          const clsB = this.classList.find(c => c.classId === b.classId) || {};
+          
+          const isLeaderA = (a.name === clsA.leaderName || a.name === clsA.subLeader) ? 1 : 0;
+          const isLeaderB = (b.name === clsB.leaderName || b.name === clsB.subLeader) ? 1 : 0;
           
           if (isLeaderA !== isLeaderB) {
-            return isLeaderB - isLeaderA; // 리더가 위로(내림차순)
+            return isLeaderB - isLeaderA; // 리더가 위로 올라감
           }
-          // 리더 여부가 같으면 이름 가나다순 정렬
           const nameA = a.name || '';
           const nameB = b.name || '';
           return nameA.localeCompare(nameB, 'ko-KR');
@@ -1520,8 +1520,9 @@ ${className} ${leaderName} 리더입니다.
           const isNewFamily = member.status === '새가족';
           const isWorshipOnly = (state.status === '결석' && state.worshipAttended);
           
-          // 👑 [3번 안건] 리더 뱃지 출력용 변수 선언
-          const isLeader = member.role && (member.role.includes('리더') || member.role.includes('부리더'));
+          // 👑 [수정] 이름 매칭으로 리더 판별
+          const cls = this.classList.find(c => c.classId === member.classId) || {};
+          const isLeader = (member.name === cls.leaderName || member.name === cls.subLeader);
 
           const row = document.createElement('div');
           
@@ -2781,8 +2782,9 @@ ${className} ${leaderName} 리더입니다.
             classCellHtml = `<span class="px-2 py-0.5 rounded-lg text-xs sm:text-sm font-black bg-slate-100 text-slate-800 border border-slate-200 whitespace-nowrap">${this.getClassName(m.classId)}</span>`;
           }
 
-          // 👑 [3번 안건] 명부 탭에도 직분에 리더/부리더 있으면 👑 뱃지 출력 반영
-          const isLeader = m.role && (m.role.includes('리더') || m.role.includes('부리더'));
+          // 👑 [수정] 이름 매칭으로 리더 판별
+          const cls = this.classList.find(c => c.classId === m.classId) || {};
+          const isLeader = (m.name === cls.leaderName || m.name === cls.subLeader);
           let roleBadgeHtml = isLeader 
             ? `<span class="text-xs sm:text-sm font-black text-amber-900 bg-amber-200 border border-amber-400 px-1.5 py-0.5 rounded whitespace-nowrap">👑 ${m.role}</span>`
             : `<span class="text-xs sm:text-sm text-slate-700 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded whitespace-nowrap">${m.role || '-'}</span>`;

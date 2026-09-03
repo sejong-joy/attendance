@@ -1563,10 +1563,16 @@ ${className} ${leaderName} 리더입니다.
           return;
         }
 
-        if (titleEl) titleEl.textContent = `출석 명단`;
+        const currentClass = this.currentUser ? this.currentUser.className : '전체반';
+        
+        if (titleEl) titleEl.textContent = `${currentClass} 명단`;
         if (subTipEl) subTipEl.textContent = `버튼을 눌러 출석을 기록하세요`;
+        // 👆 여기까지!
 
         let filtered = this.rawMembers;
+        if (activeFilter !== 'ALL') {
+          filtered = this.rawMembers.filter(m => m.classId === activeFilter);
+        }
         if (activeFilter !== 'ALL') {
           filtered = this.rawMembers.filter(m => m.classId === activeFilter);
         }

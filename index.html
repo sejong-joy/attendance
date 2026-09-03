@@ -1493,6 +1493,21 @@ ${className} ${leaderName} 리더입니다.
 
           todayVisitors.forEach((visitor, idx) => {
             const cleanPhone = (visitor.phone || '').replace(/[^0-9]/g, '');
+
+            // 👑 [자동 계산] 이름 + 연락처 기준으로 과거 방문 기록 날짜 개수 취합
+            const matchingVisits = this.rawVisitors.filter(v => 
+              v.name === visitor.name && 
+              (v.phone || '').replace(/[^0-9]/g, '') === cleanPhone
+            );
+            // 중복 방문일자(같은 날 여러 번 등록 방지)를 하나로 합쳐서 고유 방문일수 계산
+            const uniqueVisitDates = new Set(matchingVisits.map(v => this.normalizeDateStr(v.visitDate || v.date)));
+            const visitCount = uniqueVisitDates.size;
+            
+            // 👑 방문 횟수에 따라 다르게 표시되는 스마트 뱃지 생성
+            const visitBadgeHtml = visitCount > 1
+              ? `<span class="text-xs sm:text-sm font-black text-indigo-900 bg-indigo-100 border border-indigo-300 px-2 py-0.5 rounded shadow-2xs">🎉 ${visitCount}회차 방문</span>`
+              : `<span class="text-xs sm:text-sm font-black text-pink-900 bg-pink-100 border border-pink-300 px-2 py-0.5 rounded shadow-2xs">✨ 첫 방문</span>`;
+
             const card = document.createElement('div');
             card.className = 'p-3 rounded-2xl border border-blue-200 bg-blue-50/50 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5';
             
@@ -1504,7 +1519,7 @@ ${className} ${leaderName} 리더입니다.
                 <div>
                   <div class="flex items-center space-x-2 flex-wrap">
                     <span class="font-black text-slate-900 text-2xl sm:text-3xl">${visitor.name}</span>
-                    <span class="text-xs sm:text-sm font-black text-blue-900 bg-blue-100 border border-blue-300 px-2 py-0.5 rounded">방문자</span>
+                    ${visitBadgeHtml}
                     <span class="text-xs sm:text-sm text-slate-600 font-bold">${visitor.role || visitor.affiliation || '손님'}</span>
                   </div>
                   <p class="text-sm sm:text-base text-slate-700 font-bold mt-0.5">

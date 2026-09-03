@@ -468,7 +468,7 @@
       </div>
     </div>
 
-    <div id="toast" class="fixed bottom-4 right-4 z-50 transform translate-y-16 opacity-0 transition-all duration-300 pointer-events-none bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-2xl flex items-center space-x-2 text-sm sm:text-base font-black">
+    <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-[60] transform -translate-y-10 opacity-0 transition-all duration-300 pointer-events-none bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center space-x-2 text-sm sm:text-base font-black w-max max-w-[90vw]">
       <span id="toastIcon">✨</span>
       <span id="toastMsg">알림 메시지</span>
     </div>
@@ -531,8 +531,20 @@
 
       async init() {
         this.initCurrentYearAndQuarter();
-        await this.loadClassesList();
-        this.checkSavedSession();
+        
+        // 🚨 [패치] 초기 진입 시 5초 백지화 방지 및 로딩 표시
+        if (!localStorage.getItem('church_auth')) {
+          // 1. 처음 접속 시: 빈 화면 대신 명확한 빙글빙글 로딩 스피너를 띄웁니다.
+          this.showLoading('시스템 초기화 및 반 목록을 불러오는 중...');
+          await this.loadClassesList();
+          this.hideLoading();
+          this.checkSavedSession();
+        } else {
+          // 2. 재접속 시: 구글 시트를 기다리지 않고(await 제거), 스마트폰 캐시로 0.1초 만에 화면부터 즉시 띄웁니다!
+          this.loadClassesList(); 
+          this.checkSavedSession();
+        }
+        
         this.setupNetworkListeners();
         
         // 👆 스와이프 리스너 등록
@@ -4019,9 +4031,10 @@ ${className} ${leaderName} 리더입니다.
         msg.textContent = message;
         icon.textContent = type === 'success' ? '⚡' : type === 'error' ? '⚠️' : 'ℹ️';
 
-        toast.classList.remove('translate-y-16', 'opacity-0');
+        // 🚨 아래에서 위로 올라오던 애니메이션을, 위에서 아래로 내려오도록 수정
+        toast.classList.remove('-translate-y-10', 'opacity-0');
         setTimeout(() => {
-          toast.classList.add('translate-y-16', 'opacity-0');
+          toast.classList.add('-translate-y-10', 'opacity-0');
         }, 2500);
       }
 

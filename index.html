@@ -478,6 +478,8 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    // 👇 새롭게 추가할 부분 (Enterprise용 프로바이더를 불러옵니다)
+    import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js";
 
     const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzn2kkDIqszr-dMUbYPHffHlubtBjXb-mYUWApYeU9ot3lYkvrhVl_KPsNL9Y72-ZhK/exec";
 
@@ -495,6 +497,13 @@
 
     try {
       app = initializeApp(firebaseConfig);
+
+      // 👇 [여기에 App Check 코드를 넣어주세요!]
+      const appCheck = initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider('6Lcte6YtAAAAAIbjANUdJ7eAp5yv_dYDCNyk59l9'),
+        isTokenAutoRefreshEnabled: true
+      });
+      
       db = getFirestore(app);
       isFirebaseReady = true;
     } catch (e) {

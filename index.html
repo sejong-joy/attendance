@@ -3231,20 +3231,60 @@ ${className} ${leaderName} 리더입니다.
             </div>
           `;
         } else if (type === 2) {
-          // 🖨️ 2번 양식 (결산 보고서) 여백/글자 확대
+          // 🖨️ 2번 양식 (결산 보고서) 여백/글자 확대 및 ★맨 밑 합계 행 추가★
           if (!isYearly) {
             const validRecs = this.rawRecords.filter(r => (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
 
-            let totScore = 0;
-            validRecs.forEach(r => { if (r.status === '출석') totScore += 1.0; else if (r.status === '지각') totScore += 0.5; });
-            const totalAvgRate = validRecs.length > 0 ? ((totScore / validRecs.length) * 100).toFixed(1) + '%' : '0.0%';
+            // 👑 [핵심 수정] 13주 전체가 아닌 '실제 출석이 한 번이라도 기록된 주차(진행 주차)' 자동 산출
+            const activeDates = new Set();
+            validRecs.forEach(r => activeDates.add(this.normalizeDateStr(r.date)));
+            const conductedWeeks = activeDates.size > 0 ? activeDates.size : 1; // 0 나누기 방지
+
+            // 1. 안교 출석 전체 합계 사전 계산
+            const t1WeeklyTotals = sabbaths.map(s => {
+              return targetMembers.filter(m => {
+                const r = validRecs.find(rec => rec.memberId === m.memberId && this.normalizeDateStr(rec.date) === s.dateStr);
+                return r && (r.status === '출석' || r.status === '지각');
+              }).length;
+            });
+            const t1TotalMembers = targetMembers.length;
+            let t1TotalScore = 0;
+            targetMembers.forEach(m => {
+              validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
+                if (r.status === '출석') t1TotalScore += 1.0;
+                else if (r.status === '지각') t1TotalScore += 0.5;
+              });
+            });
+            
+            const t1AvgPresentRaw = t1TotalScore / conductedWeeks;
+            const t1AvgPresent = t1AvgPresentRaw.toFixed(1) + '명';
+            const totalAvgRate = t1TotalMembers > 0 ? ((t1AvgPresentRaw / t1TotalMembers) * 100).toFixed(1) + '%' : '0.0%';
+
+            // 2. 설교 예배 참석 전체 합계 사전 계산
+            const t2WeeklyTotals = sabbaths.map(s => {
+              return targetMembers.filter(m => {
+                const r = validRecs.find(rec => rec.memberId === m.memberId && this.normalizeDateStr(rec.date) === s.dateStr);
+                return r && (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended));
+              }).length;
+            });
+            let t2WorshipSum = 0;
+            targetMembers.forEach(m => {
+              validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
+                if (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended)) {
+                  t2WorshipSum += 1.0;
+                }
+              });
+            });
+            const t2AvgPresentRaw = t2WorshipSum / conductedWeeks;
+            const t2AvgPresent = t2AvgPresentRaw.toFixed(1) + '명';
+            const t2AvgRate = t1TotalMembers > 0 ? ((t2AvgPresentRaw / t1TotalMembers) * 100).toFixed(1) + '%' : '0.0%';
 
             html = `
               <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; border-bottom: 3px solid #0f172a; padding-bottom: 12px;">
                   <div>
                     <h2 style="font-size: 24px; font-weight: 900; margin: 0; color: #0f172a;">${year}년 ${quarter} 안식일학교 분기 종합 결산 보고서</h2>
-                    <p style="font-size: 13px; color: #475569; margin: 4px 0 0 0;">세종 조이 안식일학교 · 당회 및 행정 보고용</p>
+                    <p style="font-size: 13px; color: #475569; margin: 4px 0 0 0;">세종 조이 안식일학교 · 당회 및 행정 보고용 (현재 ${conductedWeeks}주차 진행중)</p>
                   </div>
                   ${approvalBoxHtml}
                 </div>
@@ -3261,7 +3301,7 @@ ${className} ${leaderName} 리더입니다.
                     <td style="border: 1px solid #cbd5e1; padding: 8px;">${this.rawMembers.length}명</td>
                     <td style="border: 1px solid #cbd5e1; padding: 8px; color: #047857;">${this.rawMembers.filter(m => m.status === '활동').length}명</td>
                     <td style="border: 1px solid #cbd5e1; padding: 8px; color: #b45309;">${this.rawMembers.filter(m => m.status === '새가족').length}명</td>
-                    <td style="border: 1px solid #cbd5e1; padding: 8px;">${sabbaths.length}회</td>
+                    <td style="border: 1px solid #cbd5e1; padding: 8px;">${conductedWeeks}회 (전체 13회)</td>
                     <td style="border: 1px solid #cbd5e1; padding: 8px; color: #059669;">${totalAvgRate}</td>
                   </tr>
                 </table>
@@ -3282,7 +3322,6 @@ ${className} ${leaderName} 리더입니다.
                     ${activeClasses.map(c => {
                       const cMembers = this.rawMembers.filter(m => m.classId === c.classId);
                       let cScoreSum = 0;
-                      let cCheckedSum = 0;
 
                       const weekCounts = sabbaths.map(s => {
                         const cnt = cMembers.filter(m => {
@@ -3293,16 +3332,15 @@ ${className} ${leaderName} 리더입니다.
                       }).join('');
 
                       cMembers.forEach(m => {
-                        const mRecs = validRecs.filter(r => r.memberId === m.memberId);
-                        mRecs.forEach(r => {
-                          if (r.status === '출석') { cScoreSum += 1.0; cCheckedSum++; }
-                          else if (r.status === '지각') { cScoreSum += 0.5; cCheckedSum++; }
-                          else if (r.status === '결석') { cCheckedSum++; }
+                        validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
+                          if (r.status === '출석') cScoreSum += 1.0;
+                          else if (r.status === '지각') cScoreSum += 0.5;
                         });
                       });
 
-                      const avgPresentNum = sabbaths.length > 0 ? (cScoreSum / sabbaths.length).toFixed(1) + '명' : '-';
-                      const avgRate = cCheckedSum > 0 ? ((cScoreSum / cCheckedSum) * 100).toFixed(1) + '%' : '-';
+                      const avgPresentRaw = cScoreSum / conductedWeeks;
+                      const avgPresentNum = avgPresentRaw.toFixed(1) + '명';
+                      const avgRate = cMembers.length > 0 ? ((avgPresentRaw / cMembers.length) * 100).toFixed(1) + '%' : '-';
 
                       return `
                         <tr style="height: 38px;">
@@ -3315,6 +3353,14 @@ ${className} ${leaderName} 리더입니다.
                         </tr>
                       `;
                     }).join('')}
+                    <!-- 👇 안교 출석 전체 합계 행 👇 -->
+                    <tr style="background: #e2e8f0; height: 40px; font-weight: 900;">
+                      <td colspan="2" style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; color: #0f172a; font-size: 13px;">총 합 계</td>
+                      <td style="border: 1px solid #cbd5e1; padding: 6px; color: #0f172a;">${t1TotalMembers}</td>
+                      ${t1WeeklyTotals.map(cnt => `<td style="border: 1px solid #cbd5e1; padding: 4px; font-size: 14px; color: ${cnt > 0 ? '#059669' : '#64748b'};">${cnt}</td>`).join('')}
+                      <td style="border: 1px solid #cbd5e1; padding: 6px; color: #0f172a;">${t1AvgPresent}</td>
+                      <td style="border: 1px solid #cbd5e1; padding: 6px; color: #059669;">${totalAvgRate}</td>
+                    </tr>
                   </tbody>
                 </table>
 
@@ -3335,7 +3381,6 @@ ${className} ${leaderName} 리더입니다.
                       ${activeClasses.map(c => {
                         const cMembers = this.rawMembers.filter(m => m.classId === c.classId);
                         let cWorshipSum = 0;
-                        let cCheckedSum = 0;
 
                         const weekCounts = sabbaths.map(s => {
                           const cnt = cMembers.filter(m => {
@@ -3346,17 +3391,16 @@ ${className} ${leaderName} 리더입니다.
                         }).join('');
 
                         cMembers.forEach(m => {
-                          const mRecs = validRecs.filter(r => r.memberId === m.memberId);
-                          mRecs.forEach(r => {
-                            cCheckedSum++;
+                          validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
                             if (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended)) {
-                              cWorshipSum++;
+                              cWorshipSum += 1.0;
                             }
                           });
                         });
 
-                        const avgPresentNum = sabbaths.length > 0 ? (cWorshipSum / sabbaths.length).toFixed(1) + '명' : '-';
-                        const avgRate = cCheckedSum > 0 ? ((cWorshipSum / cCheckedSum) * 100).toFixed(1) + '%' : '-';
+                        const wAvgPresentRaw = cWorshipSum / conductedWeeks;
+                        const wAvgPresentNum = wAvgPresentRaw.toFixed(1) + '명';
+                        const wAvgRate = cMembers.length > 0 ? ((wAvgPresentRaw / cMembers.length) * 100).toFixed(1) + '%' : '-';
 
                         return `
                           <tr style="height: 38px;">
@@ -3364,11 +3408,19 @@ ${className} ${leaderName} 리더입니다.
                             <td style="border: 1px solid #cbd5e1; padding: 6px;">${c.leaderName}</td>
                             <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold;">${cMembers.length}</td>
                             ${weekCounts}
-                            <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold; font-size: 13px;">${avgPresentNum}</td>
-                            <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: 900; color: #4338ca; font-size: 13px;">${avgRate}</td>
+                            <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold; font-size: 13px;">${wAvgPresentNum}</td>
+                            <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: 900; color: #4338ca; font-size: 13px;">${wAvgRate}</td>
                           </tr>
                         `;
                       }).join('')}
+                      <!-- 👇 설교 예배 참석 전체 합계 행 👇 -->
+                      <tr style="background: #e0e7ff; height: 40px; font-weight: 900;">
+                        <td colspan="2" style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; color: #1e3a8a; font-size: 13px;">총 합 계</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 6px; color: #1e3a8a;">${t1TotalMembers}</td>
+                        ${t2WeeklyTotals.map(cnt => `<td style="border: 1px solid #cbd5e1; padding: 4px; font-size: 14px; color: ${cnt > 0 ? '#4338ca' : '#64748b'};">${cnt}</td>`).join('')}
+                        <td style="border: 1px solid #cbd5e1; padding: 6px; color: #1e3a8a;">${t2AvgPresent}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 6px; color: #4338ca;">${t2AvgRate}</td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>

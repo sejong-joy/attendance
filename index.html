@@ -1920,7 +1920,7 @@ ${className} ${leaderName} 리더입니다.
         this.showLoading('설교 예배 출석 기록 일괄 저장 중...');
 
         try {
-          const batch = (isFirebaseReady && db && navigator.onLine) ? writeBatch(db) : null;
+          const batch = (isFirebaseReady && db) ? writeBatch(db) : null;
           const candidates = this.rawMembers.filter(m => {
             const rec = this.rawRecords.find(r => this.normalizeDateStr(r.date) === targetDate && r.memberId === m.memberId);
             return !(rec && (rec.status === '출석' || rec.status === '지각'));
@@ -1935,16 +1935,10 @@ ${className} ${leaderName} 리더입니다.
             if (isAttended) {
               if (!rec) {
                 rec = {
-                  recordId: recordId,
-                  date: targetDate,
-                  quarter: quarter || '1기',
-                  memberId: memberId,
-                  classId: member.classId,
-                  status: '결석',
-                  score: 0.0,
-                  reason: '설교 예배 참석',
-                  worshipAttended: true,
-                  checkedBy: this.currentUser?.leaderName || '관리자',
+                  recordId: recordId, date: targetDate, quarter: quarter || '1기',
+                  memberId: memberId, classId: member.classId,
+                  status: '결석', score: 0.0, reason: '설교 예배 참석',
+                  worshipAttended: true, checkedBy: this.currentUser?.leaderName || '관리자',
                   updatedAt: new Date().toISOString()
                 };
                 this.rawRecords.push(rec);
@@ -1963,8 +1957,6 @@ ${className} ${leaderName} 리더입니다.
                 const docRef = doc(db, 'attendance_records', recordId);
                 batch.set(docRef, rec);
               }
-              this.enqueueOfflineRecord(rec);
-
             } else {
               if (rec && rec.worshipAttended) {
                 rec.worshipAttended = false;
@@ -1979,20 +1971,17 @@ ${className} ${leaderName} 리더입니다.
                   const docRef = doc(db, 'attendance_records', recordId);
                   batch.set(docRef, rec);
                 }
-                this.enqueueOfflineRecord(rec);
               }
             }
           });
 
-          if (batch) {
-            await batch.commit();
-          }
+          if (batch) await batch.commit();
 
           this.calculateConsecutiveAbsentees();
           this.updateAbsentBanner();
           this.renderAttendanceList();
           this.renderClassMonitoringBar();
-          this.triggerAutoSheetSync();
+          // (구글 시트 동기화 코드 완전 삭제됨)
 
           this.hideLoading();
           this.closeWorshipCheckModal();
@@ -2206,7 +2195,8 @@ ${className} ${leaderName} 리더입니다.
         const existing = this.rawRecords.find(r => this.normalizeDateStr(r.date) === targetDate && r.memberId === memberId);
         if (existing) existing.reason = reason;
 
-        if (isFirebaseReady && db && navigator.onLine) {
+        // 🚀 파이어베이스에 즉시 저장만 하고 끝냅니다!
+        if (isFirebaseReady && db) {
           try {
             const docRef = doc(db, 'attendance_records', recordId);
             await setDoc(docRef, { reason: reason }, { merge: true });
@@ -2215,11 +2205,7 @@ ${className} ${leaderName} 리더입니다.
           }
         }
         
-        if (existing) {
-          this.enqueueOfflineRecord(existing);
-        }
-        
-        this.triggerAutoSheetSync();
+        // (구글 시트 동기화 코드 완전 삭제됨)
       }
 
       updateAttendanceSummary() {

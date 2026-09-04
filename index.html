@@ -501,7 +501,7 @@
 <!-- Firebase v11 Module Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot, writeBatch, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot, writeBatch, enableIndexedDbPersistence, disableNetwork, enableNetwork } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     // 👇 새롭게 추가할 부분 (Enterprise용 프로바이더를 불러옵니다)
     import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js";
 
@@ -681,38 +681,35 @@
       }
 
       setupNetworkListeners() {
-        // 1. 인터넷 연결 복구 시
-        window.addEventListener('online', () => {
+        window.addEventListener('online', async () => {
           this.isOnline = true;
-          this.updateCloudStatusBadge('syncing', '온라인 복구!');
-          this.subscribeRealtimeRecords(); // 연결 즉시 파이어베이스 재가동
+          this.updateCloudStatusBadge('syncing', '온라인 복구 중...');
+          if (isFirebaseReady && db) {
+            try { await enableNetwork(db); } catch(e) {}
+          }
           this.showToast('🌐 인터넷이 다시 연결되었습니다.', 'success');         
         });
 
-        // 2. 인터넷 끊김 시
         window.addEventListener('offline', () => {
           this.isOnline = false;
           this.updateCloudStatusBadge('offline', '오프라인 (저장 대기)');
           this.showToast('⚠️ 오프라인 상태입니다. (연결 시 자동 동기화)', 'info');
         });
 
-        // 3. 💡 스마트폰 화면 꺼짐 ➔ 켜짐 감지 (가장 중요)
-        document.addEventListener('visibilitychange', () => {
+        // 💡 화면 꺼짐 ➔ 켜짐 감지 시 파이어베이스 엔진 강제 재부팅
+        document.addEventListener('visibilitychange', async () => {
           if (document.visibilityState === 'visible' && this.currentUser && navigator.onLine) {
-            // 화면으로 다시 돌아왔을 때 배터리 절전으로 잠든 파이어베이스를 강제 기상시킴
-            this.updateCloudStatusBadge('syncing', '재연결 중...');
-            
-            // 기존 연결을 끊고 새롭게 갱신하여 딜레이 제거
-            if (this.unsubscribeRecords) {
-              this.unsubscribeRecords();
-              this.unsubscribeRecords = null;
+            this.updateCloudStatusBadge('syncing', '네트워크 재연결 중...');
+            if (isFirebaseReady && db) {
+              try {
+                // 막혀있던 전송 파이프를 강제로 끊고 다시 연결하여 즉시 데이터 발송!
+                await disableNetwork(db);
+                await enableNetwork(db);
+                this.updateCloudStatusBadge('saved', '자동저장됨');
+              } catch(e) {
+                console.warn("네트워크 재부팅 오류:", e);
+              }
             }
-            
-            // 0.3초 대기 후 재구독 (브라우저 네트워크 엔진이 깨어날 시간을 줌)
-            setTimeout(() => {
-              this.subscribeRealtimeRecords();
-              this.updateCloudStatusBadge('saved', '자동저장됨');
-            }, 300);
           }
         });
       }
@@ -2074,18 +2071,23 @@ ${className} ${leaderName} 리더입니다.
             this.rawMembers = this.sortMembersList((json.members || []).filter(m => m.status !== '방문자'));
             this.rawVisitors = json.visitors || (json.members || []).filter(m => m.status === '방문자');
             this.updateAbsentAlertMap(json.absentAlerts || []);
-            if (this.unsubscribeRecords) {
-              this.unsubscribeRecords(); // 기존 연결 끊기
+            
+            // 👇 기존의 unsubscribe 관련 코드를 지우고, 엔진 강제 재부팅 코드로 교체합니다 👇
+            if (isFirebaseReady && db) {
+              try {
+                await disableNetwork(db);
+                await enableNetwork(db);
+              } catch(e) {}
             }
-            this.subscribeRealtimeRecords();
+            // 👆 여기까지 👆
             
             const curDate = document.getElementById('sabbathSelect')?.value;
             if (curDate) this.loadAttendanceForSelectedDate(curDate);
             this.renderMemberDirectory();
             this.renderClassMonitoringBar();
             this.updateAbsentBanner();
-
-            this.showToast('⚡ 최신 교인 명단이 성공적으로 동기화되었습니다.', 'success');
+            
+            this.showToast('⚡ 최신 데이터가 성공적으로 동기화되었습니다.', 'success');
           } else {
             this.showToast('동기화 실패: ' + (json.message || '서버 응답 없음'), 'error');
           }

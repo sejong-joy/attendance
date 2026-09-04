@@ -380,6 +380,14 @@
             </div>
           </div>
 
+          <div id="adminBackupSection" class="hidden p-3 bg-emerald-50 border border-emerald-300 rounded-xl space-y-2 mt-4">
+            <div class="flex items-center justify-between">
+              <span class="font-black text-emerald-900 text-sm sm:text-base flex items-center space-x-1.5"><span>💾</span><span>관리자 전용: 구글 시트 안전 백업</span></span><span class="text-xs font-black bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded">교역자 전용</span>
+            </div>
+            <p class="text-xs text-emerald-800 font-bold leading-relaxed">파이어베이스의 전체 출석 데이터를 구글 시트 '출석_기록' 탭에 복사하여 보관합니다.</p>
+            <button onclick="window.appInstance.backupToGoogleSheets()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-xl transition shadow-md">데이터 원본 백업 실행</button>
+          </div>
+
           <div id="adminResetSection" class="hidden p-3 bg-red-50 border border-red-300 rounded-xl space-y-2 mt-4">
             <div class="flex items-center justify-between">
               <span class="font-black text-red-900 text-sm sm:text-base flex items-center space-x-1.5"><span>⚠️</span><span>관리자 전용: 출석 데이터 초기화 (Reset)</span></span><span class="text-xs font-black bg-red-200 text-red-900 px-2 py-0.5 rounded">교역자 전용</span>
@@ -1179,17 +1187,20 @@
         const leaderRefreshWrap = document.getElementById('leaderRefreshWrap');
         const adminResetSec = document.getElementById('adminResetSection');
         const adminNewMemberBtn = document.getElementById('adminNewMemberBtn');
+        const adminBackupSec = document.getElementById('adminBackupSection');
 
         if (this.currentUser.isAdmin) {
           statusBarWrap?.classList.remove('hidden');
           leaderRefreshWrap?.classList.add('hidden');
           adminResetSec?.classList.remove('hidden');
           adminNewMemberBtn?.classList.remove('hidden');
+          adminBackupSec?.classList.remove('hidden');
         } else {
           statusBarWrap?.classList.add('hidden');
           leaderRefreshWrap?.classList.remove('hidden');
           adminResetSec?.classList.add('hidden');
           adminNewMemberBtn?.classList.add('hidden');
+          adminBackupSec?.classList.add('hidden');
         }
 
         this.calculateConsecutiveAbsentees();
@@ -1623,10 +1634,7 @@ ${className} ${leaderName} 리더입니다.
         if (activeFilter !== 'ALL') {
           filtered = this.rawMembers.filter(m => m.classId === activeFilter);
         }
-        if (activeFilter !== 'ALL') {
-          filtered = this.rawMembers.filter(m => m.classId === activeFilter);
-        }
-
+        
         if (countBadge) countBadge.textContent = `${filtered.length}명`;
         container.innerHTML = '';
 
@@ -3008,6 +3016,38 @@ ${className} ${leaderName} 리더입니다.
           this.hideLoading();
           console.error("초기화 오류:", err);
           this.showToast('초기화 중 오류가 발생했습니다.', 'error');
+        }
+      }
+
+      async backupToGoogleSheets() {
+        if (!this.currentUser || !this.currentUser.isAdmin) return;
+        if (!confirm('현재 파이어베이스의 모든 출석 데이터를 구글 시트에 덮어써서 안전하게 백업하시겠습니까?')) return;
+
+        this.closeExportModal();
+        this.showLoading('구글 시트에 데이터를 일괄 백업 중입니다...');
+
+        try {
+          const payload = {
+            action: 'backupAttendanceData',
+            records: this.rawRecords
+          };
+
+          const res = await fetch(SHEETS_API_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+          const json = await res.json();
+
+          this.hideLoading();
+
+          if (json.success) {
+            this.showToast('✨ 구글 시트 백업이 성공적으로 완료되었습니다.', 'success');
+          } else {
+            this.showToast(json.message || '백업에 실패했습니다.', 'error');
+          }
+        } catch (err) {
+          this.hideLoading();
+          this.showToast('백업 중 네트워크 오류가 발생했습니다.', 'error');
         }
       }
 

@@ -683,8 +683,7 @@
         window.addEventListener('online', () => {
           this.isOnline = true;
           this.updateCloudStatusBadge('syncing', '온라인 복구!');
-          this.showToast('🌐 인터넷이 다시 연결되었습니다.', 'success');
-          this.processOfflineQueue();
+          this.showToast('🌐 인터넷이 다시 연결되었습니다.', 'success');          
         });
 
         window.addEventListener('offline', () => {
@@ -949,8 +948,7 @@
               this.updateAbsentBanner();
               this.checkAndAutoOpenUrgentModal();
             }
-
-            this.processOfflineQueue();
+            
           } else {
             // 🚨 [보안 패치 3] 서버에서 비밀번호 인증 실패 판정 시 화면 강제 퇴장
             if (hasLoadedFromCache) {

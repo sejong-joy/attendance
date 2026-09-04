@@ -520,15 +520,13 @@
     let isFirebaseReady = false;
 
     try {
+      // 1. 파이어베이스 초기화
       app = initializeApp(firebaseConfig);
-
-      // 👇 [여기에 App Check 코드를 넣어주세요!]
-      //const appCheck = initializeAppCheck(app, {
-      //  provider: new ReCaptchaEnterpriseProvider('6Lcte6YtAAAAAIbjANUdJ7eAp5yv_dYDCNyk59l9'),
-      //  isTokenAutoRefreshEnabled: true
-      });
       
+      // 2. DB 연결
       db = getFirestore(app);
+
+      // 3. 오프라인 캐시(인터넷 끊김 방지) 활성화
       enableIndexedDbPersistence(db).catch((err) => {
         if (err.code == 'failed-precondition') {
           console.warn("다중 탭 열림으로 인해 오프라인 캐시를 켤 수 없습니다.");
@@ -536,6 +534,7 @@
           console.warn("현재 브라우저가 오프라인 캐시를 지원하지 않습니다.");
         }
       });
+
       isFirebaseReady = true;
     } catch (e) {
       console.warn("Firebase 초기화 오류:", e);

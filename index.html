@@ -681,16 +681,39 @@
       }
 
       setupNetworkListeners() {
+        // 1. 인터넷 연결 복구 시
         window.addEventListener('online', () => {
           this.isOnline = true;
           this.updateCloudStatusBadge('syncing', '온라인 복구!');
-          this.showToast('🌐 인터넷이 다시 연결되었습니다.', 'success');          
+          this.subscribeRealtimeRecords(); // 연결 즉시 파이어베이스 재가동
+          this.showToast('🌐 인터넷이 다시 연결되었습니다.', 'success');         
         });
 
+        // 2. 인터넷 끊김 시
         window.addEventListener('offline', () => {
           this.isOnline = false;
-          this.updateCloudStatusBadge('offline', '오프라인');
-          this.showToast('⚠️ 오프라인 상태입니다.', 'info');
+          this.updateCloudStatusBadge('offline', '오프라인 (저장 대기)');
+          this.showToast('⚠️ 오프라인 상태입니다. (연결 시 자동 동기화)', 'info');
+        });
+
+        // 3. 💡 스마트폰 화면 꺼짐 ➔ 켜짐 감지 (가장 중요)
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible' && this.currentUser && navigator.onLine) {
+            // 화면으로 다시 돌아왔을 때 배터리 절전으로 잠든 파이어베이스를 강제 기상시킴
+            this.updateCloudStatusBadge('syncing', '재연결 중...');
+            
+            // 기존 연결을 끊고 새롭게 갱신하여 딜레이 제거
+            if (this.unsubscribeRecords) {
+              this.unsubscribeRecords();
+              this.unsubscribeRecords = null;
+            }
+            
+            // 0.3초 대기 후 재구독 (브라우저 네트워크 엔진이 깨어날 시간을 줌)
+            setTimeout(() => {
+              this.subscribeRealtimeRecords();
+              this.updateCloudStatusBadge('saved', '자동저장됨');
+            }, 300);
+          }
         });
       }
 

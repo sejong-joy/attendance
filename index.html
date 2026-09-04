@@ -523,9 +523,9 @@
       app = initializeApp(firebaseConfig);
 
       // 👇 [여기에 App Check 코드를 넣어주세요!]
-      const appCheck = initializeAppCheck(app, {
-        provider: new ReCaptchaEnterpriseProvider('6Lcte6YtAAAAAIbjANUdJ7eAp5yv_dYDCNyk59l9'),
-        isTokenAutoRefreshEnabled: true
+      //const appCheck = initializeAppCheck(app, {
+      //  provider: new ReCaptchaEnterpriseProvider('6Lcte6YtAAAAAIbjANUdJ7eAp5yv_dYDCNyk59l9'),
+      //  isTokenAutoRefreshEnabled: true
       });
       
       db = getFirestore(app);

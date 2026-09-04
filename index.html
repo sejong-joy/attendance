@@ -1984,8 +1984,9 @@ ${className} ${leaderName} 리더입니다.
           // (구글 시트 동기화 코드 완전 삭제됨)
 
           this.hideLoading();
+          const checkedCount = this.worshipPendingSet.size;
           this.closeWorshipCheckModal();
-          this.showToast(`✨ 설교 예배 출석(${this.worshipPendingSet.size}명)이 성공적으로 반영되었습니다.`, 'success');
+          this.showToast(`✨ 설교 예배 출석(${checkedCount}명)이 성공적으로 반영되었습니다.`, 'success');
 
         } catch (err) {
           this.hideLoading();
@@ -1993,139 +1994,18 @@ ${className} ${leaderName} 리더입니다.
           this.showToast('저장 중 오류가 발생했습니다.', 'error');
         }
       }
-
-      enqueueOfflineRecord(recordData) {
-        try {
-          const raw = localStorage.getItem('church_offline_queue') || '[]';
-          const queue = JSON.parse(raw);
-          const existingIdx = queue.findIndex(q => q.recordId === recordData.recordId);
-          if (existingIdx >= 0) queue[existingIdx] = recordData;
-          else queue.push(recordData);
-          localStorage.setItem('church_offline_queue', JSON.stringify(queue));
-        } catch(e) {}
-      }
-
-      triggerAutoSheetSync() {
-        if (!navigator.onLine) {
-          this.updateCloudStatusBadge('offline');
-          return;
-        }
-
-        this.updateCloudStatusBadge('syncing', '동기화 대기...');
-
-        if (this.autoSyncTimer) clearTimeout(this.autoSyncTimer);
-        this.autoSyncTimer = setTimeout(() => {
-          this.processOfflineQueue();
-        }, 800); 
-      }
-
-      async processOfflineQueue() {
-        if (this.isSyncing) {
-          this.queueNeedsRecheck = true; 
-          return;
-        }
-
-        let queue = [];
-        try {
-          const raw = localStorage.getItem('church_offline_queue');
-          if (raw) queue = JSON.parse(raw);
-        } catch(e) {}
-
-        if (queue.length === 0) {
-          this.updateCloudStatusBadge('saved');
-          return;
-        }
-
-        this.isSyncing = true;
-        this.queueNeedsRecheck = false;
-        this.updateCloudStatusBadge('syncing', '구글시트 저장중...');
-
-        const sentRecordIds = queue.map(q => q.recordId);
-
-        try {
-          const grouped = queue.reduce((acc, rec) => {
-            const key = rec.date + '|' + (rec.quarter || '1기');
-            if (!acc[key]) acc[key] = [];
-            acc[key].push(rec);
-            return acc;
-          }, {});
-
-          let allSuccess = true;
-
-          for (const key in grouped) {
-            const [gDate, gQuarter] = key.split('|');
-            const payload = {
-              action: 'saveAttendanceRecords',
-              date: gDate,
-              quarter: gQuarter,
-              checkedBy: this.currentUser?.leaderName || '리더',
-              records: grouped[key]
-            };
-
-            const res = await fetch(SHEETS_API_URL, {
-              method: 'POST',
-              body: JSON.stringify(payload)
-            });
-            const json = await res.json();
-            if (!json.success) allSuccess = false;
-          }
-
-          if (allSuccess) {
-            try {
-              const currentRaw = localStorage.getItem('church_offline_queue');
-              if (currentRaw) {
-                let currentQueue = JSON.parse(currentRaw);
-                currentQueue = currentQueue.filter(q => !sentRecordIds.includes(q.recordId));
-                
-                if (currentQueue.length > 0) {
-                  localStorage.setItem('church_offline_queue', JSON.stringify(currentQueue));
-                  this.queueNeedsRecheck = true; 
-                } else {
-                  localStorage.removeItem('church_offline_queue');
-                }
-              }
-            } catch(e) {}
-            this.updateCloudStatusBadge('saved');
-          } else {
-            this.updateCloudStatusBadge('syncing', '재시도 대기중..');
-            await new Promise(r => setTimeout(r, 3000));
-            this.queueNeedsRecheck = true;
-          }
-        } catch (err) {
-          if (!navigator.onLine) {
-            this.updateCloudStatusBadge('offline');
-          } else {
-            this.updateCloudStatusBadge('syncing', '통신지연 재시도..');
-            await new Promise(r => setTimeout(r, 4000));
-            this.queueNeedsRecheck = true;
-          }
-        } finally {
-          this.isSyncing = false;
-          if (this.queueNeedsRecheck) {
-            setTimeout(() => this.processOfflineQueue(), 500);
-          }
-        }
-      }
-
+   
+      
       async forceSyncLatestData() {
         if (!this.currentUser) return;
         
+        // 빙글빙글 도는 애니메이션 켜기
         const refreshIcon = document.getElementById('refreshBtnIcon');
         const adminRefreshIcon = document.getElementById('adminRefreshBtnIcon');
         if (refreshIcon) refreshIcon.classList.add('animate-spin');
         if (adminRefreshIcon) adminRefreshIcon.classList.add('animate-spin');
 
-        const raw = localStorage.getItem('church_offline_queue');
-        if (raw && JSON.parse(raw).length > 0) {
-          this.updateCloudStatusBadge('syncing', '잔여 기록 전송중...');
-          this.showToast('미전송 기록이 있어 구글 시트로 먼저 백업합니다.', 'info');
-          await this.processOfflineQueue(); 
-          await new Promise(r => setTimeout(r, 1000)); 
-        }
-
-        // ⏳ 강제 동기화 시 로딩창 띄우기 (깜빡임 적용)
-        this.showLoading('최신 서버 데이터를 불러오는 중입니다...');
-        this.updateCloudStatusBadge('syncing', '데이터 동기화 중...');
+        this.showToast('최신 교인 명단을 동기화 중입니다...', 'info');
 
         try {
           const classId = this.currentUser.classId;
@@ -2135,48 +2015,31 @@ ${className} ${leaderName} 리더입니다.
             try { pinCode = JSON.parse(authData).pinCode; } catch(e){}
           }
 
+          // 파이어베이스가 출석 기록을 전담하므로, 구글 시트에서는 '교인 명단'만 가볍게 가져옵니다.
           const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}`;
           const res = await fetch(url);
           const json = await res.json();
 
-          this.hideLoading();
-
           if (json.success) {
-            // 👑 [3번 안건] 강제 새로고침 시에도 정렬 렌더링 반영
+            // 명단과 반 설정만 최신으로 덮어씌움 (출석 기록은 건드리지 않음!)
             this.rawMembers = this.sortMembersList((json.members || []).filter(m => m.status !== '방문자'));
             this.rawVisitors = json.visitors || (json.members || []).filter(m => m.status === '방문자');
-            //this.rawRecords = (json.records || []).map(r => ({
-            //  ...r,
-            //  date: this.normalizeDateStr(r.date)
-            //}));
-            //this.updateAbsentAlertMap(json.absentAlerts || []);
-            this.calculateConsecutiveAbsentees();
-
-            const cacheKey = `church_cache_${classId}`;
-            localStorage.setItem(cacheKey, JSON.stringify(json));
-
+            this.updateAbsentAlertMap(json.absentAlerts || []);
+            
             const curDate = document.getElementById('sabbathSelect')?.value;
             if (curDate) this.loadAttendanceForSelectedDate(curDate);
             this.renderMemberDirectory();
             this.renderClassMonitoringBar();
             this.updateAbsentBanner();
 
-            const statsContent = document.getElementById('tabContent-stats');
-            if (statsContent && !statsContent.classList.contains('hidden')) {
-              this.calculateAndRenderStatistics();
-            }
-
-            this.updateCloudStatusBadge('saved', '자동저장됨');
-            this.showToast('⚡ 최신 데이터로 동기화되었습니다.', 'success');
+            this.showToast('⚡ 최신 교인 명단이 성공적으로 동기화되었습니다.', 'success');
           } else {
-            this.updateCloudStatusBadge('saved', '자동저장됨');
             this.showToast('동기화 실패: ' + (json.message || '서버 응답 없음'), 'error');
           }
         } catch(err) {
-          this.hideLoading();
-          this.updateCloudStatusBadge('saved', '자동저장됨');
           this.showToast('네트워크 상태를 확인해 주세요.', 'error');
         } finally {
+          // 빙글빙글 도는 애니메이션 끄기
           if (refreshIcon) refreshIcon.classList.remove('animate-spin');
           if (adminRefreshIcon) adminRefreshIcon.classList.remove('animate-spin');
         }

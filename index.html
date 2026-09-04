@@ -477,7 +477,7 @@
 <!-- Firebase v11 Module Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot, writeBatch, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     // 👇 새롭게 추가할 부분 (Enterprise용 프로바이더를 불러옵니다)
     import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js";
 
@@ -505,6 +505,13 @@
       });
       
       db = getFirestore(app);
+      enableIndexedDbPersistence(db).catch((err) => {
+        if (err.code == 'failed-precondition') {
+          console.warn("다중 탭 열림으로 인해 오프라인 캐시를 켤 수 없습니다.");
+        } else if (err.code == 'unimplemented') {
+          console.warn("현재 브라우저가 오프라인 캐시를 지원하지 않습니다.");
+        }
+      });
       isFirebaseReady = true;
     } catch (e) {
       console.warn("Firebase 초기화 오류:", e);

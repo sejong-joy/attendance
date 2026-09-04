@@ -3231,21 +3231,21 @@ ${className} ${leaderName} 리더입니다.
           if (!isYearly) {
             const validRecs = this.rawRecords.filter(r => (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
 
-            // 👑 [핵심 수정] 13주 전체가 아닌 '실제 출석이 한 번이라도 기록된 주차(진행 주차)' 자동 산출
             const activeDates = new Set();
             validRecs.forEach(r => activeDates.add(this.normalizeDateStr(r.date)));
-            const conductedWeeks = activeDates.size > 0 ? activeDates.size : 1; // 0 나누기 방지
+            const conductedWeeks = activeDates.size > 0 ? activeDates.size : 1; 
 
+            // 👇 [버그 수정] targetMembers 대신 this.rawMembers(전체 교인)를 강제로 보게 만듦!
             // 1. 안교 출석 전체 합계 사전 계산
             const t1WeeklyTotals = sabbaths.map(s => {
-              return targetMembers.filter(m => {
+              return this.rawMembers.filter(m => {
                 const r = validRecs.find(rec => rec.memberId === m.memberId && this.normalizeDateStr(rec.date) === s.dateStr);
                 return r && (r.status === '출석' || r.status === '지각');
               }).length;
             });
-            const t1TotalMembers = targetMembers.length;
+            const t1TotalMembers = this.rawMembers.length;
             let t1TotalScore = 0;
-            targetMembers.forEach(m => {
+            this.rawMembers.forEach(m => {
               validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
                 if (r.status === '출석') t1TotalScore += 1.0;
                 else if (r.status === '지각') t1TotalScore += 0.5;
@@ -3258,13 +3258,13 @@ ${className} ${leaderName} 리더입니다.
 
             // 2. 설교 예배 참석 전체 합계 사전 계산
             const t2WeeklyTotals = sabbaths.map(s => {
-              return targetMembers.filter(m => {
+              return this.rawMembers.filter(m => {
                 const r = validRecs.find(rec => rec.memberId === m.memberId && this.normalizeDateStr(rec.date) === s.dateStr);
                 return r && (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended));
               }).length;
             });
             let t2WorshipSum = 0;
-            targetMembers.forEach(m => {
+            this.rawMembers.forEach(m => {
               validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
                 if (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended)) {
                   t2WorshipSum += 1.0;
@@ -3274,7 +3274,7 @@ ${className} ${leaderName} 리더입니다.
             const t2AvgPresentRaw = t2WorshipSum / conductedWeeks;
             const t2AvgPresent = t2AvgPresentRaw.toFixed(1) + '명';
             const t2AvgRate = t1TotalMembers > 0 ? ((t2AvgPresentRaw / t1TotalMembers) * 100).toFixed(1) + '%' : '0.0%';
-
+         
             html = `
               <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; border-bottom: 3px solid #0f172a; padding-bottom: 12px;">

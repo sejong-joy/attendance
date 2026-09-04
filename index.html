@@ -901,10 +901,7 @@
               this.currentUser = cached.user;
               this.rawMembers = this.sortMembersList((cached.members || []).filter(m => m.status !== '방문자'));
               this.rawVisitors = cached.visitors || (cached.members || []).filter(m => m.status === '방문자');
-              this.rawRecords = (cached.records || []).map(r => ({
-                ...r,
-                date: this.normalizeDateStr(r.date)
-              }));
+              this.rawRecords = [];
               this.updateAbsentAlertMap(cached.absentAlerts || []);
               this.calculateConsecutiveAbsentees();
 
@@ -932,11 +929,7 @@
             this.currentUser = json.user;
             this.rawMembers = this.sortMembersList((json.members || []).filter(m => m.status !== '방문자'));
             this.rawVisitors = json.visitors || (json.members || []).filter(m => m.status === '방문자');
-            //this.rawRecords = (json.records || []).map(r => ({
-            //  ...r,
-            //  date: this.normalizeDateStr(r.date)
-            //}));
-            //this.updateAbsentAlertMap(json.absentAlerts || []);
+            this.rawRecords = [];
             this.calculateConsecutiveAbsentees();
 
             // 🚨 [보안 패치 2] 로그인 성공한 정상 핀번호를 캐시에 함께 저장

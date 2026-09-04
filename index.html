@@ -523,12 +523,7 @@
       // 1. 파이어베이스 초기화
       app = initializeApp(firebaseConfig);
 
-      // 👇 [복구] 파이어베이스 앱 체크 (해커/봇 방지 보안 경비원)
-      const appCheck = initializeAppCheck(app, {
-        provider: new ReCaptchaEnterpriseProvider('6Lcte6YtAAAAAIbjANUdJ7eAp5yv_dYDCNyk59l9'),
-        isTokenAutoRefreshEnabled: true
-      });
-      
+            
       // 2. DB 연결
       db = getFirestore(app);
 

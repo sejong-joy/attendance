@@ -1187,13 +1187,16 @@
         container.innerHTML = '';
 
         const totalRegularMembers = this.rawMembers.length;
+        
+        // 💡 수정 1: normalizeDateStr 적용
         const ssPresentCount = this.rawMembers.filter(m => {
-          const r = this.rawRecords.find(rec => rec.date === curDate && rec.memberId === m.memberId);
+          const r = this.rawRecords.find(rec => this.normalizeDateStr(rec.date) === curDate && rec.memberId === m.memberId);
           return r && (r.status === '출석' || r.status === '지각');
         }).length;
 
+        // 💡 수정 2: normalizeDateStr 적용
         const worshipOnlyCount = this.rawMembers.filter(m => {
-          const r = this.rawRecords.find(rec => rec.date === curDate && rec.memberId === m.memberId);
+          const r = this.rawRecords.find(rec => this.normalizeDateStr(rec.date) === curDate && rec.memberId === m.memberId);
           return r && r.status === '결석' && r.worshipAttended;
         }).length;
 
@@ -1256,7 +1259,8 @@
           let checkedCount = 0;
 
           classMembers.forEach(m => {
-            const r = this.rawRecords.find(rec => rec.date === curDate && rec.memberId === m.memberId);
+            // 💡 수정 3: normalizeDateStr 적용
+            const r = this.rawRecords.find(rec => this.normalizeDateStr(rec.date) === curDate && rec.memberId === m.memberId);
             if (r && (r.status === '출석' || r.status === '지각')) presentCount++;
             if (r && r.status) checkedCount++;
           });

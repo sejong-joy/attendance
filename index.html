@@ -901,11 +901,11 @@
             this.currentUser = json.user;
             this.rawMembers = this.sortMembersList((json.members || []).filter(m => m.status !== '방문자'));
             this.rawVisitors = json.visitors || (json.members || []).filter(m => m.status === '방문자');
-            this.rawRecords = (json.records || []).map(r => ({
-              ...r,
-              date: this.normalizeDateStr(r.date)
-            }));
-            this.updateAbsentAlertMap(json.absentAlerts || []);
+            //this.rawRecords = (json.records || []).map(r => ({
+            //  ...r,
+            //  date: this.normalizeDateStr(r.date)
+            //}));
+            //this.updateAbsentAlertMap(json.absentAlerts || []);
             this.calculateConsecutiveAbsentees();
 
             // 🚨 [보안 패치 2] 로그인 성공한 정상 핀번호를 캐시에 함께 저장
@@ -1695,26 +1695,15 @@ ${className} ${leaderName} 리더입니다.
         if (isCancelling) {
           if (idx >= 0) this.rawRecords.splice(idx, 1);
 
-          if (isFirebaseReady && db && navigator.onLine) {
+          // 🚀 1. 파이어베이스에 즉시 삭제 요청 (오프라인이어도 자체 캐싱됨)
+          if (isFirebaseReady && db) {
             try {
               const docRef = doc(db, 'attendance_records', recordId);
               await deleteDoc(docRef);
             } catch (e) {
-              console.error("Firestore 초기화 오류:", e);
+              console.error("Firestore 삭제 오류:", e);
             }
           }
-          
-          this.enqueueOfflineRecord({
-            recordId: recordId,
-            date: targetDate,
-            quarter: quarter || '1기',
-            memberId: memberId,
-            classId: member.classId,
-            status: null, 
-            reason: '',
-            worshipAttended: false
-          });
-
         } else {
           const score = finalStatus === '출석' ? 1.0 : (finalStatus === '지각' ? 0.5 : 0.0);
           const recordData = {
@@ -1753,7 +1742,8 @@ ${className} ${leaderName} 리더입니다.
             }
           }
 
-          if (isFirebaseReady && db && navigator.onLine) {
+          // 🚀 2. 파이어베이스에 즉시 저장 (구글 시트 큐 생략)
+          if (isFirebaseReady && db) {
             try {
               const docRef = doc(db, 'attendance_records', recordId);
               await setDoc(docRef, recordData);
@@ -1761,8 +1751,6 @@ ${className} ${leaderName} 리더입니다.
               console.error("Firestore 실시간 저장 오류:", e);
             }
           }
-
-          this.enqueueOfflineRecord(recordData);
         }
 
         this.calculateConsecutiveAbsentees();
@@ -1771,7 +1759,9 @@ ${className} ${leaderName} 리더입니다.
         this.updateAttendanceSummary();
         this.renderAttendanceList();
         this.renderClassMonitoringBar();
-        this.triggerAutoSheetSync();
+        
+        // 🚀 3. 구글 시트 동기화 함수 호출 완전 삭제!
+        this.updateCloudStatusBadge('saved', '서버에 저장됨');
       }
 
       openWorshipCheckModal() {
@@ -2166,11 +2156,11 @@ ${className} ${leaderName} 리더입니다.
             // 👑 [3번 안건] 강제 새로고침 시에도 정렬 렌더링 반영
             this.rawMembers = this.sortMembersList((json.members || []).filter(m => m.status !== '방문자'));
             this.rawVisitors = json.visitors || (json.members || []).filter(m => m.status === '방문자');
-            this.rawRecords = (json.records || []).map(r => ({
-              ...r,
-              date: this.normalizeDateStr(r.date)
-            }));
-            this.updateAbsentAlertMap(json.absentAlerts || []);
+            //this.rawRecords = (json.records || []).map(r => ({
+            //  ...r,
+            //  date: this.normalizeDateStr(r.date)
+            //}));
+            //this.updateAbsentAlertMap(json.absentAlerts || []);
             this.calculateConsecutiveAbsentees();
 
             const cacheKey = `church_cache_${classId}`;

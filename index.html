@@ -2051,6 +2051,10 @@ ${className} ${leaderName} 리더입니다.
             this.rawMembers = this.sortMembersList((json.members || []).filter(m => m.status !== '방문자'));
             this.rawVisitors = json.visitors || (json.members || []).filter(m => m.status === '방문자');
             this.updateAbsentAlertMap(json.absentAlerts || []);
+            if (this.unsubscribeRecords) {
+              this.unsubscribeRecords(); // 기존 연결 끊기
+            }
+            this.subscribeRealtimeRecords();
             
             const curDate = document.getElementById('sabbathSelect')?.value;
             if (curDate) this.loadAttendanceForSelectedDate(curDate);

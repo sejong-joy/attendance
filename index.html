@@ -928,7 +928,7 @@
             this.currentUser = json.user;
             this.rawMembers = this.sortMembersList((json.members || []).filter(m => m.status !== '방문자'));
             this.rawVisitors = json.visitors || (json.members || []).filter(m => m.status === '방문자');
-            this.rawRecords = [];
+            
             this.calculateConsecutiveAbsentees();
 
             // 🚨 [보안 패치 2] 로그인 성공한 정상 핀번호를 캐시에 함께 저장

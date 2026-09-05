@@ -2941,7 +2941,7 @@ ${className} ${leaderName} 리더입니다.
         this.pendingResetType = null;
       }
 
-      async executeDataReset() {
+            async executeDataReset() {
         const inp = document.getElementById('resetConfirmInput')?.value?.trim();
         if (inp !== '초기화') {
           this.showToast("'초기화'를 정확하게 입력해 주세요.", 'error');
@@ -2967,6 +2967,8 @@ ${className} ${leaderName} 리더입니다.
           } else {
             recordsToDelete.push(...this.rawRecords);
             this.rawRecords = [];
+            // 💡 [수정 1] 전체 초기화 시 화면의 '방문자 목록'도 깨끗하게 비움
+            this.rawVisitors = []; 
           }
 
           if (isFirebaseReady && db && navigator.onLine) {
@@ -2986,7 +2988,9 @@ ${className} ${leaderName} 리더입니다.
               body: JSON.stringify({
                 action: 'resetAttendanceData',
                 resetType: type,
-                quarter: curQuarter
+                quarter: curQuarter,
+                // 💡 [수정 2] 구글 시트의 '방문자_명부' 탭도 비우라고 서버(GAS)에 신호 보냄
+                clearVisitors: type === 'all' 
               })
             });
           } catch(e) {}
@@ -3018,6 +3022,7 @@ ${className} ${leaderName} 리더입니다.
           this.showToast('초기화 중 오류가 발생했습니다.', 'error');
         }
       }
+
 
       async backupToGoogleSheets() {
         if (!this.currentUser || !this.currentUser.isAdmin) return;

@@ -2967,7 +2967,6 @@ ${className} ${leaderName} 리더입니다.
           } else {
             recordsToDelete.push(...this.rawRecords);
             this.rawRecords = [];
-            this.rawVisitors = [];
           }
 
           if (isFirebaseReady && db && navigator.onLine) {
@@ -2988,7 +2987,6 @@ ${className} ${leaderName} 리더입니다.
                 action: 'resetAttendanceData',
                 resetType: type,
                 quarter: curQuarter
-                clearVisitors: type === 'all'
               })
             });
           } catch(e) {}

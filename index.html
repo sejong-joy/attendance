@@ -1030,8 +1030,13 @@
               localStorage.removeItem('church_auth');
             }
             this.showToast(json.message || '비밀번호가 일치하지 않습니다.', 'error');
-            const selectEl = document.getElementById('classSelect');
-            if(selectEl) selectEl.value = '';
+
+            // 💡 [수정] 반 선택값(classSelect)은 그대로 유지하고, 틀린 비밀번호만 비운 뒤 바로 입력 포커스 이동
+            const pinInp = document.getElementById('pinInput');
+            if (pinInp) {
+              pinInp.value = '';
+              pinInp.focus();
+            }
           }
         } catch (err) {
           this.hideLoading();

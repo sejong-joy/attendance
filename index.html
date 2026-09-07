@@ -1128,7 +1128,14 @@
       }
 
       checkAndAutoOpenUrgentModal() {
-        const unhandled = Object.values(this.absentAlertMap).filter(a => !this.careNotesMap[a.memberId]);
+        if (!this.currentUser) return;
+
+        // 💡 [수정] 우리 반(또는 관리자일 때 전체)에 미처리 결석자가 있을 때만 팝업 자동 오픈
+        const unhandled = Object.values(this.absentAlertMap).filter(a => {
+          const isMyClass = this.currentUser.isAdmin || a.classId === this.currentUser.classId;
+          return isMyClass && !this.careNotesMap[a.memberId];
+        });
+
         if (unhandled.length > 0) {
           setTimeout(() => {
             this.openUrgentModal();
@@ -1390,7 +1397,13 @@
       updateAbsentBanner() {
         const banner = document.getElementById('absentAlertBanner');
         const countSpan = document.getElementById('alertCount');
-        const unhandled = Object.values(this.absentAlertMap).filter(a => !this.careNotesMap[a.memberId]);
+        if (!this.currentUser) return;
+
+        // 💡 [수정] 관리자는 전체, 일반 리더는 '자기 반 성도만' 필터링
+        const unhandled = Object.values(this.absentAlertMap).filter(a => {
+          const isMyClass = this.currentUser.isAdmin || a.classId === this.currentUser.classId;
+          return isMyClass && !this.careNotesMap[a.memberId];
+        });
 
         if (unhandled.length > 0) {
           banner?.classList.remove('hidden');
@@ -1444,7 +1457,9 @@ ${className} ${leaderName} 리더입니다.
         const list = document.getElementById('urgentModalList');
         if (!modal || !box || !list) return;
 
-        const alerts = Object.values(this.absentAlertMap);
+        const alerts = Object.values(this.absentAlertMap).filter(a => {
+          return this.currentUser.isAdmin || a.classId === this.currentUser.classId;
+        });
         list.innerHTML = '';
 
         if (alerts.length === 0) {

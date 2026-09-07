@@ -53,42 +53,26 @@
         print-color-adjust: exact !important;
       }
 
-      /* 💡 [수정] 모바일 먹통 버그 방지: display: none 대신 화면 밖으로 치우기 */
-      header, 
-      main > section,
-      #loginSection, 
-      #appSection, 
-      #tabContent-check,
-      #tabContent-stats,
-      #tabContent-members,
-      #worshipCheckModal, 
-      #exportModal, 
-      #resetConfirmModal, 
-      #urgentAlertModal, 
-      #careVisitModal, 
-      #memberDetailModal, 
-      #statDetailModal, 
-      #newMemberModal, 
-      #classPickerModal,
-      #loadingOverlay, 
-      #toast { 
-        visibility: hidden !important;
-        position: absolute !important;
-        left: -9999px !important;
-        height: 0 !important;
-        overflow: hidden !important;
-        opacity: 0 !important;
+      /* 💡 웹 화면 요소들은 확실하게 display:none 으로 날림 */
+      body > header,
+      body > main,
+      #toast,
+      #loadingOverlay { 
+        display: none !important; 
       }
       
-      /* 💡 [수정] 중복된 요소 제거하고 1개로 깔끔하게 통합 */
+      /* 💡 인쇄용 도화지만 화면 전체에 꽉 채워서 활성화 */
       #printContainer { 
         display: block !important; 
-        visibility: visible !important;
-        width: 100% !important; 
-        margin: 0 !important; 
-        padding: 0 !important; 
-        background: white !important; 
-        color: black !important; 
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        margin: 0; 
+        padding: 0; 
+        background: white; 
+        color: black; 
+        z-index: 9999;
       }
       
       @page { 
@@ -522,9 +506,7 @@
         </form>
       </div>
     </div>
-
-    <div id="printContainer" class="hidden print:block"></div>
-
+    
     <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-50 flex items-center justify-center transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white/95 p-4 sm:p-5 rounded-2xl shadow-2xl flex flex-col items-center space-y-2 max-w-xs text-center border border-slate-200">
         <div class="w-9 h-9 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
@@ -551,9 +533,9 @@
         </div>
       </div>
     </div>
-    
-
+  
   </main>
+  <div id="printContainer"></div>
 
  <!-- ================================================================= -->
   <!-- 📌 [제 2부 시작] 스크립트 및 데이터 로직 영역 (JavaScript / Firebase) -->

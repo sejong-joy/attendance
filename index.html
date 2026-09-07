@@ -2796,6 +2796,13 @@ ${className} ${leaderName} 리더입니다.
           const rowOpacityClass = isInactive ? 'opacity-50 bg-slate-100' : 'bg-white';
           tr.className = `hover:bg-slate-50 transition font-bold border-b border-slate-100 ${rowOpacityClass}`;
 
+          // 👇 [추가] 3글자 초과 시 앞 2글자 / 뒤 나머지로 깔끔하게 2줄 줄바꿈 처리
+          const rawName = (m.name || '').trim();
+          let displayName = rawName;
+          if (rawName.length > 3) {
+            displayName = `${rawName.slice(0, 2)}<br>${rawName.slice(2)}`;
+          }
+
           let classCellHtml = '';
           if (isAdmin) {
             let optionsHtml = activeClasses.map(c => {
@@ -2824,7 +2831,8 @@ ${className} ${leaderName} 리더입니다.
           else if (m.status === '새가족') statusBadgeClass = 'bg-amber-100 text-amber-900 border-amber-300';
 
           tr.innerHTML = 
-            '<td class="py-2.5 px-2.5 font-black text-slate-950 text-base sm:text-lg max-w-[90px] sm:max-w-[120px] break-all leading-tight">' + m.name + '</td>' +
+            // 👇 [수정] m.name 대신 displayName을 넣고 leading-tight(줄간격 조절) 적용
+            '<td class="py-2 px-2 font-black text-slate-950 text-base sm:text-lg leading-tight whitespace-nowrap">' + displayName + '</td>' +
             '<td class="py-2.5 px-2.5 whitespace-nowrap">' + classCellHtml + '</td>' +
             '<td class="py-2.5 px-2 whitespace-nowrap">' + roleBadgeHtml + '</td>' +
             '<td class="py-2.5 px-2.5 text-center whitespace-nowrap">' + formattedPhoneHtml + '</td>' +

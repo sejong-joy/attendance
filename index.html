@@ -54,33 +54,50 @@
         print-color-adjust: exact !important;
       }
 
-      /* 💡 [수정] 과부하의 주범인 화면 밖 밀어내기 취소 -> 메모리에서 완전히 빼버려 즉시 로딩되게 함 */
+      /* 💡 1. 모바일 크롬 인쇄 버그 방지: body의 Flex 속성을 강제로 풀어버림 */
+      html, body {
+        display: block !important;
+        height: auto !important;
+        min-height: 0 !important;
+        background-color: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      /* 💡 2. 기존 웹앱 화면(헤더, 메인화면, 로딩, 모든 팝업)을 완전히 차단 */
       header, 
-      main > section,
-      #loginSection, 
-      #appSection, 
-      #worshipCheckModal, 
-      #exportModal, 
-      #resetConfirmModal, 
-      #urgentAlertModal, 
-      #careVisitModal, 
-      #memberDetailModal, 
-      #statDetailModal, 
-      #newMemberModal, 
-      #classPickerModal,
-      #loadingOverlay, 
-      #toast { 
-        display: none !important; 
+      main, 
+      #toast, 
+      #loadingOverlay,
+      div[id$="Modal"] {
+        display: none !important;
       }
       
+      /* 💡 3. 오직 인쇄용 표(printContainer)만 단독으로 보여줌 */
       #printContainer { 
         display: block !important; 
         width: 100% !important; 
         margin: 0 !important; 
         padding: 0 !important; 
-        background: white !important; 
-        color: black !important; 
       }
+      
+      /* 💡 4. 표가 페이지를 넘어갈 때 잘리지 않도록 보호 */
+      table { 
+        page-break-inside: auto; 
+        width: 100%; 
+        border-collapse: collapse !important; 
+      }
+      tr { 
+        page-break-inside: avoid;
+        page-break-after: auto; 
+      }
+      thead { 
+        display: table-header-group;
+      }
+      .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl, .shadow-xs, .shadow-2xs {
+        box-shadow: none !important;
+      }
+    }
       
       @page { 
         size: auto;

@@ -48,7 +48,7 @@
     }
     .pulse-danger { animation: alert-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 
-   @media print {
+    @media print {
       * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
@@ -64,7 +64,7 @@
         margin: 0 !important;
       }
 
-      /* 💡 2. 기존 웹앱 화면(헤더, 메인화면, 로딩, 모든 팝업)을 완전히 차단 */
+      /* 💡 2. 기존 웹앱 화면 차단 */
       header, 
       main, 
       #toast, 
@@ -73,7 +73,7 @@
         display: none !important;
       }
       
-      /* 💡 3. 오직 인쇄용 표(printContainer)만 단독으로 보여줌 */
+      /* 💡 3. 인쇄용 표만 보여줌 */
       #printContainer { 
         display: block !important; 
         width: 100% !important; 
@@ -81,58 +81,33 @@
         padding: 0 !important; 
       }
       
-     /* 💡 4. 표가 페이지를 넘어갈 때 잘리지 않도록 보호 + 사파리 1분 멈춤 버그 해결 */
+      /* 💡 4. 사파리 무한 로딩의 주범(collapse) 완전 차단 */
       table { 
-        page-break-inside: auto; 
-        width: 100%; 
-        border-collapse: collapse !important; 
+        page-break-inside: auto !important; 
+        width: 100% !important; 
+        border-collapse: separate !important; 
+        border-spacing: 0 !important;
       }
       
-      /* 사파리 무한 로딩의 주범인 avoid 대신 auto로 변경 */
+      /* 💡 5. 사파리를 뻗게 만들었던 avoid 삭제 후 auto 적용 */
       tr, td, th { 
         page-break-inside: auto !important; 
         break-inside: auto !important;
       }
       
+      /* 💡 6. 매 페이지 헤더 반복 기능 끄기 (사파리 과부하 방지) */
       thead { 
-        display: table-header-group;
+        display: table-row-group !important; 
       }
+      
       .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl, .shadow-xs, .shadow-2xs {
         box-shadow: none !important;
       }
-    } /* <-- @media print 닫히는 괄호 */
+    }
       
-      @page { 
-        size: auto;
-        margin: 12mm 10mm;
-      }
-      
-      html, body, main { 
-        height: auto !important; 
-        min-height: 0 !important; 
-        overflow: visible !important; 
-        margin: 0 !important; 
-        padding: 0 !important; 
-        background-color: white !important; 
-        max-width: none !important;
-      }
-      
-      table { 
-        page-break-inside: auto; 
-        width: 100%; 
-        border-collapse: collapse !important; 
-      }
-      tr { 
-        page-break-inside: avoid;
-        page-break-after: auto; 
-      }
-      thead { 
-        display: table-header-group;
-      }
-      
-      .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl, .shadow-xs {
-        box-shadow: none !important;
-      }
+    @page { 
+      size: auto;
+      margin: 12mm 10mm;
     }
 
     html.has-session #loginSection { display: none !important; }

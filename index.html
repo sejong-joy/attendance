@@ -54,26 +54,32 @@
         print-color-adjust: exact !important;
       }
 
-      /* 💡 웹 화면 요소들은 확실하게 display:none 으로 날림 */
-      body > header,
-      body > main,
-      #toast,
-      #loadingOverlay { 
+      /* 💡 [수정] 과부하의 주범인 화면 밖 밀어내기 취소 -> 메모리에서 완전히 빼버려 즉시 로딩되게 함 */
+      header, 
+      main > section,
+      #loginSection, 
+      #appSection, 
+      #worshipCheckModal, 
+      #exportModal, 
+      #resetConfirmModal, 
+      #urgentAlertModal, 
+      #careVisitModal, 
+      #memberDetailModal, 
+      #statDetailModal, 
+      #newMemberModal, 
+      #classPickerModal,
+      #loadingOverlay, 
+      #toast { 
         display: none !important; 
       }
       
-      /* 💡 인쇄용 도화지만 화면 전체에 꽉 채워서 활성화 */
       #printContainer { 
         display: block !important; 
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        margin: 0; 
-        padding: 0; 
-        background: white; 
-        color: black; 
-        z-index: 9999;
+        width: 100% !important; 
+        margin: 0 !important; 
+        padding: 0 !important; 
+        background: white !important; 
+        color: black !important; 
       }
       
       @page { 

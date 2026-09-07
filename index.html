@@ -953,16 +953,20 @@
       }
 
       async handleLogin(savedClassId = null, savedPin = null) {
-        const classId = savedClassId || document.getElementById('classSelect')?.value;
-        const pinCode = savedPin || document.getElementById('pinInput')?.value?.trim();
+        // 💡 [수정] 인자값이 문자열이 아닐 경우(이벤트 객체 등) 무시하고 화면의 엘리먼트에서 직접 확실하게 값을 읽어옵니다.
+        const classId = (typeof savedClassId === 'string' && savedClassId) ? savedClassId : document.getElementById('classSelect')?.value?.trim();
+        const pinCode = (typeof savedPin === 'string' && savedPin) ? savedPin : document.getElementById('pinInput')?.value?.trim();
 
         if (!classId || !pinCode) {
           this.hideLoading();
           this.showToast('반과 비밀번호(PIN)를 모두 입력해 주세요.', 'error');
-          if (!pinCode) document.getElementById('pinInput')?.focus();
+          if (!classId) {
+            this.openClassPickerModal();
+          } else if (!pinCode) {
+            document.getElementById('pinInput')?.focus();
+          }
           return;
         }
-
         const cacheKey = `church_cache_${classId}`;
         const cachedStr = localStorage.getItem(cacheKey);
         let hasLoadedFromCache = false;

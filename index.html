@@ -2824,7 +2824,7 @@ ${className} ${leaderName} 리더입니다.
           else if (m.status === '새가족') statusBadgeClass = 'bg-amber-100 text-amber-900 border-amber-300';
 
           tr.innerHTML = 
-            '<td class="py-2.5 px-2.5 font-black text-slate-950 text-base sm:text-lg whitespace-nowrap">' + m.name + '</td>' +
+            '<td class="py-2.5 px-2.5 font-black text-slate-950 text-base sm:text-lg max-w-[90px] sm:max-w-[120px] break-all leading-tight">' + m.name + '</td>' +
             '<td class="py-2.5 px-2.5 whitespace-nowrap">' + classCellHtml + '</td>' +
             '<td class="py-2.5 px-2 whitespace-nowrap">' + roleBadgeHtml + '</td>' +
             '<td class="py-2.5 px-2.5 text-center whitespace-nowrap">' + formattedPhoneHtml + '</td>' +

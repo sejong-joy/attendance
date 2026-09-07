@@ -143,17 +143,24 @@
           <p class="text-sm text-slate-600 mt-1 font-bold">비밀번호(PIN)를 입력한 후 교과반을 선택하세요.</p>
         </div>
         <form id="loginForm" class="space-y-4" onsubmit="event.preventDefault(); window.appInstance.handleLogin();">
+          <!-- 1. 반 선택 (먼저 배치 + 원터치 모달 버튼) -->
           <div>
-            <label class="block text-sm font-black text-slate-800 mb-1.5">1. 접속 비밀번호 (PIN)</label>
-            <input type="password" id="pinInput" placeholder="비밀번호 먼저 입력" autocomplete="current-password" class="w-full px-3 py-2.5 bg-slate-50 border-2 border-slate-300 rounded-xl text-xl font-black text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none tracking-wider transition">
+            <label class="block text-sm font-black text-slate-800 mb-1.5">교과반 선택</label>
+            <input type="hidden" id="classSelect" value="">
+            <button type="button" onclick="window.appInstance.openClassPickerModal()" id="classSelectTrigger" class="w-full px-3 py-2.5 bg-slate-50 border-2 border-slate-300 rounded-xl text-lg font-black text-slate-500 text-left flex items-center justify-between focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">
+              <span id="classSelectTriggerText">-- 출석할 반을 선택하세요 --</span>
+              <span class="text-xs text-slate-400">▼</span>
+            </button>
           </div>
+
+          <!-- 2. 비밀번호(PIN) 입력 -->
           <div>
-            <label class="block text-sm font-black text-slate-800 mb-1.5">2. 교과반 선택 <span class="text-emerald-600">(선택 시 자동 접속)</span></label>
-            <select id="classSelect" onchange="if(this.value) window.appInstance.handleLogin();" class="w-full px-3 py-2.5 bg-slate-50 border-2 border-slate-300 rounded-xl text-lg font-black text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">
-              <option value="">-- 출석할 반을 선택하세요 --</option>
-            </select>
+            <label class="block text-sm font-black text-slate-800 mb-1.5">접속 비밀번호 (PIN)</label>
+            <input type="password" id="pinInput" placeholder="비밀번호 입력 (예: 1000, 1001)" autocomplete="current-password" class="w-full px-3 py-2.5 bg-slate-50 border-2 border-slate-300 rounded-xl text-xl font-black text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none tracking-wider transition">
           </div>
-          <button type="submit" id="loginSubmitBtn" class="hidden w-full py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-lg font-black tracking-tight rounded-xl shadow-lg shadow-emerald-200 transition items-center justify-center space-x-2">
+
+          <!-- 접속 버튼 -->
+          <button type="submit" id="loginSubmitBtn" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-lg font-black tracking-tight rounded-xl shadow-lg shadow-emerald-200 transition flex items-center justify-center space-x-2">
             <span>출석부 접속하기</span><span class="text-xl">➔</span>
           </button>
         </form>
@@ -500,6 +507,22 @@
       <span id="toastIcon">✨</span>
       <span id="toastMsg">알림 메시지</span>
     </div>
+<!-- 🏛️ 원터치 반 선택 모달 (스마트폰 피커 완료버튼 대체) -->
+    <div id="classPickerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 transition-opacity duration-200 opacity-0 pointer-events-none">
+      <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-200" id="classPickerModalBox">
+        <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="text-xl">⛪</span>
+            <h3 class="text-base sm:text-lg font-black text-slate-900 leading-tight">출석할 교과반 선택</h3>
+          </div>
+          <button type="button" onclick="window.appInstance.closeClassPickerModal()" class="text-slate-400 hover:text-slate-700 font-bold text-2xl p-1">✕</button>
+        </div>
+        <div id="classPickerList" class="p-3 max-h-[60vh] overflow-y-auto custom-scrollbar space-y-1.5">
+          <!-- 반 목록 버튼들이 자바스크립트로 자동 생성됩니다 -->
+        </div>
+      </div>
+    </div>
+    
 
   </main>
 
@@ -866,21 +889,63 @@
       }
 
       populateClassSelect() {
-        const select = document.getElementById('classSelect');
-        if (!select) return;
+        const listContainer = document.getElementById('classPickerList');
+        if (!listContainer) return;
 
-        const curVal = select.value;
-        // 안내 문구를 선택 시 자동 접속된다는 문구로 변경
-        select.innerHTML = '<option value="">-- 반을 선택하면 자동 접속됩니다 --</option>';
-
+        listContainer.innerHTML = '';
         this.classList.forEach(c => {
-          const opt = document.createElement('option');
-          opt.value = c.classId;
-          opt.textContent = `${c.className} (${c.leaderName} 리더)`;
-          select.appendChild(opt);
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'w-full p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-400 active:bg-emerald-100 flex items-center justify-between text-left transition';
+          btn.onclick = () => this.selectClassOneTouch(c.classId, `${c.className} (${c.leaderName} 리더)`);
+          
+          btn.innerHTML = `
+            <span class="font-black text-base text-slate-900">${c.className}</span>
+            <span class="text-xs font-bold text-slate-500">${c.leaderName} 리더</span>
+          `;
+          listContainer.appendChild(btn);
         });
+      }
 
-        if (curVal) select.value = curVal;
+      openClassPickerModal() {
+        const modal = document.getElementById('classPickerModal');
+        const box = document.getElementById('classPickerModalBox');
+        if (modal && box) {
+          modal.classList.remove('pointer-events-none', 'opacity-0');
+          box.classList.remove('scale-95');
+          box.classList.add('scale-100');
+        }
+      }
+
+      closeClassPickerModal() {
+        const modal = document.getElementById('classPickerModal');
+        const box = document.getElementById('classPickerModalBox');
+        if (box) { box.classList.remove('scale-100'); box.classList.add('scale-95'); }
+        if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
+      }
+
+      // 💡 [핵심] 반을 터치하는 순간 팝업이 닫히고 PIN 입력창으로 커서가 즉시 들어갑니다.
+      selectClassOneTouch(classId, displayName) {
+        const hiddenInp = document.getElementById('classSelect');
+        const triggerText = document.getElementById('classSelectTriggerText');
+        const triggerBtn = document.getElementById('classSelectTrigger');
+        
+        if (hiddenInp) hiddenInp.value = classId;
+        if (triggerText) {
+          triggerText.textContent = displayName;
+          triggerText.className = 'text-slate-900 font-black';
+        }
+        if (triggerBtn) {
+          triggerBtn.classList.remove('text-slate-500');
+          triggerBtn.classList.add('border-emerald-500', 'bg-emerald-50/30');
+        }
+
+        this.closeClassPickerModal();
+
+        // 선택 완료 버튼 없이 비밀번호 입력창으로 커서 직행 (키보드 바로 올라옴)
+        setTimeout(() => {
+          document.getElementById('pinInput')?.focus();
+        }, 150);
       }
 
       async handleLogin(savedClassId = null, savedPin = null) {
@@ -1600,7 +1665,7 @@ ${className} ${leaderName} 리더입니다.
         
         // 💡 [개선] 출석 명단 타이틀에 예쁜 초록색 배경 추가!
         if (titleEl) {
-          titleEl.innerHTML = `<span class="bg-emerald-100 text-emerald-900 border border-emerald-300 px-2.5 py-0.5 rounded-lg shadow-2xs">${currentClass}</span> <span class="align-middle">명단</span>`;
+          titleEl.innerHTML = `<span class="bg-amber-300 text-amber-950 border border-amber-400 font-black px-2.5 py-0.5 rounded-lg shadow-xs">${currentClass}</span> <span class="align-middle">명단</span>`;
         }
         if (subTipEl) subTipEl.textContent = `버튼을 눌러 출석을 기록하세요`;
 

@@ -193,7 +193,7 @@
       <div id="tabContent-check" class="space-y-2">
         <div id="adminClassStatusBarWrap" class="hidden bg-white p-2.5 sm:p-3.5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
           <div class="flex items-center justify-between gap-1.5 pb-2 border-b border-slate-100">
-            <span class="text-base sm:text-lg font-black text-slate-900 flex items-center space-x-1.5 flex-shrink-0"><span class="text-emerald-600">⚡</span><span>오늘의 현황</span></span>
+            <span class="text-base sm:text-lg font-black text-slate-900 flex items-center space-x-1.5 flex-shrink-0"><span class="text-emerald-600">⚡</span><span id="adminStatusDateTitle">오늘의 현황</span></span>
             <div class="flex items-center space-x-1.5">
               <button type="button" onclick="event.preventDefault(); window.appInstance.forceSyncLatestData()" class="h-10 px-3.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-900 text-sm sm:text-base font-black tracking-tight whitespace-nowrap rounded-xl transition border border-slate-300 flex items-center space-x-1.5 shadow-xs"><span id="adminRefreshBtnIcon" class="text-base">🔄</span><span>새로고침</span></button>
               <button id="adminWorshipCheckBtn" onclick="window.appInstance.openWorshipCheckModal()" class="h-10 px-3.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-sm sm:text-base font-black tracking-tight whitespace-nowrap rounded-xl transition flex items-center space-x-1.5 shadow-xs"><span>⛪</span><span>설교 예배 체크</span></button>
@@ -1271,7 +1271,15 @@
 
         const curDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
         const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
-        
+
+        // 선택된 안식일 날짜로 제목 변경 (예: "⚡ 9월 12일")
+        const titleEl = document.getElementById('adminStatusDateTitle');
+        if (titleEl && curDate) {
+          const parts = curDate.split('-');
+          const month = parseInt(parts[1], 10);
+          const day = parseInt(parts[2], 10);
+          titleEl.textContent = `${month}월 ${day}일`;
+        }
         container.innerHTML = '';
 
         // 💡 [필터 추가] 전출, 휴면 교인은 전체 재적 및 진행현황 카운트에서 제외합니다.

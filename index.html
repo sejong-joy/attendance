@@ -53,8 +53,39 @@
         print-color-adjust: exact !important;
       }
 
-      header, #loginSection, #appSection, #worshipCheckModal, #exportModal, #resetConfirmModal, #urgentAlertModal, #careVisitModal, #memberDetailModal, #statDetailModal, #newMemberModal, #loadingOverlay, #toast { 
+      /* 💡 [수정] 인쇄 시 웹 화면 전체(헤더, 탭 본문, 모달)를 확실하게 숨김 */
+      header, 
+      main > section,
+      #loginSection, 
+      #appSection, 
+      #tabContent-check,
+      #tabContent-stats,
+      #tabContent-members,
+      #worshipCheckModal, 
+      #exportModal, 
+      #resetConfirmModal, 
+      #urgentAlertModal, 
+      #careVisitModal, 
+      #memberDetailModal, 
+      #statDetailModal, 
+      #newMemberModal, 
+      #classPickerModal,
+      #loadingOverlay, 
+      #toast { 
         display: none !important; 
+        visibility: hidden !important;
+        height: 0 !important;
+        overflow: hidden !important;
+      }
+      
+      #printContainer { 
+        display: block !important; 
+        visibility: visible !important;
+        width: 100% !important; 
+        margin: 0 !important; 
+        padding: 0 !important; 
+        background: white !important; 
+        color: black !important; 
       }
       
       #printContainer { 

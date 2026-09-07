@@ -3336,6 +3336,12 @@ ${className} ${leaderName} 리더입니다.
         const printBox = document.getElementById('printContainer');
         if (!printBox) return;
 
+        // 🚀 [초고속 렌더링 응용] 300만번의 날짜 계산을 막기 위해 검색용 '사전(Map)'을 미리 1번만 만듭니다!
+        const globalRecMap = {};
+        this.rawRecords.forEach(r => {
+          if (r.date) globalRecMap[`${this.normalizeDateStr(r.date)}_${r.memberId}`] = r;
+        });
+
         let html = '';
         const approvalBoxHtml = `
           <table style="width: 260px; border-collapse: collapse; font-size: 13px; text-align: center; margin-left: auto;">
@@ -3355,7 +3361,6 @@ ${className} ${leaderName} 리더입니다.
         if (type === 1) {
           html = `
             <div style="font-family: 'Noto Sans KR', sans-serif; padding: 10px;">
-              <!-- 💡 사파리 무한로딩 방지: flex 대신 안전한 table 구조 사용 -->
               <table style="width: 100%; border: none; margin-bottom: 15px; border-collapse: collapse;">
                 <tr>
                   <td style="border: none; padding: 0; text-align: left; vertical-align: bottom;">
@@ -3389,7 +3394,8 @@ ${className} ${leaderName} 리더입니다.
                   ${targetMembers.map(m => {
                     let p = 0, l = 0, a = 0, w = 0;
                     const weekTds = sabbaths.map(s => {
-                      const rec = this.rawRecords.find(r => r.memberId === m.memberId && this.normalizeDateStr(r.date) === s.dateStr);
+                      // 🚀 [속도 최적화] 무거운 find 대신 사전(Map)에서 0.001초 만에 꺼내옴!
+                      const rec = globalRecMap[`${s.dateStr}_${m.memberId}`];
                       if (rec && rec.status === '출석') { p++; return '<td style="border: 1px solid #cbd5e1; color: #059669; font-weight: bold; font-size: 15px;">⭕</td>'; }
                       if (rec && rec.status === '지각') { l++; return '<td style="border: 1px solid #cbd5e1; color: #d97706; font-weight: bold; font-size: 15px;">△</td>'; }
                       if (rec && rec.status === '결석') { 
@@ -3427,15 +3433,22 @@ ${className} ${leaderName} 리더입니다.
         } else if (type === 2) {
           if (!isYearly) {
             const validRecs = this.rawRecords.filter(r => (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
+            
+            // 🚀 [속도 최적화] 2번 표를 위한 전용 검색 캐시 맵 생성
             const activeDates = new Set();
-            validRecs.forEach(r => activeDates.add(this.normalizeDateStr(r.date)));
+            const validRecMap = {};
+            validRecs.forEach(r => {
+              const nDate = this.normalizeDateStr(r.date);
+              activeDates.add(nDate);
+              validRecMap[`${nDate}_${r.memberId}`] = r;
+            });
             const conductedWeeks = activeDates.size > 0 ? activeDates.size : 1; 
 
             const reportActiveMembers = this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
 
             const t1WeeklyTotals = sabbaths.map(s => {
               return reportActiveMembers.filter(m => {
-                const r = validRecs.find(rec => rec.memberId === m.memberId && this.normalizeDateStr(rec.date) === s.dateStr);
+                const r = validRecMap[`${s.dateStr}_${m.memberId}`]; // 💡 1초 컷!
                 return r && (r.status === '출석' || r.status === '지각');
               }).length;
             });
@@ -3456,7 +3469,7 @@ ${className} ${leaderName} 리더입니다.
 
             const t2WeeklyTotals = sabbaths.map(s => {
               return reportActiveMembers.filter(m => {
-                const r = validRecs.find(rec => rec.memberId === m.memberId && this.normalizeDateStr(rec.date) === s.dateStr);
+                const r = validRecMap[`${s.dateStr}_${m.memberId}`]; // 💡 1초 컷!
                 return r && (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended));
               }).length;
             });
@@ -3522,7 +3535,7 @@ ${className} ${leaderName} 리더입니다.
 
                       const weekCounts = sabbaths.map(s => {
                         const cnt = cMembers.filter(m => {
-                          const r = validRecs.find(rec => rec.memberId === m.memberId && this.normalizeDateStr(rec.date) === s.dateStr);
+                          const r = validRecMap[`${s.dateStr}_${m.memberId}`]; // 💡 초고속 검색
                           return r && (r.status === '출석' || r.status === '지각');
                         }).length;
                         return `<td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: ${cnt > 0 ? '900' : 'normal'}; color: ${cnt > 0 ? '#059669' : '#94a3b8'}; font-size: 13px;">${cnt}</td>`;
@@ -3582,7 +3595,7 @@ ${className} ${leaderName} 리더입니다.
 
                         const weekCounts = sabbaths.map(s => {
                           const cnt = cMembers.filter(m => {
-                            const r = validRecs.find(rec => rec.memberId === m.memberId && this.normalizeDateStr(rec.date) === s.dateStr);
+                            const r = validRecMap[`${s.dateStr}_${m.memberId}`]; // 💡 초고속 검색
                             return r && (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended));
                           }).length;
                           return `<td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: ${cnt > 0 ? '900' : 'normal'}; color: ${cnt > 0 ? '#4338ca' : '#94a3b8'}; font-size: 13px;">${cnt}</td>`;
@@ -3835,10 +3848,9 @@ ${className} ${leaderName} 리더입니다.
         printBox.innerHTML = html;
         this.closeExportModal();
         
-        // 💡 여유 있게 0.8초(800ms) 대기 후 인쇄 (사파리 안정성 극대화)
         setTimeout(() => {
           window.print();
-        }, 1500);
+        }, 800);
       }
 
       exportExcel(type) {

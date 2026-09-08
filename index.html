@@ -3290,6 +3290,23 @@ ${className} ${leaderName} 리더입니다.
       }
 
      printReport(type) {
+        // 🚀 [리더님 전략: 사파리 강제 예열기]
+        // 인쇄 전, 엑셀 내보내기 함수를 몰래 실행하되 실제 다운로드와 알림창은 막아버립니다.
+        if (typeof XLSX !== 'undefined') {
+          const originalWriteFile = XLSX.writeFile;
+          const originalToast = this.showToast;
+          
+          XLSX.writeFile = function() {}; 
+          this.showToast = function() {};
+          
+          try {
+            this.exportExcel(type); // 백그라운드 엑셀 1회전 (사파리 엔진 예열 완료!)
+          } catch(e) {}
+          
+          XLSX.writeFile = originalWriteFile;
+          this.showToast = originalToast;
+        }
+
         const year = document.getElementById('yearSelect')?.value || '2026';
         const quarter = document.getElementById('quarterSelect')?.value || '3기';
         const isYearly = document.querySelector('input[name="reportPeriod"]:checked')?.value === 'year';

@@ -3321,6 +3321,8 @@ ${className} ${leaderName} 리더입니다.
         });
 
         let html = '';
+        
+        // 💡 4번 심방 명부 등에만 사용될 수 있도록 변수는 남겨두되, 1번(출석부)과 2번(종합결산)에서는 사용하지 않습니다.
         const approvalBoxHtml = `
           <table style="width: 260px; border-collapse: collapse; font-size: 13px; text-align: center; margin-left: auto;">
             <tr>
@@ -3346,8 +3348,7 @@ ${className} ${leaderName} 리더입니다.
                     <p style="font-size: 13px; color: #4b5563; margin: 4px 0 0 0;">세종 조이 안식일학교 · 출력일: ${new Date().toLocaleDateString('ko-KR')}</p>
                   </td>
                   <td style="border: none; padding: 0; text-align: right; vertical-align: bottom;">
-                    ${approvalBoxHtml}
-                  </td>
+                    </td>
                 </tr>
               </table>
 
@@ -3474,8 +3475,7 @@ ${className} ${leaderName} 리더입니다.
                       <p style="font-size: 13px; color: #475569; margin: 4px 0 0 0;">세종 조이 안식일학교 · 당회 및 행정 보고용 (현재 ${conductedWeeks}주차 진행중)</p>
                     </td>
                     <td style="border: none; padding: 0; text-align: right; vertical-align: bottom;">
-                      ${approvalBoxHtml}
-                    </td>
+                      </td>
                   </tr>
                 </table>
 
@@ -3500,8 +3500,7 @@ ${className} ${leaderName} 리더입니다.
                 <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; margin-bottom: 24px;">
                   <thead>
                     <tr style="background: #f8fafc; font-weight: bold; height: 38px;">
-                      <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">반명</th>
-                      <th style="border: 1px solid #cbd5e1; padding: 6px; width: 55px;">리더</th>
+                      <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; white-space: nowrap; width: 80px;">반명</th>
                       <th style="border: 1px solid #cbd5e1; padding: 6px; width: 40px;">재적</th>
                       ${sabbaths.map((s, idx) => `<th style="border: 1px solid #cbd5e1; padding: 4px; width: 26px;">${idx + 1}과</th>`).join('')}
                       <th style="border: 1px solid #cbd5e1; padding: 6px; width: 60px;">평균출석</th>
@@ -3536,8 +3535,7 @@ ${className} ${leaderName} 리더입니다.
 
                       return `
                         <tr style="height: 38px;">
-                          <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold; text-align: left; font-size: 13px;">${c.className}</td>
-                          <td style="border: 1px solid #cbd5e1; padding: 6px;">${c.leaderName}</td>
+                          <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold; text-align: center; font-size: 13px; white-space: nowrap;">${c.className}</td>
                           <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold;">${cMembers.length}</td>
                           ${weekCounts}
                           <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold; font-size: 13px;">${avgPresentNum}</td>
@@ -3546,7 +3544,7 @@ ${className} ${leaderName} 리더입니다.
                       `;
                     }).join('')}
                     <tr style="background: #e2e8f0; height: 40px; font-weight: 900;">
-                      <td colspan="2" style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; color: #0f172a; font-size: 13px;">총 합 계</td>
+                      <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; color: #0f172a; font-size: 13px;">총 합 계</td>
                       <td style="border: 1px solid #cbd5e1; padding: 6px; color: #0f172a;">${t1TotalMembers}</td>
                       ${t1WeeklyTotals.map(cnt => `<td style="border: 1px solid #cbd5e1; padding: 4px; font-size: 14px; color: ${cnt > 0 ? '#059669' : '#64748b'};">${cnt}</td>`).join('')}
                       <td style="border: 1px solid #cbd5e1; padding: 6px; color: #0f172a;">${t1AvgPresent}</td>
@@ -3560,8 +3558,7 @@ ${className} ${leaderName} 리더입니다.
                   <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; margin-bottom: 24px;">
                     <thead>
                       <tr style="background: #eef2ff; font-weight: bold; height: 38px;">
-                        <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">반명</th>
-                        <th style="border: 1px solid #cbd5e1; padding: 6px; width: 55px;">리더</th>
+                        <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; white-space: nowrap; width: 80px;">반명</th>
                         <th style="border: 1px solid #cbd5e1; padding: 6px; width: 40px;">재적</th>
                         ${sabbaths.map((s, idx) => `<th style="border: 1px solid #cbd5e1; padding: 4px; width: 26px;">${idx + 1}과</th>`).join('')}
                         <th style="border: 1px solid #cbd5e1; padding: 6px; width: 60px;">평균참석</th>
@@ -3595,8 +3592,7 @@ ${className} ${leaderName} 리더입니다.
 
                         return `
                           <tr style="height: 38px;">
-                            <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold; text-align: left; font-size: 13px;">${c.className}</td>
-                            <td style="border: 1px solid #cbd5e1; padding: 6px;">${c.leaderName}</td>
+                            <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold; text-align: center; font-size: 13px; white-space: nowrap;">${c.className}</td>
                             <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold;">${cMembers.length}</td>
                             ${weekCounts}
                             <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold; font-size: 13px;">${wAvgPresentNum}</td>
@@ -3605,7 +3601,7 @@ ${className} ${leaderName} 리더입니다.
                         `;
                       }).join('')}
                       <tr style="background: #e0e7ff; height: 40px; font-weight: 900;">
-                        <td colspan="2" style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; color: #1e3a8a; font-size: 13px;">총 합 계</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; color: #1e3a8a; font-size: 13px;">총 합 계</td>
                         <td style="border: 1px solid #cbd5e1; padding: 6px; color: #1e3a8a;">${t1TotalMembers}</td>
                         ${t2WeeklyTotals.map(cnt => `<td style="border: 1px solid #cbd5e1; padding: 4px; font-size: 14px; color: ${cnt > 0 ? '#4338ca' : '#64748b'};">${cnt}</td>`).join('')}
                         <td style="border: 1px solid #cbd5e1; padding: 6px; color: #1e3a8a;">${t2AvgPresent}</td>
@@ -3629,17 +3625,15 @@ ${className} ${leaderName} 리더입니다.
                       <p style="font-size: 13px; color: #475569; margin: 4px 0 0 0;">세종 조이 안식일학교 · 정기 사무총회 및 당회 보고용</p>
                     </td>
                     <td style="border: none; padding: 0; text-align: right; vertical-align: bottom;">
-                      ${approvalBoxHtml}
-                    </td>
+                      </td>
                   </tr>
                 </table>
 
                 <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; margin-bottom: 24px;">
                   <thead>
                     <tr style="background: #f1f5f9; font-weight: bold; height: 45px;">
-                      <th style="border: 1px solid #cbd5e1; padding: 10px; text-align: left;">교과반명</th>
-                      <th style="border: 1px solid #cbd5e1; padding: 10px;">담당 리더</th>
-                      <th style="border: 1px solid #cbd5e1; padding: 10px;">재적</th>
+                      <th style="border: 1px solid #cbd5e1; padding: 10px; text-align: center; width: 80px; white-space: nowrap;">교과반명</th>
+                      <th style="border: 1px solid #cbd5e1; padding: 10px; width: 60px;">재적</th>
                       <th style="border: 1px solid #cbd5e1; padding: 10px;">1기 출석률</th>
                       <th style="border: 1px solid #cbd5e1; padding: 10px;">2기 출석률</th>
                       <th style="border: 1px solid #cbd5e1; padding: 10px;">3기 출석률</th>
@@ -3672,8 +3666,7 @@ ${className} ${leaderName} 리더입니다.
 
                       return `
                         <tr style="height: 45px;">
-                          <td style="border: 1px solid #cbd5e1; padding: 10px; font-weight: bold; text-align: left; font-size: 14px;">${c.className}</td>
-                          <td style="border: 1px solid #cbd5e1; padding: 10px; font-size: 14px;">${c.leaderName}</td>
+                          <td style="border: 1px solid #cbd5e1; padding: 10px; font-weight: bold; text-align: center; font-size: 14px; white-space: nowrap;">${c.className}</td>
                           <td style="border: 1px solid #cbd5e1; padding: 10px; font-weight: bold; font-size: 14px;">${cMembers.length}명</td>
                           ${qTds}
                           <td style="border: 1px solid #cbd5e1; padding: 10px; font-weight: 900; color: #059669; background: #f0fdf4; font-size: 15px;">${yrRate}</td>

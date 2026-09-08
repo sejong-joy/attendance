@@ -3978,14 +3978,60 @@ ${className} ${leaderName} 리더입니다.
           if (!isYearly) {
             const validRecs = this.rawRecords.filter(r => (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
             
-            // 💡 [추가] 진행된 주차 수(conductedWeeks) 계산
             const activeDates = new Set();
-            validRecs.forEach(r => activeDates.add(this.normalizeDateStr(r.date)));
-            const conductedWeeks = activeDates.size > 0 ? activeDates.size : 1;
+            const validRecMap = {};
+            validRecs.forEach(r => {
+              const nDate = this.normalizeDateStr(r.date);
+              activeDates.add(nDate);
+              validRecMap[`${nDate}_${r.memberId}`] = r;
+            });
+            const conductedWeeks = activeDates.size > 0 ? activeDates.size : 1; 
 
-            // 💡 [필터링] 엑셀 결산 보고서도 활동 교인 기준 적용
             const reportActiveMembers = this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
 
+            const t1WeeklyTotals = sabbaths.map(s => {
+              return reportActiveMembers.filter(m => {
+                const r = validRecMap[`${s.dateStr}_${m.memberId}`]; 
+                return r && (r.status === '출석' || r.status === '지각');
+              }).length;
+            });
+            
+            const t1TotalMembers = reportActiveMembers.length;
+            let t1TotalScore = 0;
+            let t1TotalChecked = 0; 
+            
+            reportActiveMembers.forEach(m => {
+              validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
+                if (r.status === '출석') { t1TotalScore += 1.0; t1TotalChecked++; }
+                else if (r.status === '지각') { t1TotalScore += 0.5; t1TotalChecked++; }
+                else if (r.status === '결석') { t1TotalChecked++; }
+              });
+            });
+            
+            const t1AvgPresentRaw = t1TotalScore / conductedWeeks;
+            const t1AvgPresent = t1AvgPresentRaw.toFixed(1) + '명';
+            const totalAvgRate = t1TotalChecked > 0 ? ((t1TotalScore / t1TotalChecked) * 100).toFixed(1) + '%' : '0.0%';
+
+            const t2WeeklyTotals = sabbaths.map(s => {
+              return reportActiveMembers.filter(m => {
+                const r = validRecMap[`${s.dateStr}_${m.memberId}`]; 
+                return r && (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended));
+              }).length;
+            });
+            
+            let t2WorshipSum = 0;
+            reportActiveMembers.forEach(m => {
+              validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
+                if (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended)) {
+                  t2WorshipSum += 1.0;
+                }
+              });
+            });
+            
+            const t2AvgPresentRaw = t2WorshipSum / conductedWeeks;
+            const t2AvgPresent = t2AvgPresentRaw.toFixed(1) + '명';
+            const t2AvgRate = t1TotalMembers > 0 ? ((t2AvgPresentRaw / t1TotalMembers) * 100).toFixed(1) + '%' : '0.0%';
+         
             const sheetData = [
               [{ v: `${year}년 ${quarter} 안식일학교 분기 종합 결산 보고서`, s: { font: { bold: true, sz: 16 } } }],
               [{ v: `세종 조이 안식일학교 · 출력일: ${new Date().toLocaleDateString('ko-KR')} · 진행 주차: ${conductedWeeks}회`, s: { font: { sz: 10, color: { rgb: "64748B" } } } }],
@@ -4001,15 +4047,13 @@ ${className} ${leaderName} 리더입니다.
               ]
             ];
 
-            let t1TotalScore = 0, t1TotalChecked = 0;
-
             activeClasses.forEach(c => {
               const cMembers = reportActiveMembers.filter(m => m.classId === c.classId);
               let cScoreSum = 0, cCheckedSum = 0;
 
               const weekCells = sabbaths.map(s => {
                 const cnt = cMembers.filter(m => {
-                  const r = validRecs.find(rec => rec.memberId === m.memberId && this.normalizeDateStr(rec.date) === s.dateStr);
+                  const r = validRecMap[`${s.dateStr}_${m.memberId}`]; 
                   return r && (r.status === '출석' || r.status === '지각');
                 }).length;
                 return { v: cnt, s: { font: { bold: cnt > 0, color: { rgb: cnt > 0 ? "059669" : "94A3B8" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin } };
@@ -4017,13 +4061,12 @@ ${className} ${leaderName} 리더입니다.
 
               cMembers.forEach(m => {
                 validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
-                  if (r.status === '출석') { cScoreSum += 1.0; cCheckedSum++; t1TotalScore += 1.0; t1TotalChecked++; }
-                  else if (r.status === '지각') { cScoreSum += 0.5; cCheckedSum++; t1TotalScore += 0.5; t1TotalChecked++; }
-                  else if (r.status === '결석') { cCheckedSum++; t1TotalChecked++; }
+                  if (r.status === '출석') { cScoreSum += 1.0; cCheckedSum++; }
+                  else if (r.status === '지각') { cScoreSum += 0.5; cCheckedSum++; }
+                  else if (r.status === '결석') { cCheckedSum++; }
                 });
               });
 
-              // 💡 13주 전체가 아니라 실제 진행 주차(conductedWeeks) 기준으로 평균 인원 산출
               const avgPresentNum = conductedWeeks > 0 ? (cScoreSum / conductedWeeks).toFixed(1) + '명' : '-';
               const avgRate = cCheckedSum > 0 ? ((cScoreSum / cCheckedSum) * 100).toFixed(1) + '%' : '-';
 
@@ -4036,36 +4079,98 @@ ${className} ${leaderName} 리더입니다.
                 { v: avgRate, s: stylePresent }
               ]);
             });
-            const t1WeeklyTotals = sabbaths.map(s => {
+
+            const t1WeeklyTotalCells = sabbaths.map(s => {
               const cnt = reportActiveMembers.filter(m => {
-                const r = validRecs.find(rec => rec.memberId === m.memberId && this.normalizeDateStr(rec.date) === s.dateStr);
+                const r = validRecMap[`${s.dateStr}_${m.memberId}`]; 
                 return r && (r.status === '출석' || r.status === '지각');
               }).length;
               return { v: cnt, s: { font: { bold: true, color: { rgb: cnt > 0 ? "059669" : "64748B" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin } };
             });
 
-            const totalAvgPresent = conductedWeeks > 0 ? (t1TotalScore / conductedWeeks).toFixed(1) + '명' : '0.0명';
-            const totalAvgRate = t1TotalChecked > 0 ? ((t1TotalScore / t1TotalChecked) * 100).toFixed(1) + '%' : '0.0%';
-
             sheetData.push([
               { v: "총 합 계", s: { ...styleHeader, font: { bold: true, color: { rgb: "0F172A" }, sz: 11 } } },
-              { v: "-", s: styleHeader },
+              { v: "-", s: styleHeader }, 
               { v: `${reportActiveMembers.length}명`, s: { ...styleHeader, font: { bold: true } } },
-              ...t1WeeklyTotals,
-              { v: totalAvgPresent, s: { ...styleHeader, font: { bold: true, color: { rgb: "0F172A" } } } },
+              ...t1WeeklyTotalCells,
+              { v: t1AvgPresent, s: { ...styleHeader, font: { bold: true, color: { rgb: "0F172A" } } } },
               { v: totalAvgRate, s: { ...styleHeader, font: { bold: true, color: { rgb: "059669" } } } }
             ]);
+
             const ws = XLSX.utils.aoa_to_sheet(sheetData);
             ws['!cols'] = [{ wch: 14 }, { wch: 12 }, { wch: 8 }, ...sabbaths.map(() => ({ wch: 7 })), { wch: 12 }, { wch: 12 }];
-            ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 17 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 17 } }, { s: { r: 3, c: 0 }, e: { r: 3, c: 17 } }];
+            ws['!merges'] = [
+              { s: { r: 0, c: 0 }, e: { r: 0, c: 17 } }, 
+              { s: { r: 1, c: 0 }, e: { r: 1, c: 17 } }, 
+              { s: { r: 3, c: 0 }, e: { r: 3, c: 17 } }
+            ];
 
             XLSX.utils.book_append_sheet(wb, ws, '분기결산');
             XLSX.writeFile(wb, `${year}_${quarter}_안교_종합결산보고서.xlsx`);
 
           } else {
-            this.showToast('연간 보고서는 향후 고도화 예정입니다.', 'info');
-          }
+            const quarters = ['1기', '2기', '3기', '4기'];
+            const yearRecs = this.rawRecords.filter(r => r.date && this.normalizeDateStr(r.date).startsWith(year) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
+            const reportActiveMembers = this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
 
+            const sheetData = [
+              [{ v: `${year}년도 안식일학교 연간(1개년) 종합 결산 보고서`, s: { font: { bold: true, sz: 16 } } }],
+              [{ v: `세종 조이 안식일학교 · 출력일: ${new Date().toLocaleDateString('ko-KR')} · 정기 사무총회 및 당회 보고용`, s: { font: { sz: 10, color: { rgb: "64748B" } } } }],
+              [],
+              [
+                { v: "교과반명", s: styleHeader },
+                { v: "담당 리더", s: styleHeader },
+                { v: "재적", s: styleHeader },
+                { v: "1기 출석률", s: styleHeader },
+                { v: "2기 출석률", s: styleHeader },
+                { v: "3기 출석률", s: styleHeader },
+                { v: "4기 출석률", s: styleHeader },
+                { v: "연간 종합", s: styleHeader }
+              ]
+            ];
+
+            activeClasses.forEach(c => {
+              const cMembers = reportActiveMembers.filter(m => m.classId === c.classId);
+              let yrScore = 0, yrChecked = 0;
+
+              const rowData = [
+                { v: c.className, s: styleBoldCenter },
+                { v: c.leaderName, s: styleNormalCenter },
+                { v: `${cMembers.length}명`, s: styleNormalCenter }
+              ];
+
+              quarters.forEach(q => {
+                let qScore = 0, qChecked = 0;
+                cMembers.forEach(m => {
+                  const mRecs = yearRecs.filter(r => r.memberId === m.memberId && r.quarter === q);
+                  mRecs.forEach(r => {
+                    if (r.status === '출석') { qScore += 1.0; qChecked++; }
+                    else if (r.status === '지각') { qScore += 0.5; qChecked++; }
+                    else if (r.status === '결석') { qChecked++; }
+                  });
+                });
+                yrScore += qScore;
+                yrChecked += qChecked;
+                const qRate = qChecked > 0 ? ((qScore / qChecked) * 100).toFixed(0) + '%' : '-';
+                rowData.push({ v: qRate, s: styleNormalCenter });
+              });
+
+              const yrRate = yrChecked > 0 ? ((yrScore / yrChecked) * 100).toFixed(1) + '%' : '-';
+              rowData.push({ v: yrRate, s: { font: { bold: true, color: { rgb: "059669" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin, fill: { fgColor: { rgb: "F0FDF4" } } } });
+              
+              sheetData.push(rowData);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(sheetData);
+            ws['!cols'] = [{ wch: 16 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 14 }];
+            ws['!merges'] = [
+              { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } },
+              { s: { r: 1, c: 0 }, e: { r: 1, c: 7 } }
+            ];
+
+            XLSX.utils.book_append_sheet(wb, ws, '연간결산');
+            XLSX.writeFile(wb, `${year}년_안교_연간종합결산보고서.xlsx`);
+          }
         } else if (type === 4) {
           const careList = targetMembers.filter(m => {
             const mRecs = this.rawRecords.filter(r => r.memberId === m.memberId && (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));

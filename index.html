@@ -52,6 +52,9 @@
       * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+        /* 💡 추가: 사파리 인쇄 버그를 유발하는 블러 효과 강제 해제 */
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
       }
 
       /* 💡 1. 모바일 크롬 인쇄 버그 방지: body의 Flex 속성을 강제로 풀어버림 */
@@ -3290,60 +3293,191 @@ ${className} ${leaderName} 리더입니다.
       }
 
     printReport(type) {
-        this.closeExportModal();
-        this.showLoading('인쇄용 데이터를 준비 중입니다...');
+        // 🚀 1. 사파리 30초 멈춤의 진범! 숨어있는 '차트'를 강제 삭제하여 무한 루프 원천 차단
+        if (this.weeklyChartInstance) {
+          this.weeklyChartInstance.destroy();
+          this.weeklyChartInstance = null;
+        }
 
-        // 💡 1. setTimeout을 통해 로딩 화면이 먼저 뜨게 한 후 무거운 HTML 세팅 작업을 시작합니다.
-        setTimeout(() => {
-          const year = document.getElementById('yearSelect')?.value || '2026';
-          const quarter = document.getElementById('quarterSelect')?.value || '3기';
-          const isYearly = document.querySelector('input[name="reportPeriod"]:checked')?.value === 'year';
-          const activeFilter = (this.currentUser && this.currentUser.isAdmin)
-            ? (this.selectedFilterClass || 'ALL')
-            : this.currentUser.classId;
+        // 🚀 2. 어떠한 시간 지연(setTimeout)도 없이 데이터 연산 즉시 시작!
+        const year = document.getElementById('yearSelect')?.value || '2026';
+        const quarter = document.getElementById('quarterSelect')?.value || '3기';
+        const isYearly = document.querySelector('input[name="reportPeriod"]:checked')?.value === 'year';
+        const activeFilter = (this.currentUser && this.currentUser.isAdmin)
+          ? (this.selectedFilterClass || 'ALL')
+          : this.currentUser.classId;
 
-          const className = this.getClassName(activeFilter);
-          const sabbaths = this.getQuarterSabbaths(parseInt(year, 10), quarter);
-          
-          let targetMembers = (activeFilter === 'ALL') ? this.rawMembers : this.rawMembers.filter(m => m.classId === activeFilter);
-          
-          if (type !== 5) {
-            targetMembers = targetMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
-          }
+        const className = this.getClassName(activeFilter);
+        const sabbaths = this.getQuarterSabbaths(parseInt(year, 10), quarter);
+        
+        let targetMembers = (activeFilter === 'ALL') ? this.rawMembers : this.rawMembers.filter(m => m.classId === activeFilter);
+        
+        if (type !== 5) {
+          targetMembers = targetMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
+        }
 
-          const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
-          const printBox = document.getElementById('printContainer');
-          if (!printBox) { this.hideLoading(); return; }
+        const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
+        const printBox = document.getElementById('printContainer');
+        if (!printBox) return;
 
-          const globalRecMap = {};
-          this.rawRecords.forEach(r => {
-            if (r.date) globalRecMap[`${this.normalizeDateStr(r.date)}_${r.memberId}`] = r;
-          });
+        // 초고속 사전(Map)을 이용해 0.01초 만에 데이터 준비
+        const globalRecMap = {};
+        this.rawRecords.forEach(r => {
+          if (r.date) globalRecMap[`${this.normalizeDateStr(r.date)}_${r.memberId}`] = r;
+        });
 
-          let html = '';
-          const approvalBoxHtml = `
-            <table style="width: 260px; border-collapse: collapse; font-size: 13px; text-align: center; margin-left: auto;">
-              <tr>
-                <th style="border: 1px solid #333; padding: 4px 6px; background: #f1f5f9; width: 33%;">담 당</th>
-                <th style="border: 1px solid #333; padding: 4px 6px; background: #f1f5f9; width: 33%;">안교장</th>
-                <th style="border: 1px solid #333; padding: 4px 6px; background: #f1f5f9; width: 34%;">담임목사</th>
-              </tr>
-              <tr style="height: 55px;">
-                <td style="border: 1px solid #333;"></td>
-                <td style="border: 1px solid #333;"></td>
-                <td style="border: 1px solid #333;"></td>
-              </tr>
-            </table>
+        let html = '';
+        const approvalBoxHtml = `
+          <table style="width: 260px; border-collapse: collapse; font-size: 13px; text-align: center; margin-left: auto;">
+            <tr>
+              <th style="border: 1px solid #333; padding: 4px 6px; background: #f1f5f9; width: 33%;">담 당</th>
+              <th style="border: 1px solid #333; padding: 4px 6px; background: #f1f5f9; width: 33%;">안교장</th>
+              <th style="border: 1px solid #333; padding: 4px 6px; background: #f1f5f9; width: 34%;">담임목사</th>
+            </tr>
+            <tr style="height: 55px;">
+              <td style="border: 1px solid #333;"></td>
+              <td style="border: 1px solid #333;"></td>
+              <td style="border: 1px solid #333;"></td>
+            </tr>
+          </table>
+        `;
+
+        if (type === 1) {
+          html = `
+            <div style="font-family: 'Noto Sans KR', sans-serif; padding: 10px;">
+              <table style="width: 100%; border: none; margin-bottom: 15px; border-collapse: collapse;">
+                <tr>
+                  <td style="border: none; padding: 0; text-align: left; vertical-align: bottom;">
+                    <h2 style="font-size: 24px; font-weight: 900; margin: 0; color: #111827;">${year}년 ${quarter} 안식일학교 출석부 (${className})</h2>
+                    <p style="font-size: 13px; color: #4b5563; margin: 4px 0 0 0;">세종 조이 안식일학교 · 출력일: ${new Date().toLocaleDateString('ko-KR')}</p>
+                  </td>
+                  <td style="border: none; padding: 0; text-align: right; vertical-align: bottom;">
+                    ${approvalBoxHtml}
+                  </td>
+                </tr>
+              </table>
+
+              <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: center;">
+                <thead>
+                  <tr style="background-color: #f8fafc; height: 40px;">
+                    <th style="border: 1px solid #cbd5e1; padding: 6px 4px; white-space: nowrap; width: 65px;">성명</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px 4px; white-space: nowrap; width: 45px;">직분</th>
+                    ${sabbaths.map((s, idx) => `
+                      <th style="border: 1px solid #cbd5e1; padding: 4px; font-size: 11px; width: 34px;">
+                        제${idx + 1}과<br><span style="font-size: 9px; color: #64748b;">${s.monthNum}/${s.dayNum}</span>
+                      </th>
+                    `).join('')}
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; color: #047857; white-space: nowrap;">출</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; color: #b45309; white-space: nowrap;">지</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; color: #4338ca; white-space: nowrap;">예배</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; color: #b91c1c; white-space: nowrap;">결</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 6px; white-space: nowrap;">출석률</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${targetMembers.map(m => {
+                    let p = 0, l = 0, a = 0, w = 0;
+                    const weekTds = sabbaths.map(s => {
+                      const rec = globalRecMap[`${s.dateStr}_${m.memberId}`];
+                      if (rec && rec.status === '출석') { p++; return '<td style="border: 1px solid #cbd5e1; color: #059669; font-weight: bold; font-size: 15px;">⭕</td>'; }
+                      if (rec && rec.status === '지각') { l++; return '<td style="border: 1px solid #cbd5e1; color: #d97706; font-weight: bold; font-size: 15px;">△</td>'; }
+                      if (rec && rec.status === '결석') { 
+                        a++; 
+                        if (rec.worshipAttended) {
+                          w++;
+                          return '<td style="border: 1px solid #cbd5e1; color: #4338ca; font-weight: bold; font-size: 15px;">⛪</td>';
+                        }
+                        return '<td style="border: 1px solid #cbd5e1; color: #dc2626; font-weight: bold; font-size: 15px;">❌</td>'; 
+                      }
+                      return '<td style="border: 1px solid #cbd5e1; color: #cbd5e1;">-</td>';
+                    }).join('');
+
+                    const totalChecked = p + l + a;
+                    const score = (p * 1.0) + (l * 0.5);
+                    const rate = totalChecked > 0 ? ((score / totalChecked) * 100).toFixed(0) + '%' : '-';
+
+                    return `
+                      <tr style="height: 42px;">
+                        <td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: 900; text-align: center; font-size: 14px; white-space: nowrap;">${m.name}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 4px; color: #475569; white-space: nowrap;">${m.role || '성도'}</td>
+                        ${weekTds}
+                        <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #047857;">${p}</td>
+                        <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #b45309;">${l}</td>
+                        <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #4338ca;">${w}</td>
+                        <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #b91c1c;">${a}</td>
+                        <td style="border: 1px solid #cbd5e1; font-weight: bold; font-size: 14px;">${rate}</td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
           `;
+        } else if (type === 2) {
+          if (!isYearly) {
+            const validRecs = this.rawRecords.filter(r => (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
+            
+            const activeDates = new Set();
+            const validRecMap = {};
+            validRecs.forEach(r => {
+              const nDate = this.normalizeDateStr(r.date);
+              activeDates.add(nDate);
+              validRecMap[`${nDate}_${r.memberId}`] = r;
+            });
+            const conductedWeeks = activeDates.size > 0 ? activeDates.size : 1; 
 
-          if (type === 1) {
+            const reportActiveMembers = this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
+
+            const t1WeeklyTotals = sabbaths.map(s => {
+              return reportActiveMembers.filter(m => {
+                const r = validRecMap[`${s.dateStr}_${m.memberId}`]; 
+                return r && (r.status === '출석' || r.status === '지각');
+              }).length;
+            });
+            
+            const t1TotalMembers = reportActiveMembers.length;
+            let t1TotalScore = 0;
+            let t1TotalChecked = 0; 
+            
+            reportActiveMembers.forEach(m => {
+              validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
+                if (r.status === '출석') { t1TotalScore += 1.0; t1TotalChecked++; }
+                else if (r.status === '지각') { t1TotalScore += 0.5; t1TotalChecked++; }
+                else if (r.status === '결석') { t1TotalChecked++; }
+              });
+            });
+            
+            const t1AvgPresentRaw = t1TotalScore / conductedWeeks;
+            const t1AvgPresent = t1AvgPresentRaw.toFixed(1) + '명';
+            const totalAvgRate = t1TotalChecked > 0 ? ((t1TotalScore / t1TotalChecked) * 100).toFixed(1) + '%' : '0.0%';
+
+            const t2WeeklyTotals = sabbaths.map(s => {
+              return reportActiveMembers.filter(m => {
+                const r = validRecMap[`${s.dateStr}_${m.memberId}`]; 
+                return r && (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended));
+              }).length;
+            });
+            
+            let t2WorshipSum = 0;
+            reportActiveMembers.forEach(m => {
+              validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
+                if (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended)) {
+                  t2WorshipSum += 1.0;
+                }
+              });
+            });
+            
+            const t2AvgPresentRaw = t2WorshipSum / conductedWeeks;
+            const t2AvgPresent = t2AvgPresentRaw.toFixed(1) + '명';
+            const t2AvgRate = t1TotalMembers > 0 ? ((t2AvgPresentRaw / t1TotalMembers) * 100).toFixed(1) + '%' : '0.0%';
+         
             html = `
-              <div style="font-family: 'Noto Sans KR', sans-serif; padding: 10px;">
-                <table style="width: 100%; border: none; margin-bottom: 15px; border-collapse: collapse;">
+              <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
+                <table style="width: 100%; border: none; margin-bottom: 20px; border-bottom: 3px solid #0f172a; padding-bottom: 12px; border-collapse: collapse;">
                   <tr>
                     <td style="border: none; padding: 0; text-align: left; vertical-align: bottom;">
-                      <h2 style="font-size: 24px; font-weight: 900; margin: 0; color: #111827;">${year}년 ${quarter} 안식일학교 출석부 (${className})</h2>
-                      <p style="font-size: 13px; color: #4b5563; margin: 4px 0 0 0;">세종 조이 안식일학교 · 출력일: ${new Date().toLocaleDateString('ko-KR')}</p>
+                      <h2 style="font-size: 24px; font-weight: 900; margin: 0; color: #0f172a;">${year}년 ${quarter} 안식일학교 분기 종합 결산 보고서</h2>
+                      <p style="font-size: 13px; color: #475569; margin: 4px 0 0 0;">세종 조이 안식일학교 · 당회 및 행정 보고용 (현재 ${conductedWeeks}주차 진행중)</p>
                     </td>
                     <td style="border: none; padding: 0; text-align: right; vertical-align: bottom;">
                       ${approvalBoxHtml}
@@ -3351,188 +3485,119 @@ ${className} ${leaderName} 리더입니다.
                   </tr>
                 </table>
 
-                <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: center;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px; text-align: center; margin-bottom: 24px;">
+                  <tr style="background: #f1f5f9; font-weight: bold; height: 40px;">
+                    <th style="border: 1px solid #cbd5e1; padding: 8px;">총 등록 교인</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 8px;">활동 교인</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 8px;">새가족</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 8px;">분기 진행 예배</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 8px;">안교 평균 출석률</th>
+                  </tr>
+                  <tr style="font-size: 16px; font-weight: 900; height: 46px;">
+                    <td style="border: 1px solid #cbd5e1; padding: 8px;">${reportActiveMembers.length}명</td>
+                    <td style="border: 1px solid #cbd5e1; padding: 8px; color: #047857;">${reportActiveMembers.filter(m => m.status === '활동').length}명</td>
+                    <td style="border: 1px solid #cbd5e1; padding: 8px; color: #b45309;">${reportActiveMembers.filter(m => m.status === '새가족').length}명</td>
+                    <td style="border: 1px solid #cbd5e1; padding: 8px;">${conductedWeeks}회 (전체 13회)</td>
+                    <td style="border: 1px solid #cbd5e1; padding: 8px; color: #059669;">${totalAvgRate}</td>
+                  </tr>
+                </table>
+
+                <h4 style="font-size: 15px; font-weight: 900; margin: 0 0 8px 0; color: #1e293b;">📌 1. 교과반별 주차(과)별 출석 현황 (안교 출석 기준)</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; margin-bottom: 24px;">
                   <thead>
-                    <tr style="background-color: #f8fafc; height: 40px;">
-                      <th style="border: 1px solid #cbd5e1; padding: 6px 4px; white-space: nowrap; width: 65px;">성명</th>
-                      <th style="border: 1px solid #cbd5e1; padding: 6px 4px; white-space: nowrap; width: 45px;">직분</th>
-                      ${sabbaths.map((s, idx) => `
-                        <th style="border: 1px solid #cbd5e1; padding: 4px; font-size: 11px; width: 34px;">
-                          제${idx + 1}과<br><span style="font-size: 9px; color: #64748b;">${s.monthNum}/${s.dayNum}</span>
-                        </th>
-                      `).join('')}
-                      <th style="border: 1px solid #cbd5e1; padding: 6px; color: #047857; white-space: nowrap;">출</th>
-                      <th style="border: 1px solid #cbd5e1; padding: 6px; color: #b45309; white-space: nowrap;">지</th>
-                      <th style="border: 1px solid #cbd5e1; padding: 6px; color: #4338ca; white-space: nowrap;">예배</th>
-                      <th style="border: 1px solid #cbd5e1; padding: 6px; color: #b91c1c; white-space: nowrap;">결</th>
-                      <th style="border: 1px solid #cbd5e1; padding: 6px; white-space: nowrap;">출석률</th>
+                    <tr style="background: #f8fafc; font-weight: bold; height: 38px;">
+                      <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">반명</th>
+                      <th style="border: 1px solid #cbd5e1; padding: 6px; width: 55px;">리더</th>
+                      <th style="border: 1px solid #cbd5e1; padding: 6px; width: 40px;">재적</th>
+                      ${sabbaths.map((s, idx) => `<th style="border: 1px solid #cbd5e1; padding: 4px; width: 26px;">${idx + 1}과</th>`).join('')}
+                      <th style="border: 1px solid #cbd5e1; padding: 6px; width: 60px;">평균출석</th>
+                      <th style="border: 1px solid #cbd5e1; padding: 6px; width: 60px;">출석률</th>
                     </tr>
                   </thead>
                   <tbody>
-                    ${targetMembers.map(m => {
-                      let p = 0, l = 0, a = 0, w = 0;
-                      const weekTds = sabbaths.map(s => {
-                        const rec = globalRecMap[`${s.dateStr}_${m.memberId}`];
-                        if (rec && rec.status === '출석') { p++; return '<td style="border: 1px solid #cbd5e1; color: #059669; font-weight: bold; font-size: 15px;">⭕</td>'; }
-                        if (rec && rec.status === '지각') { l++; return '<td style="border: 1px solid #cbd5e1; color: #d97706; font-weight: bold; font-size: 15px;">△</td>'; }
-                        if (rec && rec.status === '결석') { 
-                          a++; 
-                          if (rec.worshipAttended) {
-                            w++;
-                            return '<td style="border: 1px solid #cbd5e1; color: #4338ca; font-weight: bold; font-size: 15px;">⛪</td>';
-                          }
-                          return '<td style="border: 1px solid #cbd5e1; color: #dc2626; font-weight: bold; font-size: 15px;">❌</td>'; 
-                        }
-                        return '<td style="border: 1px solid #cbd5e1; color: #cbd5e1;">-</td>';
+                    ${activeClasses.map(c => {
+                      const cMembers = reportActiveMembers.filter(m => m.classId === c.classId);
+                      let cScoreSum = 0;
+
+                      const weekCounts = sabbaths.map(s => {
+                        const cnt = cMembers.filter(m => {
+                          const r = validRecMap[`${s.dateStr}_${m.memberId}`]; 
+                          return r && (r.status === '출석' || r.status === '지각');
+                        }).length;
+                        return `<td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: ${cnt > 0 ? '900' : 'normal'}; color: ${cnt > 0 ? '#059669' : '#94a3b8'}; font-size: 13px;">${cnt}</td>`;
                       }).join('');
 
-                      const totalChecked = p + l + a;
-                      const score = (p * 1.0) + (l * 0.5);
-                      const rate = totalChecked > 0 ? ((score / totalChecked) * 100).toFixed(0) + '%' : '-';
+                      let cCheckedCount = 0; 
+                      cMembers.forEach(m => {
+                        validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
+                          if (r.status === '출석') { cScoreSum += 1.0; cCheckedCount++; }
+                          else if (r.status === '지각') { cScoreSum += 0.5; cCheckedCount++; }
+                          else if (r.status === '결석') { cCheckedCount++; }
+                        });
+                      });
+
+                      const avgPresentRaw = cScoreSum / conductedWeeks;
+                      const avgPresentNum = avgPresentRaw.toFixed(1) + '명';
+                      const avgRate = cCheckedCount > 0 ? ((cScoreSum / cCheckedCount) * 100).toFixed(1) + '%' : '-';
 
                       return `
-                        <tr style="height: 42px;">
-                          <td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: 900; text-align: center; font-size: 14px; white-space: nowrap;">${m.name}</td>
-                          <td style="border: 1px solid #cbd5e1; padding: 4px; color: #475569; white-space: nowrap;">${m.role || '성도'}</td>
-                          ${weekTds}
-                          <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #047857;">${p}</td>
-                          <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #b45309;">${l}</td>
-                          <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #4338ca;">${w}</td>
-                          <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #b91c1c;">${a}</td>
-                          <td style="border: 1px solid #cbd5e1; font-weight: bold; font-size: 14px;">${rate}</td>
+                        <tr style="height: 38px;">
+                          <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold; text-align: left; font-size: 13px;">${c.className}</td>
+                          <td style="border: 1px solid #cbd5e1; padding: 6px;">${c.leaderName}</td>
+                          <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold;">${cMembers.length}</td>
+                          ${weekCounts}
+                          <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold; font-size: 13px;">${avgPresentNum}</td>
+                          <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: 900; color: #059669; font-size: 13px;">${avgRate}</td>
                         </tr>
                       `;
                     }).join('')}
+                    <tr style="background: #e2e8f0; height: 40px; font-weight: 900;">
+                      <td colspan="2" style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; color: #0f172a; font-size: 13px;">총 합 계</td>
+                      <td style="border: 1px solid #cbd5e1; padding: 6px; color: #0f172a;">${t1TotalMembers}</td>
+                      ${t1WeeklyTotals.map(cnt => `<td style="border: 1px solid #cbd5e1; padding: 4px; font-size: 14px; color: ${cnt > 0 ? '#059669' : '#64748b'};">${cnt}</td>`).join('')}
+                      <td style="border: 1px solid #cbd5e1; padding: 6px; color: #0f172a;">${t1AvgPresent}</td>
+                      <td style="border: 1px solid #cbd5e1; padding: 6px; color: #059669;">${totalAvgRate}</td>
+                    </tr>
                   </tbody>
                 </table>
-              </div>
-            `;
-          } else if (type === 2) {
-            if (!isYearly) {
-              const validRecs = this.rawRecords.filter(r => (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
-              
-              const activeDates = new Set();
-              const validRecMap = {};
-              validRecs.forEach(r => {
-                const nDate = this.normalizeDateStr(r.date);
-                activeDates.add(nDate);
-                validRecMap[`${nDate}_${r.memberId}`] = r;
-              });
-              const conductedWeeks = activeDates.size > 0 ? activeDates.size : 1; 
 
-              const reportActiveMembers = this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
-
-              const t1WeeklyTotals = sabbaths.map(s => {
-                return reportActiveMembers.filter(m => {
-                  const r = validRecMap[`${s.dateStr}_${m.memberId}`]; 
-                  return r && (r.status === '출석' || r.status === '지각');
-                }).length;
-              });
-              
-              const t1TotalMembers = reportActiveMembers.length;
-              let t1TotalScore = 0;
-              let t1TotalChecked = 0; 
-              
-              reportActiveMembers.forEach(m => {
-                validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
-                  if (r.status === '출석') { t1TotalScore += 1.0; t1TotalChecked++; }
-                  else if (r.status === '지각') { t1TotalScore += 0.5; t1TotalChecked++; }
-                  else if (r.status === '결석') { t1TotalChecked++; }
-                });
-              });
-              
-              const t1AvgPresentRaw = t1TotalScore / conductedWeeks;
-              const t1AvgPresent = t1AvgPresentRaw.toFixed(1) + '명';
-              const totalAvgRate = t1TotalChecked > 0 ? ((t1TotalScore / t1TotalChecked) * 100).toFixed(1) + '%' : '0.0%';
-
-              const t2WeeklyTotals = sabbaths.map(s => {
-                return reportActiveMembers.filter(m => {
-                  const r = validRecMap[`${s.dateStr}_${m.memberId}`]; 
-                  return r && (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended));
-                }).length;
-              });
-              
-              let t2WorshipSum = 0;
-              reportActiveMembers.forEach(m => {
-                validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
-                  if (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended)) {
-                    t2WorshipSum += 1.0;
-                  }
-                });
-              });
-              
-              const t2AvgPresentRaw = t2WorshipSum / conductedWeeks;
-              const t2AvgPresent = t2AvgPresentRaw.toFixed(1) + '명';
-              const t2AvgRate = t1TotalMembers > 0 ? ((t2AvgPresentRaw / t1TotalMembers) * 100).toFixed(1) + '%' : '0.0%';
-           
-              html = `
-                <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
-                  <table style="width: 100%; border: none; margin-bottom: 20px; border-bottom: 3px solid #0f172a; padding-bottom: 12px; border-collapse: collapse;">
-                    <tr>
-                      <td style="border: none; padding: 0; text-align: left; vertical-align: bottom;">
-                        <h2 style="font-size: 24px; font-weight: 900; margin: 0; color: #0f172a;">${year}년 ${quarter} 안식일학교 분기 종합 결산 보고서</h2>
-                        <p style="font-size: 13px; color: #475569; margin: 4px 0 0 0;">세종 조이 안식일학교 · 당회 및 행정 보고용 (현재 ${conductedWeeks}주차 진행중)</p>
-                      </td>
-                      <td style="border: none; padding: 0; text-align: right; vertical-align: bottom;">
-                        ${approvalBoxHtml}
-                      </td>
-                    </tr>
-                  </table>
-
-                  <table style="width: 100%; border-collapse: collapse; font-size: 14px; text-align: center; margin-bottom: 24px;">
-                    <tr style="background: #f1f5f9; font-weight: bold; height: 40px;">
-                      <th style="border: 1px solid #cbd5e1; padding: 8px;">총 등록 교인</th>
-                      <th style="border: 1px solid #cbd5e1; padding: 8px;">활동 교인</th>
-                      <th style="border: 1px solid #cbd5e1; padding: 8px;">새가족</th>
-                      <th style="border: 1px solid #cbd5e1; padding: 8px;">분기 진행 예배</th>
-                      <th style="border: 1px solid #cbd5e1; padding: 8px;">안교 평균 출석률</th>
-                    </tr>
-                    <tr style="font-size: 16px; font-weight: 900; height: 46px;">
-                      <td style="border: 1px solid #cbd5e1; padding: 8px;">${reportActiveMembers.length}명</td>
-                      <td style="border: 1px solid #cbd5e1; padding: 8px; color: #047857;">${reportActiveMembers.filter(m => m.status === '활동').length}명</td>
-                      <td style="border: 1px solid #cbd5e1; padding: 8px; color: #b45309;">${reportActiveMembers.filter(m => m.status === '새가족').length}명</td>
-                      <td style="border: 1px solid #cbd5e1; padding: 8px;">${conductedWeeks}회 (전체 13회)</td>
-                      <td style="border: 1px solid #cbd5e1; padding: 8px; color: #059669;">${totalAvgRate}</td>
-                    </tr>
-                  </table>
-
-                  <h4 style="font-size: 15px; font-weight: 900; margin: 0 0 8px 0; color: #1e293b;">📌 1. 교과반별 주차(과)별 출석 현황 (안교 출석 기준)</h4>
+                <div style="page-break-before: always; padding-top: 15px;">
+                  <h4 style="font-size: 15px; font-weight: 900; margin: 0 0 8px 0; color: #312e81;">📌 2. 교과반별 설교 예배 종합 참석 현황 (안교 결석 + 예배 참석 합산)</h4>
                   <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; margin-bottom: 24px;">
                     <thead>
-                      <tr style="background: #f8fafc; font-weight: bold; height: 38px;">
+                      <tr style="background: #eef2ff; font-weight: bold; height: 38px;">
                         <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">반명</th>
                         <th style="border: 1px solid #cbd5e1; padding: 6px; width: 55px;">리더</th>
                         <th style="border: 1px solid #cbd5e1; padding: 6px; width: 40px;">재적</th>
                         ${sabbaths.map((s, idx) => `<th style="border: 1px solid #cbd5e1; padding: 4px; width: 26px;">${idx + 1}과</th>`).join('')}
-                        <th style="border: 1px solid #cbd5e1; padding: 6px; width: 60px;">평균출석</th>
-                        <th style="border: 1px solid #cbd5e1; padding: 6px; width: 60px;">출석률</th>
+                        <th style="border: 1px solid #cbd5e1; padding: 6px; width: 60px;">평균참석</th>
+                        <th style="border: 1px solid #cbd5e1; padding: 6px; width: 60px;">참석률</th>
                       </tr>
                     </thead>
                     <tbody>
                       ${activeClasses.map(c => {
                         const cMembers = reportActiveMembers.filter(m => m.classId === c.classId);
-                        let cScoreSum = 0;
+                        let cWorshipSum = 0;
 
                         const weekCounts = sabbaths.map(s => {
                           const cnt = cMembers.filter(m => {
                             const r = validRecMap[`${s.dateStr}_${m.memberId}`]; 
-                            return r && (r.status === '출석' || r.status === '지각');
+                            return r && (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended));
                           }).length;
-                          return `<td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: ${cnt > 0 ? '900' : 'normal'}; color: ${cnt > 0 ? '#059669' : '#94a3b8'}; font-size: 13px;">${cnt}</td>`;
+                          return `<td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: ${cnt > 0 ? '900' : 'normal'}; color: ${cnt > 0 ? '#4338ca' : '#94a3b8'}; font-size: 13px;">${cnt}</td>`;
                         }).join('');
 
-                        let cCheckedCount = 0; 
                         cMembers.forEach(m => {
                           validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
-                            if (r.status === '출석') { cScoreSum += 1.0; cCheckedCount++; }
-                            else if (r.status === '지각') { cScoreSum += 0.5; cCheckedCount++; }
-                            else if (r.status === '결석') { cCheckedCount++; }
+                            if (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended)) {
+                              cWorshipSum += 1.0;
+                            }
                           });
                         });
 
-                        const avgPresentRaw = cScoreSum / conductedWeeks;
-                        const avgPresentNum = avgPresentRaw.toFixed(1) + '명';
-                        const avgRate = cCheckedCount > 0 ? ((cScoreSum / cCheckedCount) * 100).toFixed(1) + '%' : '-';
+                        const wAvgPresentRaw = cWorshipSum / conductedWeeks;
+                        const wAvgPresentNum = wAvgPresentRaw.toFixed(1) + '명';
+                        const wAvgRate = cMembers.length > 0 ? ((wAvgPresentRaw / cMembers.length) * 100).toFixed(1) + '%' : '-';
 
                         return `
                           <tr style="height: 38px;">
@@ -3540,207 +3605,34 @@ ${className} ${leaderName} 리더입니다.
                             <td style="border: 1px solid #cbd5e1; padding: 6px;">${c.leaderName}</td>
                             <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold;">${cMembers.length}</td>
                             ${weekCounts}
-                            <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold; font-size: 13px;">${avgPresentNum}</td>
-                            <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: 900; color: #059669; font-size: 13px;">${avgRate}</td>
+                            <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold; font-size: 13px;">${wAvgPresentNum}</td>
+                            <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: 900; color: #4338ca; font-size: 13px;">${wAvgRate}</td>
                           </tr>
                         `;
                       }).join('')}
-                      <tr style="background: #e2e8f0; height: 40px; font-weight: 900;">
-                        <td colspan="2" style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; color: #0f172a; font-size: 13px;">총 합 계</td>
-                        <td style="border: 1px solid #cbd5e1; padding: 6px; color: #0f172a;">${t1TotalMembers}</td>
-                        ${t1WeeklyTotals.map(cnt => `<td style="border: 1px solid #cbd5e1; padding: 4px; font-size: 14px; color: ${cnt > 0 ? '#059669' : '#64748b'};">${cnt}</td>`).join('')}
-                        <td style="border: 1px solid #cbd5e1; padding: 6px; color: #0f172a;">${t1AvgPresent}</td>
-                        <td style="border: 1px solid #cbd5e1; padding: 6px; color: #059669;">${totalAvgRate}</td>
+                      <tr style="background: #e0e7ff; height: 40px; font-weight: 900;">
+                        <td colspan="2" style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; color: #1e3a8a; font-size: 13px;">총 합 계</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 6px; color: #1e3a8a;">${t1TotalMembers}</td>
+                        ${t2WeeklyTotals.map(cnt => `<td style="border: 1px solid #cbd5e1; padding: 4px; font-size: 14px; color: ${cnt > 0 ? '#4338ca' : '#64748b'};">${cnt}</td>`).join('')}
+                        <td style="border: 1px solid #cbd5e1; padding: 6px; color: #1e3a8a;">${t2AvgPresent}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 6px; color: #4338ca;">${t2AvgRate}</td>
                       </tr>
                     </tbody>
                   </table>
-
-                  <div style="page-break-before: always; padding-top: 15px;">
-                    <h4 style="font-size: 15px; font-weight: 900; margin: 0 0 8px 0; color: #312e81;">📌 2. 교과반별 설교 예배 종합 참석 현황 (안교 결석 + 예배 참석 합산)</h4>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; margin-bottom: 24px;">
-                      <thead>
-                        <tr style="background: #eef2ff; font-weight: bold; height: 38px;">
-                          <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">반명</th>
-                          <th style="border: 1px solid #cbd5e1; padding: 6px; width: 55px;">리더</th>
-                          <th style="border: 1px solid #cbd5e1; padding: 6px; width: 40px;">재적</th>
-                          ${sabbaths.map((s, idx) => `<th style="border: 1px solid #cbd5e1; padding: 4px; width: 26px;">${idx + 1}과</th>`).join('')}
-                          <th style="border: 1px solid #cbd5e1; padding: 6px; width: 60px;">평균참석</th>
-                          <th style="border: 1px solid #cbd5e1; padding: 6px; width: 60px;">참석률</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        ${activeClasses.map(c => {
-                          const cMembers = reportActiveMembers.filter(m => m.classId === c.classId);
-                          let cWorshipSum = 0;
-
-                          const weekCounts = sabbaths.map(s => {
-                            const cnt = cMembers.filter(m => {
-                              const r = validRecMap[`${s.dateStr}_${m.memberId}`]; 
-                              return r && (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended));
-                            }).length;
-                            return `<td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: ${cnt > 0 ? '900' : 'normal'}; color: ${cnt > 0 ? '#4338ca' : '#94a3b8'}; font-size: 13px;">${cnt}</td>`;
-                          }).join('');
-
-                          cMembers.forEach(m => {
-                            validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
-                              if (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended)) {
-                                cWorshipSum += 1.0;
-                              }
-                            });
-                          });
-
-                          const wAvgPresentRaw = cWorshipSum / conductedWeeks;
-                          const wAvgPresentNum = wAvgPresentRaw.toFixed(1) + '명';
-                          const wAvgRate = cMembers.length > 0 ? ((wAvgPresentRaw / cMembers.length) * 100).toFixed(1) + '%' : '-';
-
-                          return `
-                            <tr style="height: 38px;">
-                              <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold; text-align: left; font-size: 13px;">${c.className}</td>
-                              <td style="border: 1px solid #cbd5e1; padding: 6px;">${c.leaderName}</td>
-                              <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold;">${cMembers.length}</td>
-                              ${weekCounts}
-                              <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold; font-size: 13px;">${wAvgPresentNum}</td>
-                              <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: 900; color: #4338ca; font-size: 13px;">${wAvgRate}</td>
-                            </tr>
-                          `;
-                        }).join('')}
-                        <tr style="background: #e0e7ff; height: 40px; font-weight: 900;">
-                          <td colspan="2" style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; color: #1e3a8a; font-size: 13px;">총 합 계</td>
-                          <td style="border: 1px solid #cbd5e1; padding: 6px; color: #1e3a8a;">${t1TotalMembers}</td>
-                          ${t2WeeklyTotals.map(cnt => `<td style="border: 1px solid #cbd5e1; padding: 4px; font-size: 14px; color: ${cnt > 0 ? '#4338ca' : '#64748b'};">${cnt}</td>`).join('')}
-                          <td style="border: 1px solid #cbd5e1; padding: 6px; color: #1e3a8a;">${t2AvgPresent}</td>
-                          <td style="border: 1px solid #cbd5e1; padding: 6px; color: #4338ca;">${t2AvgRate}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
                 </div>
-              `;
-            } else {
-              const quarters = ['1기', '2기', '3기', '4기'];
-              const yearRecs = this.rawRecords.filter(r => r.date && this.normalizeDateStr(r.date).startsWith(year) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
-
-              html = `
-                <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
-                  <table style="width: 100%; border: none; margin-bottom: 24px; border-bottom: 3px solid #0f172a; padding-bottom: 12px; border-collapse: collapse;">
-                    <tr>
-                      <td style="border: none; padding: 0; text-align: left; vertical-align: bottom;">
-                        <h2 style="font-size: 24px; font-weight: 900; margin: 0; color: #0f172a;">${year}년도 안식일학교 연간(1개년) 종합 결산 보고서</h2>
-                        <p style="font-size: 13px; color: #475569; margin: 4px 0 0 0;">세종 조이 안식일학교 · 정기 사무총회 및 당회 보고용</p>
-                      </td>
-                      <td style="border: none; padding: 0; text-align: right; vertical-align: bottom;">
-                        ${approvalBoxHtml}
-                      </td>
-                    </tr>
-                  </table>
-
-                  <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; margin-bottom: 24px;">
-                    <thead>
-                      <tr style="background: #f1f5f9; font-weight: bold; height: 45px;">
-                        <th style="border: 1px solid #cbd5e1; padding: 10px; text-align: left;">교과반명</th>
-                        <th style="border: 1px solid #cbd5e1; padding: 10px;">담당 리더</th>
-                        <th style="border: 1px solid #cbd5e1; padding: 10px;">재적</th>
-                        <th style="border: 1px solid #cbd5e1; padding: 10px;">1기 출석률</th>
-                        <th style="border: 1px solid #cbd5e1; padding: 10px;">2기 출석률</th>
-                        <th style="border: 1px solid #cbd5e1; padding: 10px;">3기 출석률</th>
-                        <th style="border: 1px solid #cbd5e1; padding: 10px;">4기 출석률</th>
-                        <th style="border: 1px solid #cbd5e1; padding: 10px; color: #059669;">연간 종합</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${activeClasses.map(c => {
-                        const cMembers = targetMembers.filter(m => m.classId === c.classId);
-                        let yrScore = 0, yrChecked = 0;
-
-                        const qTds = quarters.map(q => {
-                          let qScore = 0, qChecked = 0;
-                          cMembers.forEach(m => {
-                            const mRecs = yearRecs.filter(r => r.memberId === m.memberId && r.quarter === q);
-                            mRecs.forEach(r => {
-                              if (r.status === '출석') { qScore += 1.0; qChecked++; }
-                              else if (r.status === '지각') { qScore += 0.5; qChecked++; }
-                              else if (r.status === '결석') { qChecked++; }
-                            });
-                          });
-                          yrScore += qScore;
-                          yrChecked += qChecked;
-                          const qRate = qChecked > 0 ? ((qScore / qChecked) * 100).toFixed(0) + '%' : '-';
-                          return `<td style="border: 1px solid #cbd5e1; padding: 10px;">${qRate}</td>`;
-                        }).join('');
-
-                        const yrRate = yrChecked > 0 ? ((yrScore / yrChecked) * 100).toFixed(1) + '%' : '-';
-
-                        return `
-                          <tr style="height: 45px;">
-                            <td style="border: 1px solid #cbd5e1; padding: 10px; font-weight: bold; text-align: left; font-size: 14px;">${c.className}</td>
-                            <td style="border: 1px solid #cbd5e1; padding: 10px; font-size: 14px;">${c.leaderName}</td>
-                            <td style="border: 1px solid #cbd5e1; padding: 10px; font-weight: bold; font-size: 14px;">${cMembers.length}명</td>
-                            ${qTds}
-                            <td style="border: 1px solid #cbd5e1; padding: 10px; font-weight: 900; color: #059669; background: #f0fdf4; font-size: 15px;">${yrRate}</td>
-                          </tr>
-                        `;
-                      }).join('')}
-                    </tbody>
-                  </table>
-                </div>
-              `;
-            }
-          } else if (type === 3) {
-            const curDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value) || '';
-            html = `
-              <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
-                <table style="width: 100%; border: none; margin-bottom: 20px; border-bottom: 3px solid #111; padding-bottom: 12px; border-collapse: collapse;">
-                  <tr>
-                    <td style="border: none; padding: 0; text-align: left; vertical-align: bottom;">
-                      <h2 style="font-size: 24px; font-weight: 900; margin: 0;">안식일학교 현장 수기 출석부 (${className})</h2>
-                      <p style="font-size: 13px; color: #555; margin: 4px 0 0 0;">예배 일자: ${curDate} · 세종 조이 안식일학교</p>
-                    </td>
-                    <td style="border: none; padding: 0; text-align: right; vertical-align: bottom;">
-                      <span style="font-size: 14px; font-weight: bold; color: #444;">기호: ⭕ 출석 / △ 지각 / ❌ 결석</span>
-                    </td>
-                  </tr>
-                </table>
-
-                <table style="width: 100%; border-collapse: collapse; font-size: 15px;">
-                  <thead>
-                    <tr style="background: #f1f5f9; text-align: center; height: 45px;">
-                      <th style="border: 1px solid #94a3b8; padding: 10px; width: 50px;">No</th>
-                      <th style="border: 1px solid #94a3b8; padding: 10px; width: 120px;">성 명</th>
-                      <th style="border: 1px solid #94a3b8; padding: 10px; width: 80px;">직 분</th>
-                      <th style="border: 1px solid #94a3b8; padding: 10px; width: 120px;">출석 확인</th>
-                      <th style="border: 1px solid #94a3b8; padding: 10px;">결석 사유 및 심방 메모</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${targetMembers.map((m, idx) => `
-                      <tr style="height: 60px;">
-                        <td style="border: 1px solid #cbd5e1; text-align: center; color: #64748b; font-size: 14px;">${idx + 1}</td>
-                        <td style="border: 1px solid #cbd5e1; padding-left: 12px; font-weight: 900; font-size: 18px;">${m.name}</td>
-                        <td style="border: 1px solid #cbd5e1; text-align: center; color: #64748b; font-size: 14px;">${m.role || '성도'}</td>
-                        <td style="border: 1px solid #cbd5e1; text-align: center; font-size: 18px; color: #aaa;">[ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ]</td>
-                        <td style="border: 1px solid #cbd5e1; padding-left: 12px;"></td>
-                      </tr>
-                    `).join('')}
-                  </tbody>
-                </table>
               </div>
             `;
-          } else if (type === 4) {
-            const careList = targetMembers.filter(m => {
-              const mRecs = this.rawRecords.filter(r => r.memberId === m.memberId && (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
-              if (mRecs.length < 2) return false;
-              let sc = 0;
-              mRecs.forEach(r => { if (r.status === '출석') sc += 1.0; else if (r.status === '지각') sc += 0.5; });
-              return (sc / mRecs.length) * 100 < 60;
-            });
+          } else {
+            const quarters = ['1기', '2기', '3기', '4기'];
+            const yearRecs = this.rawRecords.filter(r => r.date && this.normalizeDateStr(r.date).startsWith(year) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
 
             html = `
               <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
-                <table style="width: 100%; border: none; margin-bottom: 20px; border-bottom: 3px solid #dc2626; padding-bottom: 12px; border-collapse: collapse;">
+                <table style="width: 100%; border: none; margin-bottom: 24px; border-bottom: 3px solid #0f172a; padding-bottom: 12px; border-collapse: collapse;">
                   <tr>
                     <td style="border: none; padding: 0; text-align: left; vertical-align: bottom;">
-                      <h2 style="font-size: 24px; font-weight: 900; margin: 0; color: #991b1b;">🚨 안식일학교 심방 및 중보기도 대상자 명부</h2>
-                      <p style="font-size: 13px; color: #666; margin: 4px 0 0 0;">${year}년 ${quarter} 기준 · 출석률 60% 미만 및 장기 결석 성도</p>
+                      <h2 style="font-size: 24px; font-weight: 900; margin: 0; color: #0f172a;">${year}년도 안식일학교 연간(1개년) 종합 결산 보고서</h2>
+                      <p style="font-size: 13px; color: #475569; margin: 4px 0 0 0;">세종 조이 안식일학교 · 정기 사무총회 및 당회 보고용</p>
                     </td>
                     <td style="border: none; padding: 0; text-align: right; vertical-align: bottom;">
                       ${approvalBoxHtml}
@@ -3748,26 +3640,49 @@ ${className} ${leaderName} 리더입니다.
                   </tr>
                 </table>
 
-                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; margin-bottom: 24px;">
                   <thead>
-                    <tr style="background: #fef2f2; text-align: center; height: 45px;">
-                      <th style="border: 1px solid #f87171; padding: 10px;">성명</th>
-                      <th style="border: 1px solid #f87171; padding: 10px;">소속반</th>
-                      <th style="border: 1px solid #f87171; padding: 10px;">연락처</th>
-                      <th style="border: 1px solid #f87171; padding: 10px;">최근 결석 사유 / 심방 기록</th>
+                    <tr style="background: #f1f5f9; font-weight: bold; height: 45px;">
+                      <th style="border: 1px solid #cbd5e1; padding: 10px; text-align: left;">교과반명</th>
+                      <th style="border: 1px solid #cbd5e1; padding: 10px;">담당 리더</th>
+                      <th style="border: 1px solid #cbd5e1; padding: 10px;">재적</th>
+                      <th style="border: 1px solid #cbd5e1; padding: 10px;">1기 출석률</th>
+                      <th style="border: 1px solid #cbd5e1; padding: 10px;">2기 출석률</th>
+                      <th style="border: 1px solid #cbd5e1; padding: 10px;">3기 출석률</th>
+                      <th style="border: 1px solid #cbd5e1; padding: 10px;">4기 출석률</th>
+                      <th style="border: 1px solid #cbd5e1; padding: 10px; color: #059669;">연간 종합</th>
                     </tr>
                   </thead>
                   <tbody>
-                    ${careList.map(m => {
-                      const care = this.careNotesMap[m.memberId];
+                    ${activeClasses.map(c => {
+                      const cMembers = targetMembers.filter(m => m.classId === c.classId);
+                      let yrScore = 0, yrChecked = 0;
+
+                      const qTds = quarters.map(q => {
+                        let qScore = 0, qChecked = 0;
+                        cMembers.forEach(m => {
+                          const mRecs = yearRecs.filter(r => r.memberId === m.memberId && r.quarter === q);
+                          mRecs.forEach(r => {
+                            if (r.status === '출석') { qScore += 1.0; qChecked++; }
+                            else if (r.status === '지각') { qScore += 0.5; qChecked++; }
+                            else if (r.status === '결석') { qChecked++; }
+                          });
+                        });
+                        yrScore += qScore;
+                        yrChecked += qChecked;
+                        const qRate = qChecked > 0 ? ((qScore / qChecked) * 100).toFixed(0) + '%' : '-';
+                        return `<td style="border: 1px solid #cbd5e1; padding: 10px;">${qRate}</td>`;
+                      }).join('');
+
+                      const yrRate = yrChecked > 0 ? ((yrScore / yrChecked) * 100).toFixed(1) + '%' : '-';
+
                       return `
-                        <tr style="height: 50px;">
-                          <td style="border: 1px solid #fca5a5; padding: 10px; font-weight: 900; font-size: 16px; text-align: center;">${m.name} <span style="font-size:12px; font-weight:normal; color:#444;">(${m.role || '성도'})</span></td>
-                          <td style="border: 1px solid #fca5a5; text-align: center; font-size: 15px;">${this.getClassName(m.classId)}</td>
-                          <td style="border: 1px solid #fca5a5; text-align: center; font-weight: bold; font-size: 15px;">${m.phone || '-'}</td>
-                          <td style="border: 1px solid #fca5a5; padding: 10px; color: #1e3a8a; font-size: 15px;">
-                            ${care ? `<b>[심방완료]</b> ${care.reason} (${care.handledBy})` : '<span style="color: #dc2626; font-weight: bold;">심방 필요</span>'}
-                          </td>
+                        <tr style="height: 45px;">
+                          <td style="border: 1px solid #cbd5e1; padding: 10px; font-weight: bold; text-align: left; font-size: 14px;">${c.className}</td>
+                          <td style="border: 1px solid #cbd5e1; padding: 10px; font-size: 14px;">${c.leaderName}</td>
+                          <td style="border: 1px solid #cbd5e1; padding: 10px; font-weight: bold; font-size: 14px;">${cMembers.length}명</td>
+                          ${qTds}
+                          <td style="border: 1px solid #cbd5e1; padding: 10px; font-weight: 900; color: #059669; background: #f0fdf4; font-size: 15px;">${yrRate}</td>
                         </tr>
                       `;
                     }).join('')}
@@ -3775,92 +3690,160 @@ ${className} ${leaderName} 리더입니다.
                 </table>
               </div>
             `;
-          } else if (type === 5) {
-            html = `
-              <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
-                <table style="width: 100%; border: none; margin-bottom: 20px; border-bottom: 3px solid #4c1d95; padding-bottom: 12px; border-collapse: collapse;">
-                  <tr>
-                    <td style="border: none; padding: 0; text-align: left; vertical-align: bottom;">
-                      <h2 style="font-size: 24px; font-weight: 900; margin: 0; color: #312e81;">📇 반별 교인 명부 및 비상연락망 (${className})</h2>
-                      <p style="font-size: 13px; color: #475569; margin: 4px 0 0 0;">세종 조이 안식일학교 · 출력일: ${new Date().toLocaleDateString('ko-KR')} · 총 ${targetMembers.length}명</p>
-                    </td>
+          }
+        } else if (type === 3) {
+          const curDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value) || '';
+          html = `
+            <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
+              <table style="width: 100%; border: none; margin-bottom: 20px; border-bottom: 3px solid #111; padding-bottom: 12px; border-collapse: collapse;">
+                <tr>
+                  <td style="border: none; padding: 0; text-align: left; vertical-align: bottom;">
+                    <h2 style="font-size: 24px; font-weight: 900; margin: 0;">안식일학교 현장 수기 출석부 (${className})</h2>
+                    <p style="font-size: 13px; color: #555; margin: 4px 0 0 0;">예배 일자: ${curDate} · 세종 조이 안식일학교</p>
+                  </td>
+                  <td style="border: none; padding: 0; text-align: right; vertical-align: bottom;">
+                    <span style="font-size: 14px; font-weight: bold; color: #444;">기호: ⭕ 출석 / △ 지각 / ❌ 결석</span>
+                  </td>
+                </tr>
+              </table>
+
+              <table style="width: 100%; border-collapse: collapse; font-size: 15px;">
+                <thead>
+                  <tr style="background: #f1f5f9; text-align: center; height: 45px;">
+                    <th style="border: 1px solid #94a3b8; padding: 10px; width: 50px;">No</th>
+                    <th style="border: 1px solid #94a3b8; padding: 10px; width: 120px;">성 명</th>
+                    <th style="border: 1px solid #94a3b8; padding: 10px; width: 80px;">직 분</th>
+                    <th style="border: 1px solid #94a3b8; padding: 10px; width: 120px;">출석 확인</th>
+                    <th style="border: 1px solid #94a3b8; padding: 10px;">결석 사유 및 심방 메모</th>
                   </tr>
-                </table>
-
-                <table style="width: 100%; border-collapse: collapse; font-size: 15px; text-align: center;">
-                  <thead>
-                    <tr style="background: #eef2ff; font-weight: bold; height: 45px;">
-                      <th style="border: 1px solid #a5b4fc; padding: 10px; width: 45px;">No</th>
-                      <th style="border: 1px solid #a5b4fc; padding: 10px; width: 100px;">성 명</th>
-                      <th style="border: 1px solid #a5b4fc; padding: 10px; width: 90px;">소속반</th>
-                      <th style="border: 1px solid #a5b4fc; padding: 10px; width: 80px;">직 분</th>
-                      <th style="border: 1px solid #a5b4fc; padding: 10px; width: 140px;">연 락 처</th>
-                      <th style="border: 1px solid #a5b4fc; padding: 10px; width: 80px;">상 태</th>
-                      <th style="border: 1px solid #a5b4fc; padding: 10px;">비 고 (메모)</th>
+                </thead>
+                <tbody>
+                  ${targetMembers.map((m, idx) => `
+                    <tr style="height: 60px;">
+                      <td style="border: 1px solid #cbd5e1; text-align: center; color: #64748b; font-size: 14px;">${idx + 1}</td>
+                      <td style="border: 1px solid #cbd5e1; padding-left: 12px; font-weight: 900; font-size: 18px;">${m.name}</td>
+                      <td style="border: 1px solid #cbd5e1; text-align: center; color: #64748b; font-size: 14px;">${m.role || '성도'}</td>
+                      <td style="border: 1px solid #cbd5e1; text-align: center; font-size: 18px; color: #aaa;">[ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ]</td>
+                      <td style="border: 1px solid #cbd5e1; padding-left: 12px;"></td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    ${targetMembers.map((m, idx) => {
-                      const cls = this.classList.find(c => c.classId === m.classId) || {};
-                      const isLeader = (m.name === cls.leaderName || m.name === cls.subLeader);
-                      
-                      const nameDisp = `<span style="font-weight: 900; font-size: 17px;">${m.name}</span>`;
-                      const roleDisp = isLeader ? `👑 ${m.role || '-'}` : (m.role || '-');
-                      
-                      return `
-                        <tr style="height: 55px;">
-                          <td style="border: 1px solid #c7d2fe; color: #64748b;">${idx + 1}</td>
-                          <td style="border: 1px solid #c7d2fe; padding: 8px;">${nameDisp}</td>
-                          <td style="border: 1px solid #c7d2fe;">${this.getClassName(m.classId)}</td>
-                          <td style="border: 1px solid #c7d2fe; color: #475569; font-weight: ${isLeader ? '900' : 'normal'}; font-size: 14px;">${roleDisp}</td>
-                          <td style="border: 1px solid #c7d2fe; font-weight: bold; color: #374151; font-size: 16px;">${m.phone || '-'}</td>
-                          <td style="border: 1px solid #c7d2fe; color: ${m.status === '새가족' ? '#d97706' : '#047857'}; font-weight: bold;">${m.status || '활동'}</td>
-                          <td style="border: 1px solid #c7d2fe; padding: 8px; text-align: left; font-size: 13px; color: #64748b;">${m.notes || ''}</td>
-                        </tr>
-                      `;
-                    }).join('')}
-                  </tbody>
-                </table>
-              </div>
-            `;
-          }
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        } else if (type === 4) {
+          const careList = targetMembers.filter(m => {
+            const mRecs = this.rawRecords.filter(r => r.memberId === m.memberId && (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
+            if (mRecs.length < 2) return false;
+            let sc = 0;
+            mRecs.forEach(r => { if (r.status === '출석') sc += 1.0; else if (r.status === '지각') sc += 0.5; });
+            return (sc / mRecs.length) * 100 < 60;
+          });
 
-          // 💡 2. 완성된 HTML을 미리 화면 밖(printContainer)에 렌더링합니다.
-          printBox.innerHTML = html;
-          this.hideLoading();
+          html = `
+            <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
+              <table style="width: 100%; border: none; margin-bottom: 20px; border-bottom: 3px solid #dc2626; padding-bottom: 12px; border-collapse: collapse;">
+                <tr>
+                  <td style="border: none; padding: 0; text-align: left; vertical-align: bottom;">
+                    <h2 style="font-size: 24px; font-weight: 900; margin: 0; color: #991b1b;">🚨 안식일학교 심방 및 중보기도 대상자 명부</h2>
+                    <p style="font-size: 13px; color: #666; margin: 4px 0 0 0;">${year}년 ${quarter} 기준 · 출석률 60% 미만 및 장기 결석 성도</p>
+                  </td>
+                  <td style="border: none; padding: 0; text-align: right; vertical-align: bottom;">
+                    ${approvalBoxHtml}
+                  </td>
+                </tr>
+              </table>
 
-          // 💡 3. [핵심] 사파리의 보안 경고와 멈춤을 우회하기 위한 '2단계 터치' 팝업 생성
-          let readyModal = document.getElementById('safariPrintReadyModal');
-          if (!readyModal) {
-            readyModal = document.createElement('div');
-            readyModal.id = 'safariPrintReadyModal';
-            readyModal.className = 'fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[100] flex flex-col items-center justify-center p-4 transition-opacity duration-200';
-            readyModal.innerHTML = `
-              <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl text-center max-w-sm w-full transform transition-transform scale-100">
-                <div class="text-6xl mb-4 animate-bounce">🖨️</div>
-                <h3 class="text-2xl font-black text-slate-900 mb-2">인쇄 준비 완료!</h3>
-                <p class="text-sm font-bold text-slate-600 mb-6 bg-slate-50 p-3 rounded-xl border border-slate-200">애플(아이패드) 보안 정책에 따라<br>아래 버튼을 직접 눌러야 인쇄창이 뜹니다.</p>
-                <button id="safariRealPrintBtn" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xl font-black rounded-xl shadow-lg shadow-emerald-200 transition-all flex items-center justify-center space-x-2">
-                  <span>인쇄 화면 띄우기</span>
-                </button>
-                <button id="safariPrintCancelBtn" class="mt-4 px-6 py-2 text-sm font-bold text-slate-500 hover:text-slate-800 transition">취소</button>
-              </div>
-            `;
-            document.body.appendChild(readyModal);
+              <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <thead>
+                  <tr style="background: #fef2f2; text-align: center; height: 45px;">
+                    <th style="border: 1px solid #f87171; padding: 10px;">성명</th>
+                    <th style="border: 1px solid #f87171; padding: 10px;">소속반</th>
+                    <th style="border: 1px solid #f87171; padding: 10px;">연락처</th>
+                    <th style="border: 1px solid #f87171; padding: 10px;">최근 결석 사유 / 심방 기록</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${careList.map(m => {
+                    const care = this.careNotesMap[m.memberId];
+                    return `
+                      <tr style="height: 50px;">
+                        <td style="border: 1px solid #fca5a5; padding: 10px; font-weight: 900; font-size: 16px; text-align: center;">${m.name} <span style="font-size:12px; font-weight:normal; color:#444;">(${m.role || '성도'})</span></td>
+                        <td style="border: 1px solid #fca5a5; text-align: center; font-size: 15px;">${this.getClassName(m.classId)}</td>
+                        <td style="border: 1px solid #fca5a5; text-align: center; font-weight: bold; font-size: 15px;">${m.phone || '-'}</td>
+                        <td style="border: 1px solid #fca5a5; padding: 10px; color: #1e3a8a; font-size: 15px;">
+                          ${care ? `<b>[심방완료]</b> ${care.reason} (${care.handledBy})` : '<span style="color: #dc2626; font-weight: bold;">심방 필요</span>'}
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        } else if (type === 5) {
+          html = `
+            <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
+              <table style="width: 100%; border: none; margin-bottom: 20px; border-bottom: 3px solid #4c1d95; padding-bottom: 12px; border-collapse: collapse;">
+                <tr>
+                  <td style="border: none; padding: 0; text-align: left; vertical-align: bottom;">
+                    <h2 style="font-size: 24px; font-weight: 900; margin: 0; color: #312e81;">📇 반별 교인 명부 및 비상연락망 (${className})</h2>
+                    <p style="font-size: 13px; color: #475569; margin: 4px 0 0 0;">세종 조이 안식일학교 · 출력일: ${new Date().toLocaleDateString('ko-KR')} · 총 ${targetMembers.length}명</p>
+                  </td>
+                </tr>
+              </table>
 
-            // 🚀 사용자가 직접 터치하는 순간 동기적으로 바로 인쇄! (경고창 완벽 회피)
-            document.getElementById('safariRealPrintBtn').addEventListener('click', () => {
-              document.getElementById('safariPrintReadyModal').style.display = 'none';
-              window.print(); // 💡 버튼 터치 후 0초 만에 실행되므로 보안 차단 통과
-            });
+              <table style="width: 100%; border-collapse: collapse; font-size: 15px; text-align: center;">
+                <thead>
+                  <tr style="background: #eef2ff; font-weight: bold; height: 45px;">
+                    <th style="border: 1px solid #a5b4fc; padding: 10px; width: 45px;">No</th>
+                    <th style="border: 1px solid #a5b4fc; padding: 10px; width: 100px;">성 명</th>
+                    <th style="border: 1px solid #a5b4fc; padding: 10px; width: 90px;">소속반</th>
+                    <th style="border: 1px solid #a5b4fc; padding: 10px; width: 80px;">직 분</th>
+                    <th style="border: 1px solid #a5b4fc; padding: 10px; width: 140px;">연 락 처</th>
+                    <th style="border: 1px solid #a5b4fc; padding: 10px; width: 80px;">상 태</th>
+                    <th style="border: 1px solid #a5b4fc; padding: 10px;">비 고 (메모)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${targetMembers.map((m, idx) => {
+                    const cls = this.classList.find(c => c.classId === m.classId) || {};
+                    const isLeader = (m.name === cls.leaderName || m.name === cls.subLeader);
+                    
+                    const nameDisp = `<span style="font-weight: 900; font-size: 17px;">${m.name}</span>`;
+                    const roleDisp = isLeader ? `👑 ${m.role || '-'}` : (m.role || '-');
+                    
+                    return `
+                      <tr style="height: 55px;">
+                        <td style="border: 1px solid #c7d2fe; color: #64748b;">${idx + 1}</td>
+                        <td style="border: 1px solid #c7d2fe; padding: 8px;">${nameDisp}</td>
+                        <td style="border: 1px solid #c7d2fe;">${this.getClassName(m.classId)}</td>
+                        <td style="border: 1px solid #c7d2fe; color: #475569; font-weight: ${isLeader ? '900' : 'normal'}; font-size: 14px;">${roleDisp}</td>
+                        <td style="border: 1px solid #c7d2fe; font-weight: bold; color: #374151; font-size: 16px;">${m.phone || '-'}</td>
+                        <td style="border: 1px solid #c7d2fe; color: ${m.status === '새가족' ? '#d97706' : '#047857'}; font-weight: bold;">${m.status || '활동'}</td>
+                        <td style="border: 1px solid #c7d2fe; padding: 8px; text-align: left; font-size: 13px; color: #64748b;">${m.notes || ''}</td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
 
-            document.getElementById('safariPrintCancelBtn').addEventListener('click', () => {
-              document.getElementById('safariPrintReadyModal').style.display = 'none';
-            });
-          }
-          readyModal.style.display = 'flex';
+        printBox.innerHTML = html;
 
-        }, 100); // 💡 로딩창이 화면에 뜰 시간을 0.1초 벌어준 후 시작
+        // 🚀 3. 사용자가 버튼을 누른 그 순간! 단 0.1초의 틈도 주지 않고 바로 인쇄 명령! (자동 차단 완벽 회피)
+        window.print();
+
+        // 🚀 4. 인쇄 완료 및 취소 후 뒷정리
+        this.closeExportModal();
+
+        // 지웠던 차트는 통계 탭을 열 때 자동으로 다시 그려지도록 복구
+        const statsContent = document.getElementById('tabContent-stats');
+        if (statsContent && !statsContent.classList.contains('hidden')) {
+          this.calculateAndRenderStatistics();
+        }
       }
 
       exportExcel(type) {

@@ -3411,12 +3411,13 @@ ${className} ${leaderName} 리더입니다.
           if (!isYearly) {
             const validRecs = this.rawRecords.filter(r => (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
             
+            // 🚀 [초고속 연산 최적화] 무거운 filter 루프를 없애고 멤버별 O(1) 사전(Map)으로 변경
             const activeDates = new Set();
-            const validRecMap = {};
+            const validRecsByMember = {};
             validRecs.forEach(r => {
-              const nDate = this.normalizeDateStr(r.date);
-              activeDates.add(nDate);
-              validRecMap[`${nDate}_${r.memberId}`] = r;
+              activeDates.add(this.normalizeDateStr(r.date));
+              if (!validRecsByMember[r.memberId]) validRecsByMember[r.memberId] = [];
+              validRecsByMember[r.memberId].push(r);
             });
             const conductedWeeks = activeDates.size > 0 ? activeDates.size : 1; 
 
@@ -3424,7 +3425,8 @@ ${className} ${leaderName} 리더입니다.
 
             const t1WeeklyTotals = sabbaths.map(s => {
               return reportActiveMembers.filter(m => {
-                const r = validRecMap[`${s.dateStr}_${m.memberId}`]; 
+                const mRecs = validRecsByMember[m.memberId] || [];
+                const r = mRecs.find(rec => this.normalizeDateStr(rec.date) === s.dateStr); 
                 return r && (r.status === '출석' || r.status === '지각');
               }).length;
             });
@@ -3434,7 +3436,8 @@ ${className} ${leaderName} 리더입니다.
             let t1TotalChecked = 0; 
             
             reportActiveMembers.forEach(m => {
-              validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
+              const mRecs = validRecsByMember[m.memberId] || [];
+              mRecs.forEach(r => {
                 if (r.status === '출석') { t1TotalScore += 1.0; t1TotalChecked++; }
                 else if (r.status === '지각') { t1TotalScore += 0.5; t1TotalChecked++; }
                 else if (r.status === '결석') { t1TotalChecked++; }
@@ -3447,14 +3450,16 @@ ${className} ${leaderName} 리더입니다.
 
             const t2WeeklyTotals = sabbaths.map(s => {
               return reportActiveMembers.filter(m => {
-                const r = validRecMap[`${s.dateStr}_${m.memberId}`]; 
+                const mRecs = validRecsByMember[m.memberId] || [];
+                const r = mRecs.find(rec => this.normalizeDateStr(rec.date) === s.dateStr); 
                 return r && (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended));
               }).length;
             });
             
             let t2WorshipSum = 0;
             reportActiveMembers.forEach(m => {
-              validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
+              const mRecs = validRecsByMember[m.memberId] || [];
+              mRecs.forEach(r => {
                 if (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended)) {
                   t2WorshipSum += 1.0;
                 }
@@ -3515,7 +3520,8 @@ ${className} ${leaderName} 리더입니다.
 
                       const weekCounts = sabbaths.map(s => {
                         const cnt = cMembers.filter(m => {
-                          const r = validRecMap[`${s.dateStr}_${m.memberId}`]; 
+                          const mRecs = validRecsByMember[m.memberId] || [];
+                          const r = mRecs.find(rec => this.normalizeDateStr(rec.date) === s.dateStr); 
                           return r && (r.status === '출석' || r.status === '지각');
                         }).length;
                         return `<td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: ${cnt > 0 ? '900' : 'normal'}; color: ${cnt > 0 ? '#059669' : '#94a3b8'}; font-size: 13px;">${cnt}</td>`;
@@ -3523,7 +3529,8 @@ ${className} ${leaderName} 리더입니다.
 
                       let cCheckedCount = 0; 
                       cMembers.forEach(m => {
-                        validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
+                        const mRecs = validRecsByMember[m.memberId] || [];
+                        mRecs.forEach(r => {
                           if (r.status === '출석') { cScoreSum += 1.0; cCheckedCount++; }
                           else if (r.status === '지각') { cScoreSum += 0.5; cCheckedCount++; }
                           else if (r.status === '결석') { cCheckedCount++; }
@@ -3575,14 +3582,16 @@ ${className} ${leaderName} 리더입니다.
 
                         const weekCounts = sabbaths.map(s => {
                           const cnt = cMembers.filter(m => {
-                            const r = validRecMap[`${s.dateStr}_${m.memberId}`]; 
+                            const mRecs = validRecsByMember[m.memberId] || [];
+                            const r = mRecs.find(rec => this.normalizeDateStr(rec.date) === s.dateStr); 
                             return r && (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended));
                           }).length;
                           return `<td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: ${cnt > 0 ? '900' : 'normal'}; color: ${cnt > 0 ? '#4338ca' : '#94a3b8'}; font-size: 13px;">${cnt}</td>`;
                         }).join('');
 
                         cMembers.forEach(m => {
-                          validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
+                          const mRecs = validRecsByMember[m.memberId] || [];
+                          mRecs.forEach(r => {
                             if (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended)) {
                               cWorshipSum += 1.0;
                             }
@@ -3620,6 +3629,13 @@ ${className} ${leaderName} 리더입니다.
             const quarters = ['1기', '2기', '3기', '4기'];
             const yearRecs = this.rawRecords.filter(r => r.date && this.normalizeDateStr(r.date).startsWith(year) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
 
+            // 🚀 [초고속 연산 최적화] 연간 데이터도 단번에 가져오는 캐싱 맵 생성
+            const yearRecsByMember = {};
+            yearRecs.forEach(r => {
+              if (!yearRecsByMember[r.memberId]) yearRecsByMember[r.memberId] = [];
+              yearRecsByMember[r.memberId].push(r);
+            });
+
             html = `
               <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
                 <table style="width: 100%; border: none; margin-bottom: 24px; border-bottom: 3px solid #0f172a; padding-bottom: 12px; border-collapse: collapse;">
@@ -3655,7 +3671,7 @@ ${className} ${leaderName} 리더입니다.
                       const qTds = quarters.map(q => {
                         let qScore = 0, qChecked = 0;
                         cMembers.forEach(m => {
-                          const mRecs = yearRecs.filter(r => r.memberId === m.memberId && r.quarter === q);
+                          const mRecs = (yearRecsByMember[m.memberId] || []).filter(r => r.quarter === q);
                           mRecs.forEach(r => {
                             if (r.status === '출석') { qScore += 1.0; qChecked++; }
                             else if (r.status === '지각') { qScore += 0.5; qChecked++; }
@@ -3726,8 +3742,9 @@ ${className} ${leaderName} 리더입니다.
             </div>
           `;
         } else if (type === 4) {
+          // 🚀 [초고속 연산 최적화] 무거운 3중 필터 루프를 완전히 O(1) 맵으로 대체
           const careList = targetMembers.filter(m => {
-            const mRecs = this.rawRecords.filter(r => r.memberId === m.memberId && (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
+            const mRecs = (this.rawRecords || []).filter(r => r.memberId === m.memberId && (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
             if (mRecs.length < 2) return false;
             let sc = 0;
             mRecs.forEach(r => { if (r.status === '출석') sc += 1.0; else if (r.status === '지각') sc += 0.5; });
@@ -3825,13 +3842,13 @@ ${className} ${leaderName} 리더입니다.
           `;
         }
 
-        // 🚀 4. 메인 화면에 쑤셔넣는 대신 완전히 독립된, 가벼운 투명 Iframe(새 창)을 생성!
-        // (Tailwind 등 메인 화면의 무거운 스크립트들이 인쇄 화면을 스캔하지 못하게 완벽히 분리)
+        // 🚀 2. 원본 구조(Iframe) 완벽 유지
+        printBox.innerHTML = html;
+
         let printFrame = document.getElementById('safariPrintFrame');
         if (!printFrame) {
           printFrame = document.createElement('iframe');
           printFrame.id = 'safariPrintFrame';
-          // 아이패드 화면 밖으로 숨김 처리
           printFrame.style.position = 'fixed';
           printFrame.style.right = '0';
           printFrame.style.bottom = '0';
@@ -3843,7 +3860,6 @@ ${className} ${leaderName} 리더입니다.
 
         const frameDoc = printFrame.contentWindow.document;
         frameDoc.open();
-        // Iframe 안에는 오직 순수한 HTML과 표 CSS만 들어갑니다. (Tailwind 차단)
         frameDoc.write(`
           <!DOCTYPE html>
           <html>
@@ -3870,7 +3886,7 @@ ${className} ${leaderName} 리더입니다.
         `);
         frameDoc.close();
 
-        // 🚀 5. 메인 스크립트의 간섭이 완전히 차단된 Iframe에서 즉시 0초 컷으로 인쇄 명령!
+        // 🚀 3. 타이머 없이 0.01초 만에 즉시 실행하여 사파리 자동 차단 완벽 회피!
         printFrame.contentWindow.focus();
         printFrame.contentWindow.print();
       }

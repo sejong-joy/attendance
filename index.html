@@ -3290,32 +3290,32 @@ ${className} ${leaderName} 리더입니다.
       }
 
      printReport(type) {
-        // 1. 팝업을 닫고 로딩 화면을 먼저 띄워 화면 멈춤을 방지합니다.
         this.closeExportModal();
-        this.showLoading('인쇄 화면을 최적화하여 불러오는 중입니다...');
+        this.showLoading('엑셀 최적화 및 인쇄 준비 중...');
 
-        // 🚀 1단계: 사파리 엔진 예열 (엑셀 로직 몰래 1회전 실행)
+        // 🚀 [리더님 전략 완벽 적용] 
+        // 실제 엑셀 파일 생성 연산을 100% 똑같이 돌려서 사파리를 예열시키되, 다운로드 창만 차단!
         if (typeof XLSX !== 'undefined') {
           const originalWriteFile = XLSX.writeFile;
           const originalToast = this.showToast;
           
-          // 다운로드와 알림창을 빈 함수로 만들어 무력화
-          XLSX.writeFile = function() {}; 
-          this.showToast = function() {};
+          // 💡 다운로드 팝업을 띄우는 대신, 백그라운드 메모리상에서만 엑셀 데이터를 만듭니다.
+          XLSX.writeFile = function(wb, filename) {
+            XLSX.write(wb, { bookType: 'xlsx', type: 'array' }); 
+          }; 
+          this.showToast = function() {}; // 예열 중 알림창 숨김
           
           try {
-            this.exportExcel(type); 
+            this.exportExcel(type); // 엑셀 강제 1회전 (사파리 엔진 예열 완료!)
           } catch(e) {}
           
-          // 기능 원상 복구
+          // 💡 예열이 끝난 후 기능 원상 복구
           XLSX.writeFile = originalWriteFile;
           this.showToast = originalToast;
         }
 
-        // 🚀 2단계: 사람의 클릭 속도처럼 브라우저에게 "숨 고르기 및 메모리 최적화" 시간 0.5초 부여
+        // 🚀 엑셀 예열로 사파리 엔진이 풀가동된 후, 0.5초 대기하여 병목을 풀고 인쇄 실행
         setTimeout(() => {
-          
-          // --- 최적화된 상태에서 초고속으로 HTML 표 생성 시작 ---
           const year = document.getElementById('yearSelect')?.value || '2026';
           const quarter = document.getElementById('quarterSelect')?.value || '3기';
           const isYearly = document.querySelector('input[name="reportPeriod"]:checked')?.value === 'year';
@@ -3340,6 +3340,7 @@ ${className} ${leaderName} 리더입니다.
             return;
           }
 
+          // 💡 빠른 계산을 위한 사전 생성 (글로벌)
           const globalRecMap = {};
           this.rawRecords.forEach(r => {
             if (r.date) globalRecMap[`${this.normalizeDateStr(r.date)}_${r.memberId}`] = r;
@@ -3853,12 +3854,12 @@ ${className} ${leaderName} 리더입니다.
           printBox.innerHTML = html;
           this.hideLoading();
           
-          // 🚀 3단계: 사파리가 표를 화면에 다 그릴 시간 0.8초 부여 후 최종 인쇄
+          // 🚀 표가 화면에 렌더링될 여유를 준 뒤 최종 인쇄 팝업 호출
           setTimeout(() => {
             window.print();
           }, 800);
 
-        }, 500); // 0.5초(500ms) 동안 브라우저가 최적화를 마치고 휴식하도록 강제 딜레이
+        }, 500); // 엑셀 예열 후 대기 시간 0.5초
       }
 
       exportExcel(type) {

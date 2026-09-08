@@ -3289,7 +3289,7 @@ ${className} ${leaderName} 리더입니다.
         }
       }
 
-      printReport(type) {
+     printReport(type) {
         const year = document.getElementById('yearSelect')?.value || '2026';
         const quarter = document.getElementById('quarterSelect')?.value || '3기';
         const isYearly = document.querySelector('input[name="reportPeriod"]:checked')?.value === 'year';
@@ -3311,7 +3311,7 @@ ${className} ${leaderName} 리더입니다.
         const printBox = document.getElementById('printContainer');
         if (!printBox) return;
 
-        // 🚀 [초고속 렌더링 응용] 300만번의 날짜 계산을 막기 위해 검색용 '사전(Map)'을 미리 1번만 만듭니다!
+        // 🚀 [리더님 전략 적용] 300만번의 연산을 1번으로 압축하는 글로벌 사전(Map) 생성
         const globalRecMap = {};
         this.rawRecords.forEach(r => {
           if (r.date) globalRecMap[`${this.normalizeDateStr(r.date)}_${r.memberId}`] = r;
@@ -3369,7 +3369,7 @@ ${className} ${leaderName} 리더입니다.
                   ${targetMembers.map(m => {
                     let p = 0, l = 0, a = 0, w = 0;
                     const weekTds = sabbaths.map(s => {
-                      // 🚀 [속도 최적화] 무거운 find 대신 사전(Map)에서 0.001초 만에 꺼내옴!
+                      // 💡 [수정] 무거운 find 함수 제거! 사전에서 즉시 1초 컷으로 조회
                       const rec = globalRecMap[`${s.dateStr}_${m.memberId}`];
                       if (rec && rec.status === '출석') { p++; return '<td style="border: 1px solid #cbd5e1; color: #059669; font-weight: bold; font-size: 15px;">⭕</td>'; }
                       if (rec && rec.status === '지각') { l++; return '<td style="border: 1px solid #cbd5e1; color: #d97706; font-weight: bold; font-size: 15px;">△</td>'; }
@@ -3409,7 +3409,7 @@ ${className} ${leaderName} 리더입니다.
           if (!isYearly) {
             const validRecs = this.rawRecords.filter(r => (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
             
-            // 🚀 [속도 최적화] 2번 표를 위한 전용 검색 캐시 맵 생성
+            // 🚀 [수정] 2번 결산표를 위한 전용 검색 캐시 사전 생성
             const activeDates = new Set();
             const validRecMap = {};
             validRecs.forEach(r => {
@@ -3423,13 +3423,15 @@ ${className} ${leaderName} 리더입니다.
 
             const t1WeeklyTotals = sabbaths.map(s => {
               return reportActiveMembers.filter(m => {
-                const r = validRecMap[`${s.dateStr}_${m.memberId}`]; // 💡 1초 컷!
+                const r = validRecMap[`${s.dateStr}_${m.memberId}`]; // 💡 초고속 검색
                 return r && (r.status === '출석' || r.status === '지각');
               }).length;
             });
+            
             const t1TotalMembers = reportActiveMembers.length;
             let t1TotalScore = 0;
             let t1TotalChecked = 0; 
+            
             reportActiveMembers.forEach(m => {
               validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
                 if (r.status === '출석') { t1TotalScore += 1.0; t1TotalChecked++; }
@@ -3444,10 +3446,11 @@ ${className} ${leaderName} 리더입니다.
 
             const t2WeeklyTotals = sabbaths.map(s => {
               return reportActiveMembers.filter(m => {
-                const r = validRecMap[`${s.dateStr}_${m.memberId}`]; // 💡 1초 컷!
+                const r = validRecMap[`${s.dateStr}_${m.memberId}`]; // 💡 초고속 검색
                 return r && (r.status === '출석' || r.status === '지각' || (r.status === '결석' && r.worshipAttended));
               }).length;
             });
+            
             let t2WorshipSum = 0;
             reportActiveMembers.forEach(m => {
               validRecs.filter(r => r.memberId === m.memberId).forEach(r => {
@@ -3456,6 +3459,7 @@ ${className} ${leaderName} 리더입니다.
                 }
               });
             });
+            
             const t2AvgPresentRaw = t2WorshipSum / conductedWeeks;
             const t2AvgPresent = t2AvgPresentRaw.toFixed(1) + '명';
             const t2AvgRate = t1TotalMembers > 0 ? ((t2AvgPresentRaw / t1TotalMembers) * 100).toFixed(1) + '%' : '0.0%';
@@ -3825,7 +3829,7 @@ ${className} ${leaderName} 리더입니다.
         
         setTimeout(() => {
           window.print();
-        }, 800);
+        }, 500);
       }
 
       exportExcel(type) {

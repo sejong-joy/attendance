@@ -3293,17 +3293,9 @@ ${className} ${leaderName} 리더입니다.
       }
 
     printReport(type) {
-        // 🚀 1. 사파리 엔진을 40초 동안 기절시키는 주범! 
-        // 팝업창의 '블러 효과'와 '애니메이션'을 0초 만에 강제 삭제하여 렌더링 충돌을 원천 차단합니다.
-        const modals = document.querySelectorAll('div[id$="Modal"]');
-        modals.forEach(m => {
-          m.style.transition = 'none'; 
-          m.style.backdropFilter = 'none'; 
-          m.style.webkitBackdropFilter = 'none';
-          m.style.display = 'none'; // 스르륵 닫히지 않고 즉시 증발시킴
-        });
+        // 💡 1. 팝업창 즉시 닫기 (시간 지연 없음!)
+        this.closeExportModal();
 
-        // 🚀 2. 초고속 사전(Map) 캐싱으로 데이터 연산 0.01초 컷
         const year = document.getElementById('yearSelect')?.value || '2026';
         const quarter = document.getElementById('quarterSelect')?.value || '3기';
         const isYearly = document.querySelector('input[name="reportPeriod"]:checked')?.value === 'year';
@@ -3321,12 +3313,11 @@ ${className} ${leaderName} 리더입니다.
         }
 
         const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
-        const printBox = document.getElementById('printContainer');
-        if (!printBox) return;
 
-        const validRecMap = {};
+        // 초고속 사전(Map)을 이용해 0.01초 만에 데이터 준비
+        const globalRecMap = {};
         this.rawRecords.forEach(r => {
-          if (r.date) validRecMap[`${this.normalizeDateStr(r.date)}_${r.memberId}`] = r;
+          if (r.date) globalRecMap[`${this.normalizeDateStr(r.date)}_${r.memberId}`] = r;
         });
 
         let html = '';
@@ -3381,7 +3372,7 @@ ${className} ${leaderName} 리더입니다.
                   ${targetMembers.map(m => {
                     let p = 0, l = 0, a = 0, w = 0;
                     const weekTds = sabbaths.map(s => {
-                      const rec = validRecMap[`${s.dateStr}_${m.memberId}`];
+                      const rec = globalRecMap[`${s.dateStr}_${m.memberId}`];
                       if (rec && rec.status === '출석') { p++; return '<td style="border: 1px solid #cbd5e1; color: #059669; font-weight: bold; font-size: 15px;">⭕</td>'; }
                       if (rec && rec.status === '지각') { l++; return '<td style="border: 1px solid #cbd5e1; color: #d97706; font-weight: bold; font-size: 15px;">△</td>'; }
                       if (rec && rec.status === '결석') { 
@@ -3421,7 +3412,12 @@ ${className} ${leaderName} 리더입니다.
             const validRecs = this.rawRecords.filter(r => (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
             
             const activeDates = new Set();
-            validRecs.forEach(r => activeDates.add(this.normalizeDateStr(r.date)));
+            const validRecMap = {};
+            validRecs.forEach(r => {
+              const nDate = this.normalizeDateStr(r.date);
+              activeDates.add(nDate);
+              validRecMap[`${nDate}_${r.memberId}`] = r;
+            });
             const conductedWeeks = activeDates.size > 0 ? activeDates.size : 1; 
 
             const reportActiveMembers = this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
@@ -3829,29 +3825,54 @@ ${className} ${leaderName} 리더입니다.
           `;
         }
 
-        printBox.innerHTML = html;
+        // 🚀 4. 메인 화면에 쑤셔넣는 대신 완전히 독립된, 가벼운 투명 Iframe(새 창)을 생성!
+        // (Tailwind 등 메인 화면의 무거운 스크립트들이 인쇄 화면을 스캔하지 못하게 완벽히 분리)
+        let printFrame = document.getElementById('safariPrintFrame');
+        if (!printFrame) {
+          printFrame = document.createElement('iframe');
+          printFrame.id = 'safariPrintFrame';
+          // 아이패드 화면 밖으로 숨김 처리
+          printFrame.style.position = 'fixed';
+          printFrame.style.right = '0';
+          printFrame.style.bottom = '0';
+          printFrame.style.width = '0px';
+          printFrame.style.height = '0px';
+          printFrame.style.border = 'none';
+          document.body.appendChild(printFrame);
+        }
 
-        // 🚀 4. 리더님이 엑셀 클릭 시 경험했던 그 마법(화면 강제 고침)을 단 한 줄로 재현!
-        void document.body.offsetHeight; 
+        const frameDoc = printFrame.contentWindow.document;
+        frameDoc.open();
+        // Iframe 안에는 오직 순수한 HTML과 표 CSS만 들어갑니다. (Tailwind 차단)
+        frameDoc.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <style>
+              @page { size: auto; margin: 12mm 10mm; }
+              body { 
+                font-family: 'Noto Sans KR', sans-serif; 
+                background: white; 
+                margin: 0; 
+                padding: 0; 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact; 
+              }
+              table { width: 100%; border-collapse: collapse; page-break-inside: auto; }
+              tr { page-break-inside: avoid; page-break-after: auto; }
+              thead { display: table-header-group; }
+            </style>
+          </head>
+          <body>
+            ${html}
+          </body>
+          </html>
+        `);
+        frameDoc.close();
 
-        // 🚀 5. setTimeout(시간 지연) 없이 0.05초 만에 즉시 인쇄 실행! (사파리 1초 만료 보안망 완벽 통과)
-        setTimeout(() => {
-          window.print();
-          
-          // 인쇄가 끝나면 숨겼던 차트와 모달창 원래대로 복구
-          modals.forEach(m => {
-            m.style.transition = ''; 
-            m.style.backdropFilter = ''; 
-            m.style.webkitBackdropFilter = '';
-            m.style.display = ''; 
-          });
-          
-          this.closeExportModal();
-          const statsContent = document.getElementById('tabContent-stats');
-          if (statsContent && !statsContent.classList.contains('hidden')) {
-            this.calculateAndRenderStatistics();
-          }
-        }, 50); 
+        // 🚀 5. 메인 스크립트의 간섭이 완전히 차단된 Iframe에서 즉시 0초 컷으로 인쇄 명령!
+        printFrame.contentWindow.focus();
+        printFrame.contentWindow.print();
       }
 
       exportExcel(type) {

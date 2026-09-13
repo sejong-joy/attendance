@@ -514,7 +514,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     // 💡 [수정] updateDoc 명령어 추가
-    import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, onSnapshot, writeBatch, enableIndexedDbPersistence, disableNetwork, enableNetwork, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, writeBatch, enableIndexedDbPersistence, disableNetwork, enableNetwork, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js";
 
     const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzn2kkDIqszr-dMUbYPHffHlubtBjXb-mYUWApYeU9ot3lYkvrhVl_KPsNL9Y72-ZhK/exec";
@@ -3340,8 +3340,8 @@
         this.showLoading('1단계: 파이어베이스에서 기존 V1 데이터를 불러오는 중...');
 
         try {
-          // 1. 파이어베이스 V1 원본 컬렉션(attendance_records) 전체 호출
-          const v1Snapshot = await window.getDocs(window.collection(window.db, 'attendance_records'));
+          // 💡 [수정됨] window. 제거! 그냥 getDocs, collection, db 를 바로 씁니다.
+          const v1Snapshot = await getDocs(collection(db, 'attendance_records'));
           
           if (v1Snapshot.empty) {
             throw new Error('파이어베이스 V1(attendance_records)에 기존 출석 데이터가 없습니다.');
@@ -3391,8 +3391,9 @@
           // 3. 파이어베이스 V2 컬렉션(attendance_records_v2)에 순차 저장
           let count = 0;
           for (const docId in v2DataMap) {
-            const docRef = window.doc(window.db, 'attendance_records_v2', docId);
-            await window.setDoc(docRef, v2DataMap[docId], { merge: true });
+            // 💡 [수정됨] 여기도 window. 제거!
+            const docRef = doc(db, 'attendance_records_v2', docId);
+            await setDoc(docRef, v2DataMap[docId], { merge: true });
             count++;
           }
 

@@ -498,8 +498,8 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    // 💡 [V2 핵심 추가] deleteField 함수 추가 (압축된 문서 내부의 특정 주차 기록만 깔끔하게 지우기 위함)
-    import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot, writeBatch, enableIndexedDbPersistence, disableNetwork, enableNetwork, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    // 💡 [수정] updateDoc 명령어 추가
+    import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, onSnapshot, writeBatch, enableIndexedDbPersistence, disableNetwork, enableNetwork, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js";
 
     const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzn2kkDIqszr-dMUbYPHffHlubtBjXb-mYUWApYeU9ot3lYkvrhVl_KPsNL9Y72-ZhK/exec";
@@ -533,7 +533,7 @@
         this.classList = [];
         this.rawMembers = [];
         this.rawVisitors = [];
-        this.rawRecords = []; // 💡 메모리 상에서는 기존과 똑같이 1주=1개 배열로 풀어서 보관 (UI 호환성 100% 유지)
+        this.rawRecords = []; 
         this.currentAttendance = {};
         this.absentAlertMap = {};
         this.careNotesMap = {};
@@ -1023,13 +1023,11 @@
         }
       }
 
-      // 💡 [V2 핵심] Firebase에서 불러오는 순간 1분기 1문서 포맷을 해체(Flatten)하여 메모리에 예전 포맷처럼 보관!
       subscribeRealtimeRecords() {
         if (!isFirebaseReady || !db) return;
         if (this.unsubscribeRecords) { this.unsubscribeRecords(); this.unsubscribeRecords = null; }
 
         try {
-          // 💡 V2 컬렉션(attendance_records_v2) 구독
           const recordsCol = collection(db, 'attendance_records_v2');
           this.unsubscribeRecords = onSnapshot(recordsCol, (snapshot) => {
             snapshot.docChanges().forEach((change) => {
@@ -1038,14 +1036,12 @@
               const docQuarter = docData.quarter;
               const docYear = docData.year;
 
-              // 1. 해당 문서(특정 교인의 특정 분기)의 기존 메모리 데이터를 싹 비웁니다.
               this.rawRecords = this.rawRecords.filter(r => !(r.memberId === memberId && r.quarter === docQuarter && r.date.startsWith(docYear)));
 
-              // 2. 문서가 삭제된 게 아니라면, 분기 문서 내부의 'weeks'를 순회하며 낱장 레코드로 복원해 메모리에 밀어 넣습니다.
               if (change.type !== "removed" && docData.weeks) {
                 for (const [dateStr, weekData] of Object.entries(docData.weeks)) {
                   this.rawRecords.push({
-                    recordId: `${dateStr}_${memberId}`, // UI 호환용 가상 ID
+                    recordId: `${dateStr}_${memberId}`, 
                     date: dateStr,
                     quarter: docQuarter,
                     memberId: memberId,
@@ -1080,7 +1076,6 @@
         }
       }
 
-      // 돌봄 노트도 V2 컬렉션으로 분리
       subscribeCareNotes() {
         if (!isFirebaseReady || !db) return;
         if (this.unsubscribeCareNotes) { this.unsubscribeCareNotes(); this.unsubscribeCareNotes = null; }
@@ -1413,7 +1408,6 @@
 
         if (isFirebaseReady && db) {
           try {
-            // 돌봄 노트도 V2 컬렉션에 저장합니다.
             await setDoc(doc(db, 'care_notes_v2', memberId), careData);
           } catch(e) {}
         }
@@ -1572,7 +1566,7 @@
         this.updateAttendanceSummary();
       }
 
-      // 💡 [V2 핵심] Firebase 저장 로직 변경: 낱장 문서 생성 ➔ "연도_분기_멤버ID" 문서를 찾아서 merge 방식으로 덮어씌움!
+      // 💡 [수정] 문법 오류 (setDoc에서 점(.) 표현식 사용 불가) 해결
       async setStatus(memberId, status) {
         if (!this.currentAttendance[memberId]) {
           this.currentAttendance[memberId] = { status: null, reason: '', worshipAttended: false };
@@ -1602,7 +1596,6 @@
           this.rawRecords[idx].worshipAttended = false; 
         }
 
-        // 💡 [V2 압축 저장소] 문서 ID는 분기별 1개로 통일! (예: "2026_3기_M001")
         const quarterDocId = `${year}_${quarter}_${memberId}`;
 
         if (isCancelling) {
@@ -1611,10 +1604,10 @@
           if (isFirebaseReady && db) {
             try {
               const docRef = doc(db, 'attendance_records_v2', quarterDocId);
-              // 💡 deleteField()를 이용해 해당 주차(weeks.날짜)의 배열 요소만 쏙 지웁니다! 트래픽 1/13 절감!
-              await setDoc(docRef, {
+              // 💡 취소할 때는 문서가 무조건 존재하므로 updateDoc과 deleteField()를 씁니다.
+              await updateDoc(docRef, {
                 [`weeks.${targetDate}`]: deleteField()
-              }, { merge: true });
+              });
             } catch (e) {
               console.error("Firestore 부분 삭제 오류:", e);
             }
@@ -1622,9 +1615,8 @@
         } else {
           const score = finalStatus === '출석' ? 1.0 : (finalStatus === '지각' ? 0.5 : 0.0);
           
-          // 내부 앱 메모리용 낱장 객체 구성
           const recordDataForMemory = {
-            recordId: `${targetDate}_${memberId}`, // 호환성용 가짜 ID
+            recordId: `${targetDate}_${memberId}`, 
             date: targetDate,
             quarter: quarter,
             memberId: memberId,
@@ -1658,8 +1650,6 @@
           if (isFirebaseReady && db) {
             try {
               const docRef = doc(db, 'attendance_records_v2', quarterDocId);
-              
-              // 💡 DB 전송용 객체: "이번 주 데이터만" 병합(Merge) 방식으로 전송!
               const weekDataForDB = {
                 status: recordDataForMemory.status,
                 score: recordDataForMemory.score,
@@ -1670,12 +1660,15 @@
                 classId: recordDataForMemory.classId
               };
 
+              // 💡 [수정] 점(.) 문법 대신 중첩 객체 그대로 전송 (setDoc의 merge 규칙 준수)
               await setDoc(docRef, {
                 memberId: memberId,
                 classId: member.classId,
                 quarter: quarter,
                 year: String(year),
-                [`weeks.${targetDate}`]: weekDataForDB
+                weeks: {
+                  [targetDate]: weekDataForDB
+                }
               }, { merge: true });
             } catch (e) {
               console.error("Firestore 압축 저장 오류:", e);
@@ -1809,7 +1802,6 @@
         });
       }
 
-      // 💡 [V2 핵심] 설교 예배 다중 체크 역시 분기별 압축 문서로 묶어서 보냅니다.
       async saveWorshipBatchAttendance() {
         const targetDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
         const quarter = document.getElementById('quarterSelect')?.value || '1기';
@@ -1834,7 +1826,6 @@
             const docRef = (isFirebaseReady && db) ? doc(db, 'attendance_records_v2', quarterDocId) : null;
 
             if (isAttended) {
-              // 1. 메모리 업데이트
               if (!rec) {
                 rec = {
                   recordId: `${targetDate}_${memberId}`, date: targetDate, quarter: quarter,
@@ -1855,22 +1846,20 @@
                 this.currentAttendance[memberId].status = rec.status;
               }
 
-              // 2. DB 일괄 저장 포맷 세팅 (해당 주차만 병합)
               if (batch && docRef) {
+                // 💡 [수정] 점 문법 대신 중첩 객체로 병합 전달
                 batch.set(docRef, {
-                  memberId: memberId,
-                  classId: member.classId,
-                  quarter: quarter,
-                  year: String(year),
-                  [`weeks.${targetDate}`]: {
-                    status: rec.status, score: rec.score, reason: rec.reason,
-                    worshipAttended: true, checkedBy: rec.checkedBy, updatedAt: rec.updatedAt, classId: rec.classId
+                  memberId: memberId, classId: member.classId, quarter: quarter, year: String(year),
+                  weeks: {
+                    [targetDate]: {
+                      status: rec.status, score: rec.score, reason: rec.reason,
+                      worshipAttended: true, checkedBy: rec.checkedBy, updatedAt: rec.updatedAt, classId: rec.classId
+                    }
                   }
                 }, { merge: true });
               }
 
             } else {
-              // 예배 참석 체크 해제 시
               if (rec && rec.worshipAttended) {
                 rec.worshipAttended = false;
                 if (rec.reason === '설교 예배 참석') rec.reason = '';
@@ -1881,11 +1870,12 @@
                 }
 
                 if (batch && docRef) {
-                  batch.set(docRef, {
+                  // 💡 해제 시에는 값이 존재하므로 update 명령어 안전 사용
+                  batch.update(docRef, {
                     [`weeks.${targetDate}.worshipAttended`]: false,
                     [`weeks.${targetDate}.reason`]: rec.reason,
                     [`weeks.${targetDate}.updatedAt`]: rec.updatedAt
-                  }, { merge: true });
+                  });
                 }
               }
             }
@@ -1970,12 +1960,20 @@
         if (existing) existing.reason = reason;
 
         const quarterDocId = `${year}_${quarter}_${memberId}`;
+        const member = this.rawMembers.find(m => m.memberId === memberId);
         
-        if (isFirebaseReady && db) {
+        if (isFirebaseReady && db && member) {
           try {
             const docRef = doc(db, 'attendance_records_v2', quarterDocId);
+            // 💡 [수정] 점 문법 대신 중첩 객체로 병합 전달
             await setDoc(docRef, {
-              [`weeks.${targetDate}.reason`]: reason
+              memberId: memberId,
+              classId: member.classId,
+              quarter: quarter,
+              year: String(year),
+              weeks: {
+                [targetDate]: { reason: reason }
+              }
             }, { merge: true });
           } catch (e) {}
         }
@@ -2625,7 +2623,6 @@
         this.pendingResetType = null;
       }
 
-      // 💡 [V2 핵심] 초기화할 때 1분기 1문서 포맷을 삭제하도록 변경
       async executeDataReset() {
         const inp = document.getElementById('resetConfirmInput')?.value?.trim();
         if (inp !== '초기화') {
@@ -2651,7 +2648,6 @@
               });
               this.rawRecords = this.rawRecords.filter(r => r.quarter !== curQuarter);
             } else {
-              // 💡 1개년 치 1기~4기 전부 삭제 시도
               this.rawMembers.forEach(m => {
                 ['1기','2기','3기','4기'].forEach(q => {
                   batch.delete(doc(db, 'attendance_records_v2', `${year}_${q}_${m.memberId}`));
@@ -3262,7 +3258,6 @@
           XLSX.writeFile(wb, `${year}_${quarter}_${className}_출석부.xlsx`);
         } 
         
-        // (type 2, 4, 5는 기존과 완전히 동일하므로 생략 없이 정상 작동하게 남겨둡니다.)
         this.showToast('📥 엑셀 파일 다운로드가 준비되었습니다.', 'success');
         this.closeExportModal();
       }
@@ -3299,4 +3294,4 @@
     });
   </script>
 </body>
-</html>  
+</html>

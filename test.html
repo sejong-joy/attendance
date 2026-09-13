@@ -340,6 +340,14 @@
             </div>
             <button onclick="window.appInstance.printReport(3)" class="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white font-black text-sm rounded-lg transition shadow-2xs">🖨️ 수기 체크표 인쇄</button>
           </div>
+          <!-- 💡 [추가] 관리자 전용 구글 시트 안전 백업 버튼 영역 -->
+          <div id="adminBackupSection" class="p-3 bg-emerald-50 border border-emerald-300 rounded-xl space-y-2 mt-4">
+            <div class="flex items-center justify-between">
+              <span class="font-black text-emerald-900 text-sm sm:text-base flex items-center space-x-1.5"><span>💾</span><span>관리자 전용: 구글 시트 백업</span></span><span class="text-xs font-black bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded">교역자 전용</span>
+            </div>
+            <p class="text-xs text-emerald-800 font-bold leading-relaxed">파이어베이스의 압축된 V2 데이터를 해체하여 구글 시트 '출석_기록' 탭에 백업합니다.</p>
+            <button onclick="window.appInstance.backupToGoogleSheets()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-xl transition shadow-md">데이터 원본 백업 실행</button>
+          </div>
           <div id="adminResetSection" class="hidden p-3 bg-red-50 border border-red-300 rounded-xl space-y-2 mt-4">
             <div class="flex items-center justify-between">
               <span class="font-black text-red-900 text-sm sm:text-base flex items-center space-x-1.5"><span>⚠️</span><span>V2 출석 데이터 초기화 (Reset)</span></span>
@@ -3292,6 +3300,38 @@
     window.addEventListener('DOMContentLoaded', () => {
       window.appInstance.init();
     });
+
+    async backupToGoogleSheets() {
+        if (!this.currentUser || !this.currentUser.isAdmin) return;
+        if (!confirm('현재 파이어베이스의 출석 데이터를 구글 시트에 안전하게 백업하시겠습니까?\n(기존 시트 내용은 현재 데이터로 덮어쓰기 됩니다.)')) return;
+
+        this.closeExportModal();
+        this.showLoading('구글 시트에 데이터를 일괄 백업 중입니다...');
+
+        try {
+          // V2 메모리 상에 낱장으로 풀려있는(Flatten) 데이터를 통째로 백엔드로 전송
+          const payload = {
+            action: 'backupAttendanceData',
+            records: this.rawRecords
+          };
+
+          const res = await fetch(SHEETS_API_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+          const json = await res.json();
+          this.hideLoading();
+
+          if (json.success) {
+            this.showToast('✨ 구글 시트 백업이 성공적으로 완료되었습니다.', 'success');
+          } else {
+            this.showToast(json.message || '백업에 실패했습니다.', 'error');
+          }
+        } catch (err) {
+          this.hideLoading();
+          this.showToast('백업 중 네트워크 오류가 발생했습니다.', 'error');
+        }
+      }
   </script>
 </body>
 </html>

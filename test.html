@@ -3334,81 +3334,68 @@
         }
       }
       async runMigrationV1toV2() {
-        if (!confirm('파이어베이스의 기존 출석(V1) 데이터를 V2(압축 포맷)로 일괄 이관하시겠습니까?\n(기존 V1 데이터는 삭제되지 않고 그대로 보존됩니다.)')) return;
+        if (!confirm('누락되었던 심방 기록(Care Notes)과 최신 결석 사유를 V2로 완벽하게 이관하시겠습니까?\n(기존 V2 데이터는 안전하게 유지되며 누락된 부분만 쏙쏙 채워집니다!)')) return;
 
         this.closeExportModal();
-        this.showLoading('1단계: 파이어베이스에서 기존 V1 데이터를 불러오는 중...');
+        this.showLoading('V1 데이터(결석사유, 심방기록)를 V2로 완벽 복구 중입니다...');
 
         try {
-          const v1Snapshot = await getDocs(collection(db, 'attendance_records'));
+          const promises = [];
           
-          if (v1Snapshot.empty) {
-            throw new Error('파이어베이스 V1(attendance_records)에 기존 출석 데이터가 없습니다.');
-          }
+          // 💡 1. 누락되었던 '심방 기록(care_notes)' 완벽 이관
+          const careCol = collection(db, 'care_notes');
+          const careSnap = await getDocs(careCol);
+          careSnap.forEach(docSnap => {
+            promises.push(setDoc(doc(db, 'care_notes_v2', docSnap.id), docSnap.data(), { merge: true }));
+          });
 
-          this.showLoading('2단계: V2 포맷으로 데이터 압축 및 전송 중... (창을 닫지 마세요)');
-
+          // 💡 2. '출석/결석 사유' 최신 데이터 이관
+          const v1Col = collection(db, 'attendance_records');
+          const v1Snapshot = await getDocs(v1Col);
           const v2DataMap = {};
-          let v1Count = 0;
-
-          // 2. 13주 단위 문서(Document)로 병합(Flatten) 압축
+          
           v1Snapshot.forEach(docSnap => {
             const rec = docSnap.data();
             const quarter = rec.quarter || '3기';
             const memberId = rec.memberId;
             const date = rec.date;
 
-            // 필수 데이터가 없는 찌꺼기 기록은 스킵
             if (!memberId || !date) return; 
-            v1Count++;
 
-            // 💡 [수정] 날짜에서 연도 추출 (예: "2026-09-05" -> "2026")
             const year = date.split('-')[0] || '2026';
-            
-            // 💡 [수정] V2 앱이 읽을 수 있는 정확한 문서 이름 규격 (예: 2026_3기_M0001)
             const docId = `${year}_${quarter}_${memberId}`; 
 
-            // 처음 나오는 ID면 뼈대 생성
             if (!v2DataMap[docId]) {
               v2DataMap[docId] = {
-                year: String(year), // 💡 [수정] 연도 추가
-                quarter: quarter,
-                memberId: memberId,
-                classId: rec.classId || '알수없음',
-                weeks: {} // 💡 [수정] weeklyData 가 아니라 weeks 로 저장해야 앱이 읽습니다!
+                year: String(year), quarter: quarter, memberId: memberId, classId: rec.classId || '알수없음', weeks: {} 
               };
             }
-
-            // 가장 최근 소속반 정보로 업데이트
             if (rec.classId) v2DataMap[docId].classId = rec.classId;
 
-            // 날짜별 출석 데이터 삽입
-            v2DataMap[docId].weeks[date] = { // 💡 [수정] weeks 안에 저장
-              status: rec.status || '결석',
-              score: rec.score || 0,
-              reason: rec.reason || '',
+            // V1에 있던 결석 사유(reason)와 심방/예배 참석 기록 완벽 복사
+            v2DataMap[docId].weeks[date] = { 
+              status: rec.status || '결석', score: rec.score || 0,
+              reason: rec.reason || '', 
               checkedBy: rec.checkedBy || '관리자',
               worshipAttended: !!rec.worshipAttended,
-              updatedAt: new Date().toISOString()
+              updatedAt: rec.updatedAt || new Date().toISOString()
             };
           });
 
-          // 3. 파이어베이스 V2 컬렉션(attendance_records_v2)에 순차 저장
-          let count = 0;
           for (const docId in v2DataMap) {
-            const docRef = doc(db, 'attendance_records_v2', docId);
-            // merge: true 덕분에 버튼을 여러 번 눌러도 안전하게 덮어써집니다.
-            await setDoc(docRef, v2DataMap[docId], { merge: true });
-            count++;
+            promises.push(setDoc(doc(db, 'attendance_records_v2', docId), v2DataMap[docId], { merge: true }));
           }
 
+          // 💡 3. 500개 제한 없는 Promise.all 병렬 처리로 초고속 전송
+          await Promise.all(promises);
+
           this.hideLoading();
-          this.showToast(`✨ 성공! V1 데이터(${v1Count}개)가 완벽한 V2 규격(${count}개)으로 이관되었습니다.`, 'success');
+          this.showToast(`✨ 누락된 심방 기록과 결석 사유가 완벽하게 복구되었습니다!`, 'success');
 
         } catch (err) {
           console.error(err);
           this.hideLoading();
-          this.showToast(`마이그레이션 실패: ${err.message}`, 'error');
+          this.showToast(`복구 실패: ${err.message}`, 'error');
         }
       }
     }

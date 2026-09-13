@@ -1894,6 +1894,7 @@ ${className} ${leaderName} 리더입니다.
         }
 
         const idx = this.rawRecords.findIndex(r => this.normalizeDateStr(r.date) === targetDate && r.memberId === memberId);
+        if (idx >= 0 && (finalStatus === '출석' || finalStatus === '지각')) { this.rawRecords[idx].worshipAttended = false; }
 
         if (isCancelling) {
           if (idx >= 0) this.rawRecords.splice(idx, 1);
@@ -1917,7 +1918,7 @@ ${className} ${leaderName} 리더입니다.
             status: finalStatus,
             score: score,
             reason: this.currentAttendance[memberId].reason || '',
-            worshipAttended: !!this.currentAttendance[memberId].worshipAttended,
+            worshipAttended: (finalStatus === '출석' || finalStatus === '지각') ? false : !!this.currentAttendance[memberId].worshipAttended,
             checkedBy: this.currentUser?.leaderName || '리더',
             updatedAt: new Date().toISOString()
           };

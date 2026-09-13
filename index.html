@@ -512,7 +512,57 @@
         </form>
       </div>
     </div>
-    
+    <!-- ✏️ 교인 정보 및 상태 수정 모달 (관리자 전용) -->
+    <div id="editMemberModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-2.5 transition-opacity duration-200 opacity-0 pointer-events-none">
+      <div class="bg-white rounded-2xl shadow-2xl border border-blue-300 w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-200" id="editMemberModalBox">
+        <div class="px-4 py-3 bg-blue-50 border-b border-blue-100 flex items-center justify-between">
+          <div class="flex items-center space-x-2"><span class="text-2xl">✏️</span><div><h3 class="text-lg font-black text-blue-950 leading-tight">교인 정보 수정</h3><p class="text-xs text-blue-800 font-bold">직분 및 교적 상태 변경</p></div></div>
+          <button type="button" onclick="window.appInstance.closeEditMemberModal()" class="text-slate-400 hover:text-slate-700 font-bold text-2xl p-1">✕</button>
+        </div>
+        <form onsubmit="event.preventDefault(); window.appInstance.submitEditMember();" class="p-3.5 space-y-2.5">
+          <input type="hidden" id="editMemberId">
+          <div>
+            <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">성명 *</label>
+            <input type="text" id="editMemberName" required class="w-full px-3 py-2 bg-white border-2 border-slate-300 rounded-xl text-base font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">연락처</label>
+            <input type="tel" id="editMemberPhone" maxlength="13" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/^(\d{2,3})(\d{3,4})(\d{1,4})$/g, '$1-$2-$3');" class="w-full px-3 py-2 bg-white border-2 border-slate-300 rounded-xl text-base font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">소속반 *</label>
+              <select id="editMemberClassSelect" class="w-full px-2 py-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-xs sm:text-sm font-black text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
+            </div>
+            <div>
+              <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">직분</label>
+              <input type="text" id="editMemberRole" placeholder="예: 집사" class="w-full px-2 py-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-xs sm:text-sm font-black text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+          </div>
+          <div class="p-2 bg-slate-50 rounded-xl border border-slate-200">
+            <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">상태 (소프트 삭제 관리) *</label>
+            <select id="editMemberStatus" class="w-full px-3 py-2 bg-white border-2 border-slate-300 rounded-xl text-sm font-black text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+              <option value="활동">🟢 활동 (정규 출석)</option>
+              <option value="새가족">🌱 새가족 (정규 출석)</option>
+              <option value="방문자">🏷️ 단순 방문자</option>
+              <option disabled>──────────</option>
+              <option value="전출">✈️ 전출 (출석부 제외)</option>
+              <option value="이명">✈️ 이명 (출석부 제외)</option>
+              <option value="휴면">💤 휴면 (장기결석 제외)</option>
+              <option value="별세">🕊️ 별세 (명부 보존용)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">비고 메모</label>
+            <input type="text" id="editMemberNote" class="w-full px-3 py-2 bg-white border-2 border-slate-300 rounded-xl text-xs sm:text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
+          <div class="flex space-x-2 pt-1">
+            <button type="button" onclick="window.appInstance.closeEditMemberModal()" class="w-1/2 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-black text-sm tracking-tight rounded-xl transition">취소</button>
+            <button type="submit" class="w-1/2 py-2 bg-blue-600 hover:bg-blue-700 text-white font-black text-sm tracking-tight rounded-xl transition shadow-md">정보 수정 저장</button>
+          </div>
+        </form>
+      </div>
+    </div>
     <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-50 flex items-center justify-center transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white/95 p-4 sm:p-5 rounded-2xl shadow-2xl flex flex-col items-center space-y-2 max-w-xs text-center border border-slate-200">
         <div class="w-9 h-9 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
@@ -2868,13 +2918,18 @@ ${className} ${leaderName} 리더입니다.
           const isLeader = (m.name === cls.leaderName || m.name === cls.subLeader);
           let roleBadgeHtml = `<span class="text-xs sm:text-sm font-bold text-slate-700 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded whitespace-nowrap">${isLeader ? '👑 ' : ''}${m.role || '-'}</span>`;
 
-          let statusBadgeClass = 'bg-slate-200 text-slate-700 border-slate-300';
+         let statusBadgeClass = 'bg-slate-200 text-slate-700 border-slate-300';
           if (m.status === '활동') statusBadgeClass = 'bg-emerald-100 text-emerald-900 border-emerald-300';
           else if (m.status === '새가족') statusBadgeClass = 'bg-amber-100 text-amber-900 border-amber-300';
 
+          // 💡 [수정] 관리자로 로그인 시, 이름 부분에 클릭 가능한 버튼(수정 팝업 열기)을 씌워줍니다.
+          let finalNameHtml = displayName;
+          if (isAdmin) {
+            finalNameHtml = `<button type="button" onclick="window.appInstance.openEditMemberModal('${m.memberId}')" class="text-left font-black text-[17px] text-blue-700 hover:text-blue-900 flex flex-col sm:flex-row sm:items-center gap-1 transition"><span>${displayName}</span><span class="text-[10px] bg-blue-100 border border-blue-300 text-blue-800 px-1.5 py-0.5 rounded shadow-2xs">수정✏️</span></button>`;
+          }
+
           tr.innerHTML = 
-            // 👇 [수정] m.name 대신 displayName을 넣고 leading-tight(줄간격 조절) 적용
-            '<td class="py-2 px-2 font-black text-slate-950 text-base sm:text-lg leading-tight whitespace-nowrap">' + displayName + '</td>' +
+            '<td class="py-2 px-2 font-black text-slate-950 text-base sm:text-lg leading-tight whitespace-nowrap">' + finalNameHtml + '</td>' +
             '<td class="py-2.5 px-2.5 whitespace-nowrap">' + classCellHtml + '</td>' +
             '<td class="py-2.5 px-2 whitespace-nowrap">' + roleBadgeHtml + '</td>' +
             '<td class="py-2.5 px-2 text-center whitespace-nowrap">' +
@@ -3195,6 +3250,119 @@ ${className} ${leaderName} 리더입니다.
         const box = document.getElementById('newMemberModalBox');
         if (box) { box.classList.remove('scale-100'); box.classList.add('scale-95'); }
         if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
+      }
+
+      // 💡 [신규 추가] 정보 수정 모달 열기
+      openEditMemberModal(memberId) {
+        if (!this.currentUser || !this.currentUser.isAdmin) return;
+        const member = this.rawMembers.find(m => m.memberId === memberId);
+        if (!member) return;
+
+        document.getElementById('editMemberId').value = memberId;
+        document.getElementById('editMemberName').value = member.name || '';
+        document.getElementById('editMemberPhone').value = member.phone || '';
+        document.getElementById('editMemberRole').value = member.role || '';
+        document.getElementById('editMemberStatus').value = member.status || '활동';
+        document.getElementById('editMemberNote').value = member.notes || '';
+
+        const classSelect = document.getElementById('editMemberClassSelect');
+        if (classSelect) {
+          classSelect.innerHTML = '';
+          const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
+          activeClasses.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.classId;
+            opt.textContent = `${c.className} (${c.leaderName} 리더)`;
+            if (c.classId === member.classId) opt.selected = true;
+            classSelect.appendChild(opt);
+          });
+        }
+
+        const modal = document.getElementById('editMemberModal');
+        const box = document.getElementById('editMemberModalBox');
+        if (modal && box) {
+          modal.classList.remove('pointer-events-none', 'opacity-0');
+          box.classList.remove('scale-95');
+          box.classList.add('scale-100');
+        }
+      }
+
+      // 💡 [신규 추가] 정보 수정 모달 닫기
+      closeEditMemberModal() {
+        const modal = document.getElementById('editMemberModal');
+        const box = document.getElementById('editMemberModalBox');
+        if (box) { box.classList.remove('scale-100'); box.classList.add('scale-95'); }
+        if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
+      }
+
+      // 💡 [신규 추가] 구글 시트로 수정 내역 전송 (저장 버튼 누를 때)
+      async submitEditMember() {
+        const memberId = document.getElementById('editMemberId')?.value;
+        const name = document.getElementById('editMemberName')?.value?.trim();
+        const phone = document.getElementById('editMemberPhone')?.value?.trim();
+        const classId = document.getElementById('editMemberClassSelect')?.value;
+        const role = document.getElementById('editMemberRole')?.value?.trim() || '성도';
+        const status = document.getElementById('editMemberStatus')?.value || '활동';
+        const note = document.getElementById('editMemberNote')?.value?.trim() || '';
+
+        if (!memberId || !name) {
+          this.showToast('성명을 입력해주세요.', 'error');
+          return;
+        }
+
+        this.showLoading(`${name} 님의 정보를 수정 중...`);
+
+        try {
+          const payload = {
+            action: 'updateMemberInfo', // 구글 시트용 API 액션 이름 (GAS 수정 필요)
+            memberId: memberId,
+            name: name,
+            phone: phone,
+            classId: classId,
+            role: role,
+            status: status,
+            notes: note
+          };
+
+          const res = await fetch(SHEETS_API_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+          const json = await res.json();
+
+          this.hideLoading();
+
+          if (json.success) {
+            // 화면상에 들고 있던 데이터 즉시 업데이트
+            const targetMember = this.rawMembers.find(m => m.memberId === memberId);
+            if (targetMember) {
+              targetMember.name = name;
+              targetMember.phone = phone;
+              targetMember.classId = classId;
+              targetMember.role = role;
+              targetMember.status = status;
+              targetMember.notes = note;
+            }
+
+            // 가나다순 재정렬 후 화면 새로고침
+            this.rawMembers = this.sortMembersList(this.rawMembers);
+            this.closeEditMemberModal();
+            this.showToast(`✨ ${name} 님의 정보가 성공적으로 변경되었습니다.`, 'success');
+
+            this.renderMemberDirectory();
+            this.renderAttendanceList();
+            this.renderClassMonitoringBar();
+            const statsContent = document.getElementById('tabContent-stats');
+            if (statsContent && !statsContent.classList.contains('hidden')) {
+              this.calculateAndRenderStatistics();
+            }
+          } else {
+            this.showToast(json.message || '정보 수정에 실패했습니다.', 'error');
+          }
+        } catch (err) {
+          this.hideLoading();
+          this.showToast('서버 통신 중 오류가 발생했습니다.', 'error');
+        }
       }
 
       onNewMemberTypeChange() {

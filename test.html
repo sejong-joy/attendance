@@ -3340,7 +3340,6 @@
         this.showLoading('1단계: 파이어베이스에서 기존 V1 데이터를 불러오는 중...');
 
         try {
-          // 💡 [수정됨] window. 제거! 그냥 getDocs, collection, db 를 바로 씁니다.
           const v1Snapshot = await getDocs(collection(db, 'attendance_records'));
           
           if (v1Snapshot.empty) {
@@ -3363,15 +3362,20 @@
             if (!memberId || !date) return; 
             v1Count++;
 
-            const docId = `${quarter}_${memberId}`;
+            // 💡 [수정] 날짜에서 연도 추출 (예: "2026-09-05" -> "2026")
+            const year = date.split('-')[0] || '2026';
+            
+            // 💡 [수정] V2 앱이 읽을 수 있는 정확한 문서 이름 규격 (예: 2026_3기_M0001)
+            const docId = `${year}_${quarter}_${memberId}`; 
 
             // 처음 나오는 ID면 뼈대 생성
             if (!v2DataMap[docId]) {
               v2DataMap[docId] = {
+                year: String(year), // 💡 [수정] 연도 추가
                 quarter: quarter,
                 memberId: memberId,
                 classId: rec.classId || '알수없음',
-                weeklyData: {}
+                weeks: {} // 💡 [수정] weeklyData 가 아니라 weeks 로 저장해야 앱이 읽습니다!
               };
             }
 
@@ -3379,26 +3383,27 @@
             if (rec.classId) v2DataMap[docId].classId = rec.classId;
 
             // 날짜별 출석 데이터 삽입
-            v2DataMap[docId].weeklyData[date] = {
+            v2DataMap[docId].weeks[date] = { // 💡 [수정] weeks 안에 저장
               status: rec.status || '결석',
               score: rec.score || 0,
               reason: rec.reason || '',
-              checkedBy: rec.checkedBy || '리더',
-              worshipAttended: !!rec.worshipAttended
+              checkedBy: rec.checkedBy || '관리자',
+              worshipAttended: !!rec.worshipAttended,
+              updatedAt: new Date().toISOString()
             };
           });
 
           // 3. 파이어베이스 V2 컬렉션(attendance_records_v2)에 순차 저장
           let count = 0;
           for (const docId in v2DataMap) {
-            // 💡 [수정됨] 여기도 window. 제거!
             const docRef = doc(db, 'attendance_records_v2', docId);
+            // merge: true 덕분에 버튼을 여러 번 눌러도 안전하게 덮어써집니다.
             await setDoc(docRef, v2DataMap[docId], { merge: true });
             count++;
           }
 
           this.hideLoading();
-          this.showToast(`✨ 성공! V1 데이터(${v1Count}개)가 V2 문서(${count}개)로 압축 이관되었습니다.`, 'success');
+          this.showToast(`✨ 성공! V1 데이터(${v1Count}개)가 완벽한 V2 규격(${count}개)으로 이관되었습니다.`, 'success');
 
         } catch (err) {
           console.error(err);

@@ -3401,6 +3401,14 @@ ${className} ${leaderName} 리더입니다.
           return;
         }
 
+        // 💡 [V1 중복 방어] 통신 중 버튼 비활성화 (광클 방지)
+        const submitBtn = document.querySelector('#newMemberModalBox button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '등록 중...';
+          submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+
         this.showLoading(`${name} 님을 등록하는 중...`);
 
         try {
@@ -3462,11 +3470,19 @@ ${className} ${leaderName} 리더입니다.
               this.calculateAndRenderStatistics();
             }
           } else {
+            // 💡 서버에서 중복으로 판정되어 튕겨냈을 때 안내
             this.showToast(json.message || '등록에 실패했습니다.', 'error');
           }
         } catch (err) {
           this.hideLoading();
           this.showToast('서버 통신 중 오류가 발생했습니다. 네트워크를 확인해주세요.', 'error');
+        } finally {
+          // 💡 통신 완료 후 버튼 상태 원상 복구
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '명부에 등록';
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          }
         }
       }
 

@@ -501,7 +501,7 @@
         </div>
         <form onsubmit="event.preventDefault(); window.appInstance.submitNewMember();" class="p-3.5 space-y-2.5">
           <div><label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">성명 *</label><input type="text" id="newMemberName" required placeholder="예: 홍길동" class="w-full px-3 py-2 bg-white border-2 border-slate-300 rounded-xl text-base font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none"></div>
-          <div><label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">연락처</label><input type="tel" id="newMemberPhone" placeholder="예: 010-1234-5678" class="w-full px-3 py-2 bg-white border-2 border-slate-300 rounded-xl text-base font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none"></div>
+          <div><label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">연락처</label><input type="tel" id="newMemberPhone" maxlength="13" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/^(\d{2,3})(\d{3,4})(\d{1,4})$/g, '$1-$2-$3');" placeholder="예: 010-1234-5678" class="w-full px-3 py-2 bg-white border-2 border-slate-300 rounded-xl text-base font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none"></div>
           <div class="grid grid-cols-2 gap-2">
             <div><label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">등록 구분 *</label><select id="newMemberStatus" onchange="window.appInstance.onNewMemberTypeChange()" class="w-full px-2 py-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-xs sm:text-sm font-black text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none"><option value="방문자">🏷️ 단순 방문자</option><option value="새가족">🌱 정규 새가족</option></select></div>
             <div id="newMemberClassWrap" class="hidden"><label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">배정할 반 *</label><select id="newMemberClassSelect" class="w-full px-2 py-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-xs sm:text-sm font-black text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none"></select></div>
@@ -1834,6 +1834,14 @@ ${className} ${leaderName} 리더입니다.
         const isCancelling = (currentStatus === status);
         const finalStatus = isCancelling ? null : status;
         this.currentAttendance[memberId].status = finalStatus;
+
+        // 💡 [2번 이슈 해결 추가 코드] 안교 출석이나 지각 처리 시, 기존에 남아있던 '설교 예배 참석' 꼬리표 강제 제거
+        if (finalStatus === '출석' || finalStatus === '지각') {
+          this.currentAttendance[memberId].worshipAttended = false;
+          if (this.currentAttendance[memberId].reason === '설교 예배 참석') {
+            this.currentAttendance[memberId].reason = ''; // 결석 사유칸에 적혀있던 글자도 알아서 지워줌
+          }
+        }
 
         const idx = this.rawRecords.findIndex(r => this.normalizeDateStr(r.date) === targetDate && r.memberId === memberId);
 

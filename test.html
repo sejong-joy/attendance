@@ -348,6 +348,13 @@
             <p class="text-xs text-emerald-800 font-bold leading-relaxed">파이어베이스의 압축된 V2 데이터를 해체하여 구글 시트 '출석_기록' 탭에 백업합니다.</p>
             <button onclick="window.appInstance.backupToGoogleSheets()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-xl transition shadow-md">데이터 원본 백업 실행</button>
           </div>
+          <!-- 💡 [일회용] V1 -> V2 데이터 마이그레이션 버튼 -->
+          <div id="migrationSection" class="p-3 bg-purple-50 border border-purple-300 rounded-xl space-y-2 mt-4">
+            <div class="flex items-center justify-between">
+              <span class="font-black text-purple-900 text-sm sm:text-base flex items-center space-x-1.5"><span>🚀</span><span>[일회용] V1 ➔ V2 데이터 마이그레이션</span></span>
+            </div>
+            <button onclick="window.appInstance.runMigrationV1toV2()" class="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-black text-sm rounded-xl transition shadow-md">시트 데이터를 파이어베이스로 압축 이관</button>
+          </div>
           <div id="adminResetSection" class="hidden p-3 bg-red-50 border border-red-300 rounded-xl space-y-2 mt-4">
             <div class="flex items-center justify-between">
               <span class="font-black text-red-900 text-sm sm:text-base flex items-center space-x-1.5"><span>⚠️</span><span>V2 출석 데이터 초기화 (Reset)</span></span>
@@ -3324,6 +3331,78 @@
         } catch (err) {
           this.hideLoading();
           this.showToast('백업 중 네트워크 오류가 발생했습니다.', 'error');
+        }
+      }
+      async runMigrationV1toV2() {
+        if (!confirm('파이어베이스의 기존 출석(V1) 데이터를 V2(압축 포맷)로 일괄 이관하시겠습니까?\n(기존 V1 데이터는 삭제되지 않고 그대로 보존됩니다.)')) return;
+
+        this.closeExportModal();
+        this.showLoading('1단계: 파이어베이스에서 기존 V1 데이터를 불러오는 중...');
+
+        try {
+          // 1. 파이어베이스 V1 원본 컬렉션(attendance_records) 전체 호출
+          const v1Snapshot = await window.getDocs(window.collection(window.db, 'attendance_records'));
+          
+          if (v1Snapshot.empty) {
+            throw new Error('파이어베이스 V1(attendance_records)에 기존 출석 데이터가 없습니다.');
+          }
+
+          this.showLoading('2단계: V2 포맷으로 데이터 압축 및 전송 중... (창을 닫지 마세요)');
+
+          const v2DataMap = {};
+          let v1Count = 0;
+
+          // 2. 13주 단위 문서(Document)로 병합(Flatten) 압축
+          v1Snapshot.forEach(docSnap => {
+            const rec = docSnap.data();
+            const quarter = rec.quarter || '3기';
+            const memberId = rec.memberId;
+            const date = rec.date;
+
+            // 필수 데이터가 없는 찌꺼기 기록은 스킵
+            if (!memberId || !date) return; 
+            v1Count++;
+
+            const docId = `${quarter}_${memberId}`;
+
+            // 처음 나오는 ID면 뼈대 생성
+            if (!v2DataMap[docId]) {
+              v2DataMap[docId] = {
+                quarter: quarter,
+                memberId: memberId,
+                classId: rec.classId || '알수없음',
+                weeklyData: {}
+              };
+            }
+
+            // 가장 최근 소속반 정보로 업데이트
+            if (rec.classId) v2DataMap[docId].classId = rec.classId;
+
+            // 날짜별 출석 데이터 삽입
+            v2DataMap[docId].weeklyData[date] = {
+              status: rec.status || '결석',
+              score: rec.score || 0,
+              reason: rec.reason || '',
+              checkedBy: rec.checkedBy || '리더',
+              worshipAttended: !!rec.worshipAttended
+            };
+          });
+
+          // 3. 파이어베이스 V2 컬렉션(attendance_records_v2)에 순차 저장
+          let count = 0;
+          for (const docId in v2DataMap) {
+            const docRef = window.doc(window.db, 'attendance_records_v2', docId);
+            await window.setDoc(docRef, v2DataMap[docId], { merge: true });
+            count++;
+          }
+
+          this.hideLoading();
+          this.showToast(`✨ 성공! V1 데이터(${v1Count}개)가 V2 문서(${count}개)로 압축 이관되었습니다.`, 'success');
+
+        } catch (err) {
+          console.error(err);
+          this.hideLoading();
+          this.showToast(`마이그레이션 실패: ${err.message}`, 'error');
         }
       }
     }

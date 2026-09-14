@@ -91,7 +91,7 @@
     }
       
     @page { 
-      size: auto;
+      size: auto; 
       margin: 12mm 10mm;
     }
 
@@ -308,7 +308,6 @@
           <button onclick="window.appInstance.closeExportModal()" class="text-slate-400 hover:text-slate-800 text-2xl font-bold p-1">✕</button>
         </div>
         <div class="p-3 sm:p-4 space-y-2.5 max-h-[75vh] overflow-y-auto custom-scrollbar">
-          <!-- 내부 엑셀 다운로드 항목들 그대로 유지 (길어서 생략되었으나 기존과 동일) -->
           <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl hover:border-emerald-400 transition">
             <div class="flex items-center justify-between mb-1">
               <span class="font-black text-slate-900 text-base sm:text-lg flex items-center space-x-1.5"><span>📄</span><span>1. 반별 13주 종합 출석부</span></span><span class="text-xs font-black bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">A4 가로 권장</span>
@@ -356,14 +355,13 @@
             <button onclick="window.appInstance.runMigrationV1toV2()" class="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-black text-sm rounded-xl transition shadow-md">시트 데이터를 파이어베이스로 압축 이관</button>
           </div>
           <!-- 📷 AI 종이 장부 스캔 업로드 버튼 (카메라 촬영 + 갤러리 파일 선택 모두 가능) -->
-<div style="margin: 10px 0; padding: 12px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 8px; text-align: center;">
-  <label for="paperScanInput" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; color: #1e293b; font-weight: bold; font-size: 14px;">
-    <span>📸 종이 방문기록부 사진 촬영 또는 갤러리 불러오기</span>
-    <!-- 💡 capture="environment" 속성을 제거하여 갤러리 선택과 카메라 촬영을 둘 다 선택할 수 있게 바꿉니다 -->
-    <input type="file" id="paperScanInput" accept="image/*" style="display: none;" onchange="window.appInstance.handlePaperScan(event)">
-  </label>
-  <p style="font-size: 11px; color: #64748b; margin: 4px 0 0 0;">스마트폰이나 PC에서 종이 장부 사진을 선택하면 AI가 일괄 분석합니다.</p>
-</div>
+          <div style="margin: 10px 0; padding: 12px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 8px; text-align: center;">
+            <label for="paperScanInput" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; color: #1e293b; font-weight: bold; font-size: 14px;">
+              <span>📸 종이 방문기록부 사진 촬영 또는 갤러리 불러오기</span>
+              <input type="file" id="paperScanInput" accept="image/*" style="display: none;" onchange="window.appInstance.handlePaperScan(event)">
+            </label>
+            <p style="font-size: 11px; color: #64748b; margin: 4px 0 0 0;">스마트폰이나 PC에서 종이 장부 사진을 선택하면 AI가 일괄 분석합니다.</p>
+          </div>
           
           <div id="adminResetSection" class="hidden p-3 bg-red-50 border border-red-300 rounded-xl space-y-2 mt-4">
             <div class="flex items-center justify-between">
@@ -451,13 +449,18 @@
       </div>
     </div>
 
+    <!-- 💡 [수정] 새가족 및 방문자 등록 모달 (방문 일자 입력칸 추가 및 건너뛰기 버튼 구조 개선) -->
     <div id="newMemberModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-2.5 transition-opacity duration-200 opacity-0 pointer-events-none">
       <div class="bg-white rounded-2xl shadow-2xl border border-emerald-200 w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-200" id="newMemberModalBox">
         <div class="px-4 py-3 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between">
-          <div class="flex items-center space-x-2"><span class="text-2xl">🌱</span><h3 class="text-lg font-black text-emerald-950">새가족 등록</h3></div>
-          <button onclick="window.appInstance.closeNewMemberModal()" class="text-slate-400 hover:text-slate-700 text-2xl p-1">✕</button>
+          <div class="flex items-center space-x-2"><span class="text-2xl">🌱</span><h3 class="text-lg font-black text-emerald-950">새가족 / 방문자 등록</h3></div>
+          <button onclick="window.appInstance.cancelOrSkipCurrentScannedMember()" class="text-slate-400 hover:text-slate-700 text-2xl p-1">✕</button>
         </div>
         <form onsubmit="event.preventDefault(); window.appInstance.submitNewMember();" class="p-3.5 space-y-2.5">
+          <div>
+            <label class="block text-xs font-black text-slate-700 mb-1">방문/등록 일자</label>
+            <input type="date" id="newMemberDate" class="w-full px-3 py-2 border-2 border-slate-300 rounded-xl font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
           <input type="text" id="newMemberName" required placeholder="성명 *" class="w-full px-3 py-2 border-2 border-slate-300 rounded-xl font-bold">
           <input type="tel" id="newMemberPhone" placeholder="연락처" class="w-full px-3 py-2 border-2 border-slate-300 rounded-xl font-bold">
           <select id="newMemberStatus" onchange="window.appInstance.onNewMemberTypeChange()" class="w-full px-2 py-2 border-2 border-slate-300 rounded-xl font-black">
@@ -466,7 +469,10 @@
           <div id="newMemberClassWrap" class="hidden"><select id="newMemberClassSelect" class="w-full px-2 py-2 border-2 rounded-xl font-black"></select></div>
           <input type="text" id="newMemberNote" placeholder="비고 메모" class="w-full px-3 py-2 border-2 border-slate-300 rounded-xl font-bold">
           <p id="newMemberNotice" class="text-xs text-blue-800 font-bold bg-blue-50 p-2 rounded-xl border border-blue-200 mt-1"></p>
-          <div class="flex space-x-2 pt-1"><button type="button" onclick="window.appInstance.closeNewMemberModal()" class="w-1/2 py-2 bg-slate-200 font-black rounded-xl">취소</button><button type="submit" class="w-1/2 py-2 bg-emerald-600 text-white font-black rounded-xl">등록</button></div>
+          <div class="flex space-x-2 pt-1" id="newMemberBtnWrap">
+            <button type="button" onclick="window.appInstance.cancelOrSkipCurrentScannedMember()" id="newMemberCancelBtn" class="w-1/2 py-2 bg-slate-200 hover:bg-slate-300 font-black rounded-xl text-slate-700 transition">취소</button>
+            <button type="submit" class="w-1/2 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-md transition">등록</button>
+          </div>
         </form>
       </div>
     </div>
@@ -523,7 +529,6 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    // 💡 [수정] updateDoc 명령어 추가
     import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, writeBatch, enableIndexedDbPersistence, disableNetwork, enableNetwork, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js";
 
@@ -1592,7 +1597,6 @@
         this.updateAttendanceSummary();
       }
 
-      // 💡 [수정] 문법 오류 (setDoc에서 점(.) 표현식 사용 불가) 해결
       async setStatus(memberId, status) {
         if (!this.currentAttendance[memberId]) {
           this.currentAttendance[memberId] = { status: null, reason: '', worshipAttended: false };
@@ -1630,7 +1634,6 @@
           if (isFirebaseReady && db) {
             try {
               const docRef = doc(db, 'attendance_records_v2', quarterDocId);
-              // 💡 취소할 때는 문서가 무조건 존재하므로 updateDoc과 deleteField()를 씁니다.
               await updateDoc(docRef, {
                 [`weeks.${targetDate}`]: deleteField()
               });
@@ -1686,7 +1689,6 @@
                 classId: recordDataForMemory.classId
               };
 
-              // 💡 [수정] 점(.) 문법 대신 중첩 객체 그대로 전송 (setDoc의 merge 규칙 준수)
               await setDoc(docRef, {
                 memberId: memberId,
                 classId: member.classId,
@@ -1873,7 +1875,6 @@
               }
 
               if (batch && docRef) {
-                // 💡 [수정] 점 문법 대신 중첩 객체로 병합 전달
                 batch.set(docRef, {
                   memberId: memberId, classId: member.classId, quarter: quarter, year: String(year),
                   weeks: {
@@ -1896,7 +1897,6 @@
                 }
 
                 if (batch && docRef) {
-                  // 💡 해제 시에는 값이 존재하므로 update 명령어 안전 사용
                   batch.update(docRef, {
                     [`weeks.${targetDate}.worshipAttended`]: false,
                     [`weeks.${targetDate}.reason`]: rec.reason,
@@ -1991,7 +1991,6 @@
         if (isFirebaseReady && db && member) {
           try {
             const docRef = doc(db, 'attendance_records_v2', quarterDocId);
-            // 💡 [수정] 점 문법 대신 중첩 객체로 병합 전달
             await setDoc(docRef, {
               memberId: memberId,
               classId: member.classId,
@@ -2722,7 +2721,11 @@
         const modal = document.getElementById('newMemberModal');
         const box = document.getElementById('newMemberModalBox');
         const classSelect = document.getElementById('newMemberClassSelect');
+        const defaultDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
         
+        const dateInp = document.getElementById('newMemberDate');
+        if (dateInp) dateInp.value = defaultDate;
+
         document.getElementById('newMemberName').value = '';
         document.getElementById('newMemberPhone').value = '';
         document.getElementById('newMemberNote').value = '';
@@ -2752,6 +2755,26 @@
         const box = document.getElementById('newMemberModalBox');
         if (box) { box.classList.remove('scale-100'); box.classList.add('scale-95'); }
         if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
+
+        const cancelBtn = document.getElementById('newMemberCancelBtn');
+        if (cancelBtn) cancelBtn.textContent = '취소';
+      }
+
+      // 💡 [추가] AI 스캔 등록 중 취소 및 건너뛰기 처리
+      cancelOrSkipCurrentScannedMember() {
+        if (this.pendingScannedVisitors && this.pendingScannedVisitors.length > 0) {
+          const remainCount = this.pendingScannedVisitors.length;
+          if (confirm(`현재 방문자를 건너뛰고 다음 대기자(${remainCount}명)를 확인하시겠습니까?\n\n[확인] : 다음 사람으로 넘어가기\n[취소] : 스캔 등록 전체 중단`)) {
+            this.showToast('⏭️ 현재 항목을 건너뛰었습니다.', 'info');
+            this.showNextScannedVisitorModal();
+          } else {
+            this.pendingScannedVisitors = [];
+            this.closeNewMemberModal();
+            this.showToast('스캔 일괄 등록이 중단되었습니다.', 'info');
+          }
+        } else {
+          this.closeNewMemberModal();
+        }
       }
 
       openEditMemberModal(memberId) {
@@ -2870,7 +2893,10 @@
         const status = document.getElementById('newMemberStatus')?.value || '방문자';
         const note = document.getElementById('newMemberNote')?.value?.trim() || '';
         const targetClassId = document.getElementById('newMemberClassSelect')?.value;
-        const curDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
+        
+        // 💡 [수정] 모달에 입력된 날짜를 우선 적용하고, 없으면 상단 안식일 날짜 사용
+        const modalDate = document.getElementById('newMemberDate')?.value;
+        const curDate = modalDate ? this.normalizeDateStr(modalDate) : this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
 
         if (!name) { this.showToast('성명을 입력해주세요.', 'error'); return; }
         if (status === '새가족' && !targetClassId) { this.showToast('배정할 반을 선택해주세요.', 'error'); return; }
@@ -2902,6 +2928,7 @@
               this.showToast(`✨ 새가족 [${name}] 등록 완료!`, 'success');
             }
 
+            // 💡 [수정] 대기열에 다음 사람이 남아있으면 연속 오픈, 없으면 닫기
             if (this.pendingScannedVisitors && this.pendingScannedVisitors.length > 0) {
               this.showNextScannedVisitorModal();
             } else {
@@ -3325,7 +3352,6 @@
         this.showLoading('구글 시트에 데이터를 일괄 백업 중입니다...');
 
         try {
-          // V2 메모리 상에 낱장으로 풀려있는(Flatten) 데이터를 통째로 백엔드로 전송
           const payload = {
             action: 'backupAttendanceData',
             records: this.rawRecords
@@ -3348,6 +3374,7 @@
           this.showToast('백업 중 네트워크 오류가 발생했습니다.', 'error');
         }
       }
+
       async runMigrationV1toV2() {
         if (!confirm('누락되었던 심방 기록(Care Notes)과 최신 결석 사유를 V2로 완벽하게 이관하시겠습니까?\n(기존 V2 데이터는 안전하게 유지되며 누락된 부분만 쏙쏙 채워집니다!)')) return;
 
@@ -3357,14 +3384,12 @@
         try {
           const promises = [];
           
-          // 💡 1. 누락되었던 '심방 기록(care_notes)' 완벽 이관
           const careCol = collection(db, 'care_notes');
           const careSnap = await getDocs(careCol);
           careSnap.forEach(docSnap => {
             promises.push(setDoc(doc(db, 'care_notes_v2', docSnap.id), docSnap.data(), { merge: true }));
           });
 
-          // 💡 2. '출석/결석 사유' 최신 데이터 이관
           const v1Col = collection(db, 'attendance_records');
           const v1Snapshot = await getDocs(v1Col);
           const v2DataMap = {};
@@ -3387,7 +3412,6 @@
             }
             if (rec.classId) v2DataMap[docId].classId = rec.classId;
 
-            // V1에 있던 결석 사유(reason)와 심방/예배 참석 기록 완벽 복사
             v2DataMap[docId].weeks[date] = { 
               status: rec.status || '결석', score: rec.score || 0,
               reason: rec.reason || '', 
@@ -3401,7 +3425,6 @@
             promises.push(setDoc(doc(db, 'attendance_records_v2', docId), v2DataMap[docId], { merge: true }));
           }
 
-          // 💡 3. 500개 제한 없는 Promise.all 병렬 처리로 초고속 전송
           await Promise.all(promises);
 
           this.hideLoading();
@@ -3415,7 +3438,7 @@
       }
 
       // 💡 ----------------------------------------------------
-      // 📸 [추가] 종이 장부 사진 AI 분석 및 자동 입력 메서드
+      // 📸 종이 장부 사진 AI 분석 및 자동 입력 메서드
       // ----------------------------------------------------
       async handlePaperScan(event) {
         const file = event.target.files[0];
@@ -3427,14 +3450,23 @@
           const base64Data = await this.fileToBase64(file);
           
           const apiKey = "AQ.Ab8RN6J1lc_K8nApJQxtttb4uDyHxjnv-M_2Uz38yojIHum65Q"; 
-          // 💡 정식 지원 모델 gemini-2.5-flash 지정
           const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
           
+          const currentYear = document.getElementById('yearSelect')?.value || '2026';
+          const defaultDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
+
+          // 💡 [수정] 날짜(visitDate)도 함께 인식하도록 프롬프트 확장
           const promptText = `
             이 이미지는 교회 안식일학교 종이 방문기록부 사진입니다.
-            사진에 적힌 모든 방문자의 정보를 빠짐없이 읽어서 정확히 아래와 같은 JSON 배열 형태로만 추출해 주세요. 다른 설명이나 텍스트는 절대 포함하지 마세요.
+            사진에 적힌 모든 방문자의 정보를 빠짐없이 읽어서 정확히 아래와 같은 JSON 배열 형태로만 추출해 주세요. 다른 설명이나 마크다운 텍스트는 절대 포함하지 마세요.
             [
-              { "name": "이름", "phone": "전화번호", "introducer": "인도자", "notes": "메모 또는 방문사유" }
+              { 
+                "name": "이름", 
+                "phone": "전화번호", 
+                "introducer": "인도자", 
+                "notes": "메모 또는 방문사유",
+                "visitDate": "${currentYear}-MM-DD 형식 (장부에 9/5 처럼 적혀있으면 ${currentYear}-09-05로 변환, 날짜를 유추할 수 없으면 '${defaultDate}')"
+              }
             ]
             만약 정보가 없으면 빈 문자열("")로 채워주세요.
           `;
@@ -3486,38 +3518,51 @@
         }
       }
 
-// 💡 큐에서 1명씩 꺼내 기존 새가족 모달 입력창에 채워주는 함수
-showNextScannedVisitorModal() {
-  if (!this.pendingScannedVisitors || this.pendingScannedVisitors.length === 0) {
-    this.closeNewMemberModal();
-    this.showToast('🎉 모든 스캔 방문자 등록이 완료되었습니다!', 'success');
-    return;
-  }
+      // 💡 [수정] 큐에서 1명씩 꺼내 모달 입력창에 채워주는 함수 (날짜 연동 및 건너뛰기 버튼 동적 제어)
+      showNextScannedVisitorModal() {
+        if (!this.pendingScannedVisitors || this.pendingScannedVisitors.length === 0) {
+          this.closeNewMemberModal();
+          this.showToast('🎉 모든 스캔 방문자 처리가 완료되었습니다!', 'success');
+          return;
+        }
 
-  const currentVisitor = this.pendingScannedVisitors.shift(); // 맨 앞 사람 꺼내기
-  const remainCount = this.pendingScannedVisitors.length;
+        const currentVisitor = this.pendingScannedVisitors.shift(); // 맨 앞 사람 꺼내기
+        const remainCount = this.pendingScannedVisitors.length;
 
-  this.openNewMemberModal();
+        this.openNewMemberModal();
 
-  setTimeout(() => {
-    if (document.getElementById('newMemberName')) {
-      document.getElementById('newMemberName').value = currentVisitor.name || '';
-    }
-    if (document.getElementById('newMemberPhone')) {
-      document.getElementById('newMemberPhone').value = currentVisitor.phone || '';
-    }
-    if (document.getElementById('newMemberNote')) {
-      document.getElementById('newMemberNote').value = `인도자: ${currentVisitor.introducer || ''} / ${currentVisitor.notes || ''}`;
-    }
-    if (document.getElementById('newMemberStatus')) {
-      document.getElementById('newMemberStatus').value = '방문자';
-    }
-    this.onNewMemberTypeChange();
-  }, 100);
+        // 💡 대기열이 남아있으면 취소 버튼을 '건너뛰기'로 직관적 표시
+        const cancelBtn = document.getElementById('newMemberCancelBtn');
+        if (cancelBtn) {
+          cancelBtn.textContent = remainCount > 0 ? `건너뛰기 (남은 ${remainCount}명)` : '취소 / 닫기';
+        }
 
-  this.showToast(`[${currentVisitor.name || '방문자'}] 확인/수정 후 등록을 누르세요. (남은 인원: ${remainCount}명)`, 'info');
-}
-// 💡 [누락 복구] 파일을 Base64 문자열로 변환하는 필수 함수
+        setTimeout(() => {
+          const defaultDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
+          if (document.getElementById('newMemberDate')) {
+            document.getElementById('newMemberDate').value = (currentVisitor.visitDate && currentVisitor.visitDate.includes('-')) 
+              ? currentVisitor.visitDate 
+              : defaultDate;
+          }
+          if (document.getElementById('newMemberName')) {
+            document.getElementById('newMemberName').value = currentVisitor.name || '';
+          }
+          if (document.getElementById('newMemberPhone')) {
+            document.getElementById('newMemberPhone').value = currentVisitor.phone || '';
+          }
+          if (document.getElementById('newMemberNote')) {
+            document.getElementById('newMemberNote').value = `인도자: ${currentVisitor.introducer || ''} / ${currentVisitor.notes || ''}`;
+          }
+          if (document.getElementById('newMemberStatus')) {
+            document.getElementById('newMemberStatus').value = '방문자';
+          }
+          this.onNewMemberTypeChange();
+        }, 100);
+
+        this.showToast(`[${currentVisitor.name || '방문자'}] 일자/내용 확인 후 등록 또는 건너뛰기를 누르세요.`, 'info');
+      }
+
+      // 💡 [보존] 파일을 Base64 문자열로 변환하는 필수 함수
       fileToBase64(file) {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -3532,8 +3577,6 @@ showNextScannedVisitorModal() {
     window.addEventListener('DOMContentLoaded', () => {
       window.appInstance.init();
     });
-
-    
   </script>
 </body>
 </html>

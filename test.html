@@ -3496,16 +3496,24 @@
           });
 
           const result = await response.json();
+          console.log("📌 서버 원본 응답:", result); // F12 콘솔 확인용
 
+          // 1. GAS 백엔드 에러 체크
+          if (result.success === false) {
+            throw new Error(`GAS 서버 오류: ${result.message}`);
+          }
+
+          // 2. Gemini API 에러 체크
           if (result.error) {
-            throw new Error(`API 오류 (${result.error.code}): ${result.error.message}`);
+            throw new Error(`API 오류 (${result.error.code || ''}): ${result.error.message}`);
           }
 
           const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          console.log("📌 AI 텍스트:", rawText);
           
           const jsonMatch = rawText.match(/\[[\s\S]*\]/);
           if (!jsonMatch) {
-            throw new Error('AI가 데이터를 올바른 형식으로 읽어내지 못했습니다.');
+            throw new Error(`AI 형식 불일치 (응답 텍스트: ${rawText || '내용 없음'})`);
           }
 
           const scannedVisitors = JSON.parse(jsonMatch[0]);

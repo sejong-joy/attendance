@@ -601,9 +601,23 @@
               <select id="editMemberClassSelect" class="w-full px-2 py-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-xs sm:text-sm font-black text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
             </div>
             <div>
-              <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">직분</label>
-              <input type="text" id="editMemberRole" placeholder="예: 집사" class="w-full px-2 py-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-xs sm:text-sm font-black text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-            </div>
+  <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">직분 *</label>
+  <select id="editMemberRole" class="w-full px-2 py-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-xs sm:text-sm font-black text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+    <option value="집사">집사</option>
+    <option value="성도">성도</option>
+    <option value="장로">장로</option>
+    <option value="목사">목사</option>
+    <option value="전도사">전도사</option>
+    <option value="사모">사모</option>
+    <option value="학생">학생</option>
+    <option value="청년">청년</option>
+    <option disabled>──────────</option>
+    <option value="영아">영아</option>
+    <option value="유치">유치</option>
+    <option value="유년">유년</option>
+    <option value="소년">소년</option>
+  </select>
+</div>
           </div>
           <div class="p-2 bg-slate-50 rounded-xl border border-slate-200">
             <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">상태 (소프트 삭제 관리) *</label>
@@ -3336,7 +3350,7 @@ ${className} ${leaderName} 리더입니다.
         if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
       }
 
-      // 💡 [신규 추가] 정보 수정 모달 열기
+      // 💡 [수정] 교인 정보 수정 모달 열기 (세분화된 12개 직분 완벽 적용)
       openEditMemberModal(memberId) {
         if (!this.currentUser || !this.currentUser.isAdmin) return;
         const member = this.rawMembers.find(m => m.memberId === memberId);
@@ -3345,10 +3359,39 @@ ${className} ${leaderName} 리더입니다.
         document.getElementById('editMemberId').value = memberId;
         document.getElementById('editMemberName').value = member.name || '';
         document.getElementById('editMemberPhone').value = member.phone || '';
-        document.getElementById('editMemberRole').value = member.role || '';
         document.getElementById('editMemberStatus').value = member.status || '활동';
         document.getElementById('editMemberNote').value = member.notes || '';
 
+        // 💡 [직분 세분화 목록] 전도사 추가 및 어린이 -> 영아/유치/유년/소년 반영
+        const defaultRoles = [
+          '집사', '성도', '장로', '목사', '전도사', '사모', '학생', '청년',
+          '영아', '유치', '유년', '소년'
+        ];
+        
+        const roleSelect = document.getElementById('editMemberRole');
+        if (roleSelect) {
+          roleSelect.innerHTML = '';
+          const currentRole = (member.role || '성도').trim();
+          
+          defaultRoles.forEach(r => {
+            const opt = document.createElement('option');
+            opt.value = r;
+            opt.textContent = r;
+            roleSelect.appendChild(opt);
+          });
+
+          // 기존 데이터가 '어린이'이거나 목록 외의 직분인 경우 예외 옵션으로 자동 추가 유지
+          if (currentRole && !defaultRoles.includes(currentRole)) {
+            const customOpt = document.createElement('option');
+            customOpt.value = currentRole;
+            customOpt.textContent = `${currentRole} (기존)`;
+            roleSelect.appendChild(customOpt);
+          }
+
+          roleSelect.value = currentRole || '성도';
+        }
+
+        // 반 선택 드롭다운 설정
         const classSelect = document.getElementById('editMemberClassSelect');
         if (classSelect) {
           classSelect.innerHTML = '';

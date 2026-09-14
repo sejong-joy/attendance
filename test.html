@@ -3416,21 +3416,22 @@
         const file = event.target.files[0];
         if (!file) return;
 
-        this.showToast('🤖 AI가 종이 장부를 분석하고 있습니다. 잠시만 기다려주세요...', 'info');
+        this.showToast('🤖 AI가 종이 장부의 모든 방문자를 분석하고 있습니다...', 'info');
 
         try {
           const base64Data = await this.fileToBase64(file);
           
-          // ⚠️ 테스트용 Gemini API Key (사용하시는 개인 키로 교체하세요)
-          const apiKey = "AIzaSyBPLKkIEnEr2GTogJFJUPnMJJdlvSyvbCw"; 
+          const apiKey = "AIzaSyBPLKkIEnEr2GTogJFJUPnMJJdlvSyvbCw"; // 사용 중인 키 유지
           const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+          
+          // 💡 여러 명의 방문자 정보를 배열 구조로 추출하도록 프롬프트 강화
           const promptText = `
             이 이미지는 교회 안식일학교 종이 방문기록부 사진입니다.
-            사진에 적힌 방문자의 정보를 읽어서 정확히 아래와 같은 JSON 배열 형태로만 추출해 주세요. 다른 설명이나 텍스트는 절대 포함하지 마세요.
+            사진에 적힌 **모든 방문자들의 정보**를 빠짐없이 읽어서 정확히 아래와 같은 JSON 배열 형태로만 추출해 주세요. 다른 설명이나 텍스트는 절대 포함하지 마세요.
             [
-              { "name": "이름", "phone": "전화번호", "introducer": "인도자", "notes": "메모 또는 특이사항" }
+              { "name": "이름", "phone": "전화번호", "introducer": "인도자", "notes": "메모 또는 특이사항", "visitDate": "방문날짜" }
             ]
-            만약 정보가 없으면 빈 문자열("")로 채워주세요.
+            만약 정보가 없으면 빈 문자열("")로 채워주세요. 여러 명이 적혀있다면 전부 다 포함해 주세요.
           `;
 
           const payload = {
@@ -3463,21 +3464,26 @@
             return;
           }
 
+          // 💡 여러 명이 인식된 경우 처리
+          // 우선 첫 번째 방문자 정보를 기본 입력창에 띄우고, 전체 목록은 안내 토스트 및 콘솔로 표시
           const visitor = scannedVisitors[0];
           
-          // 새가족/방문자 등록 모달창 내부 입력 필드들에 자동 주입
-          // (새가족 등록 모달이 열려있거나 열릴 때 연동되도록 필드 확인)
           this.openNewMemberModal();
           
           setTimeout(() => {
             if (document.getElementById('newMemberName')) document.getElementById('newMemberName').value = visitor.name || '';
             if (document.getElementById('newMemberPhone')) document.getElementById('newMemberPhone').value = visitor.phone || '';
-            if (document.getElementById('newMemberNote')) document.getElementById('newMemberNote').value = `인도자: ${visitor.introducer || ''} / ${visitor.notes || ''}`;
+            if (document.getElementById('newMemberNote')) document.getElementById('newMemberNote').value = `[AI스캔] 인도자: ${visitor.introducer || ''} / 메모: ${visitor.notes || ''}`;
             if (document.getElementById('newMemberStatus')) document.getElementById('newMemberStatus').value = '방문자';
             this.onNewMemberTypeChange();
           }, 100);
 
-          this.showToast(`✨ AI 스캔 완료! (${visitor.name} 성도 정보 입력됨)`, 'success');
+          if (scannedVisitors.length > 1) {
+            this.showToast(`✨ 총 ${scannedVisitors.length}명 인식! (첫 번째 ${visitor.name} 성도 우선 입력됨)`, 'success');
+            console.log("📋 AI가 인식한 전체 방문자 명단:", scannedVisitors);
+          } else {
+            this.showToast(`✨ AI 스캔 완료! (${visitor.name} 성도 정보 입력됨)`, 'success');
+          }
 
         } catch (error) {
           console.error(error, "AI 스캔 실패");

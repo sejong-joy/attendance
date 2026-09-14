@@ -3510,6 +3510,15 @@ showNextScannedVisitorModal() {
 
   this.showToast(`[${currentVisitor.name || '방문자'}] 확인/수정 후 등록을 누르세요. (남은 인원: ${remainCount}명)`, 'info');
 }
+// 💡 [누락 복구] 파일을 Base64 문자열로 변환하는 필수 함수
+      fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = error => reject(error);
+        });
+      }
     }
 
     window.appInstance = new AttendanceApp();

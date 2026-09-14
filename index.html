@@ -1718,7 +1718,9 @@ ${className} ${leaderName} 리더입니다.
           }
 
           todayVisitors.forEach((visitor, idx) => {
-            // 💡 전화번호 조건 없이 이름이 같은 방문 기록들을 모두 모음
+            // 💡 cleanPhone 변수 선언 추가
+            const cleanPhone = (visitor.phone || '').replace(/[^0-9]/g, '');
+
             const matchingVisits = this.rawVisitors.filter(v => 
               v.name && visitor.name && v.name.trim() === visitor.name.trim()
             );

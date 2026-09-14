@@ -1718,10 +1718,9 @@ ${className} ${leaderName} 리더입니다.
           }
 
           todayVisitors.forEach((visitor, idx) => {
-            const cleanPhone = (visitor.phone || '').replace(/[^0-9]/g, '');
+            // 💡 전화번호 조건 없이 이름이 같은 방문 기록들을 모두 모음
             const matchingVisits = this.rawVisitors.filter(v => 
-              v.name === visitor.name && 
-              (v.phone || '').replace(/[^0-9]/g, '') === cleanPhone
+              v.name && visitor.name && v.name.trim() === visitor.name.trim()
             );
             const uniqueVisitDates = new Set(matchingVisits.map(v => this.normalizeDateStr(v.visitDate || v.date)));
             const visitCount = uniqueVisitDates.size;

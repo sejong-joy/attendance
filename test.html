@@ -3418,66 +3418,73 @@
       // 📸 [추가] 종이 장부 사진 AI 분석 및 자동 입력 메서드
       // ----------------------------------------------------
       async handlePaperScan(event) {
-  const file = event.target.files[0];
-  if (!file) return;
+        const file = event.target.files[0];
+        if (!file) return;
 
-  this.showToast('🤖 AI가 종이 장부의 모든 방문자를 분석하고 있습니다...', 'info');
+        this.showToast('🤖 AI가 종이 장부의 모든 방문자를 분석하고 있습니다...', 'info');
 
-  try {
-    const base64Data = await this.fileToBase64(file);
-    const apiKey = "AIzaSyBPLKkIEnEr2GTogJFJUPnMJJdlvSyvbCw"; 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
-    
-    const promptText = `
-      이 이미지는 교회 안식일학교 종이 방문기록부 사진입니다.
-      사진에 적힌 모든 방문자의 정보를 빠짐없이 읽어서 정확히 아래와 같은 JSON 배열 형태로만 추출해 주세요. 다른 설명이나 텍스트는 절대 포함하지 마세요.
-      [
-        { "name": "이름", "phone": "전화번호", "introducer": "인도자", "notes": "메모 또는 특이사항" }
-      ]
-      만약 정보가 없으면 빈 문자열("")로 채워주세요.
-    `;
+        try {
+          const base64Data = await this.fileToBase64(file);
+          
+          const apiKey = "AIzaSyBPLKkIEnEr2GTogJFJUPnMJJdlvSyvbCw"; 
+          // 💡 정식 지원 모델 gemini-2.5-flash 지정
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+          
+          const promptText = `
+            이 이미지는 교회 안식일학교 종이 방문기록부 사진입니다.
+            사진에 적힌 모든 방문자의 정보를 빠짐없이 읽어서 정확히 아래와 같은 JSON 배열 형태로만 추출해 주세요. 다른 설명이나 텍스트는 절대 포함하지 마세요.
+            [
+              { "name": "이름", "phone": "전화번호", "introducer": "인도자", "notes": "메모 또는 방문사유" }
+            ]
+            만약 정보가 없으면 빈 문자열("")로 채워주세요.
+          `;
 
-    const payload = {
-      contents: [{
-        parts: [
-          { text: promptText },
-          { inline_data: { mime_type: file.type, data: base64Data } }
-        ]
-      }]
-    };
+          const payload = {
+            contents: [{
+              parts: [
+                { text: promptText },
+                { inline_data: { mime_type: file.type || 'image/jpeg', data: base64Data } }
+              ]
+            }]
+          };
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
 
-    const result = await response.json();
-    const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    
-    const jsonMatch = rawText.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
-      throw new Error('AI가 데이터를 올바른 형식으로 읽어내지 못했습니다.');
-    }
+          const result = await response.json();
 
-    const scannedVisitors = JSON.parse(jsonMatch[0]);
+          if (result.error) {
+            throw new Error(`API 오류 (${result.error.code}): ${result.error.message}`);
+          }
 
-    if (!Array.isArray(scannedVisitors) || scannedVisitors.length === 0) {
-      this.showToast('인식된 방문자 정보가 없습니다. 다시 촬영해 주세요.', 'error');
-      return;
-    }
+          const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          
+          const jsonMatch = rawText.match(/\[[\s\S]*\]/);
+          if (!jsonMatch) {
+            throw new Error('AI가 데이터를 올바른 형식으로 읽어내지 못했습니다.');
+          }
 
-    // 💡 인식된 방문자 목록을 대기열에 저장하고 첫 번째 방문자 모달 오픈
-    this.pendingScannedVisitors = scannedVisitors;
-    this.showNextScannedVisitorModal();
+          const scannedVisitors = JSON.parse(jsonMatch[0]);
 
-  } catch (error) {
-    console.error("AI 스캔 실패:", error);
-    this.showToast('사진 분석 중 오류가 발생했습니다. API 키를 확인해 주세요.', 'error');
-  } finally {
-    event.target.value = '';
-  }
-}
+          if (!Array.isArray(scannedVisitors) || scannedVisitors.length === 0) {
+            this.showToast('인식된 방문자 정보가 없습니다. 다시 촬영해 주세요.', 'error');
+            return;
+          }
+
+          // 💡 대기열에 저장하고 첫 번째 사람 모달 띄우기
+          this.pendingScannedVisitors = scannedVisitors;
+          this.showNextScannedVisitorModal();
+
+        } catch (error) {
+          console.error("AI 스캔 실패 상세:", error);
+          this.showToast(`사진 분석 실패: ${error.message}`, 'error');
+        } finally {
+          event.target.value = '';
+        }
+      }
 
 // 💡 큐에서 1명씩 꺼내 기존 새가족 모달 입력창에 채워주는 함수
 showNextScannedVisitorModal() {

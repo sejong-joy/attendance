@@ -1360,17 +1360,13 @@
         const curDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
         const activeClasses = this.classList.filter(c => c.classId !== 'ADMIN');
 
-        // 선택된 안식일 날짜로 제목 변경 (예: "⚡ 9월 12일")
         const titleEl = document.getElementById('adminStatusDateTitle');
         if (titleEl && curDate) {
           const parts = curDate.split('-');
-          const month = parseInt(parts[1], 10);
-          const day = parseInt(parts[2], 10);
-          titleEl.textContent = `${month}월 ${day}일`;
+          titleEl.textContent = `${parseInt(parts[1], 10)}월 ${parseInt(parts[2], 10)}일`;
         }
         container.innerHTML = '';
 
-        // 💡 [필터 추가] 전출, 휴면 교인은 전체 재적 및 진행현황 카운트에서 제외합니다.
         const activeMembersOnly = this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
         const totalRegularMembers = activeMembersOnly.length;
         
@@ -1402,15 +1398,9 @@
 
         masterCard.innerHTML = `
           <div class="flex items-center justify-between pb-1 border-b ${isMasterSelected ? 'border-white/20' : 'border-slate-100'}">
-            <span class="font-black text-sm sm:text-base flex items-center space-x-1">
-              <span>✨ 전체 현황</span>
-              <span class="text-xs font-normal opacity-90">(재적 ${totalRegularMembers}명)</span>
-            </span>
-            <span class="text-xs sm:text-sm font-black px-2 py-0.5 rounded-lg ${isMasterSelected ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-900'}">
-              출석률 ${totalOverallRate}%
-            </span>
+            <span class="font-black text-sm sm:text-base flex items-center space-x-1"><span>✨ 전체 현황</span><span class="text-xs font-normal opacity-90">(재적 ${totalRegularMembers}명)</span></span>
+            <span class="text-xs sm:text-sm font-black px-2 py-0.5 rounded-lg ${isMasterSelected ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-900'}">출석률 ${totalOverallRate}%</span>
           </div>
-
           <div class="grid grid-cols-3 gap-1.5 my-1.5 text-center">
             <div class="p-1 rounded-xl ${isMasterSelected ? 'bg-white/10' : 'bg-slate-50'}">
               <span class="text-xs font-black ${isMasterSelected ? 'text-emerald-200' : 'text-slate-600'} block">📖 안교</span>
@@ -1428,7 +1418,6 @@
               <span class="text-[10px] font-bold ${isMasterSelected ? 'text-emerald-100' : 'text-blue-500'}">(방명록)</span>
             </div>
           </div>
-
           <div class="space-y-0.5">
             <div class="w-full bg-black/10 h-1.5 rounded-full overflow-hidden">
               <div class="bg-emerald-400 h-full rounded-full transition-all duration-300" style="width: ${totalOverallRate}%"></div>
@@ -1438,52 +1427,54 @@
         container.appendChild(masterCard);
 
         activeClasses.forEach(c => {
-          const classMembers = activeMembersOnly.filter(m => m.classId === c.classId);
-          let presentCount = 0;
-          let checkedCount = 0;
-
-          classMembers.forEach(m => {
-            const r = this.rawRecords.find(rec => this.normalizeDateStr(rec.date) === curDate && rec.memberId === m.memberId);
-            if (r && (r.status === '출석' || r.status === '지각')) presentCount++;
-            if (r && r.status) checkedCount++;
-          });
-
-          const uncheckCount = classMembers.length - checkedCount;
-          const rate = classMembers.length > 0 ? ((presentCount / classMembers.length) * 100).toFixed(0) : '0';
+          const isVisitorClass = (c.classId === 'C12' || c.classId === 'VISITOR');
           const isSelected = this.selectedFilterClass === c.classId;
+
+          let presentCount = 0;
+          let totalCount = 0;
+          let rate = '0';
+          let statusBadgeHtml = '';
+
+          // 💡 방문자 반인 경우: rawVisitors에서 당일 방문자 수 카운트
+          if (isVisitorClass) {
+            presentCount = todayVisitorCount;
+            totalCount = todayVisitorCount;
+            rate = todayVisitorCount > 0 ? '100' : '0';
+            statusBadgeHtml = `<span class="text-xs font-black px-1.5 py-0.2 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-900'}">${todayVisitorCount}명</span>`;
+          } else {
+            // 일반 정규 교과반인 경우
+            const classMembers = activeMembersOnly.filter(m => m.classId === c.classId);
+            totalCount = classMembers.length;
+            let checkedCount = 0;
+
+            classMembers.forEach(m => {
+              const r = this.rawRecords.find(rec => this.normalizeDateStr(rec.date) === curDate && rec.memberId === m.memberId);
+              if (r && (r.status === '출석' || r.status === '지각')) presentCount++;
+              if (r && r.status) checkedCount++;
+            });
+
+            const uncheckCount = totalCount - checkedCount;
+            rate = totalCount > 0 ? ((presentCount / totalCount) * 100).toFixed(0) : '0';
+
+            statusBadgeHtml = uncheckCount === 0 && totalCount > 0
+              ? `<span class="text-xs font-black px-1.5 py-0.2 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'}">완료</span>`
+              : `<span class="text-xs font-black px-1.5 py-0.2 rounded ${isSelected ? 'bg-amber-400 text-amber-950' : 'bg-amber-100 text-amber-900'}">${uncheckCount}명</span>`;
+          }
 
           const card = document.createElement('div');
           card.className = `p-2 sm:p-2.5 rounded-2xl border transition cursor-pointer select-none flex flex-col justify-between shadow-2xs ${
-            isSelected 
-              ? 'bg-emerald-700 text-white border-emerald-800 ring-2 ring-emerald-400' 
-              : 'bg-white hover:border-emerald-300 border-slate-200 text-slate-900'
+            isSelected ? 'bg-emerald-700 text-white border-emerald-800 ring-2 ring-emerald-400' : 'bg-white hover:border-emerald-300 border-slate-200 text-slate-900'
           }`;
           card.onclick = () => this.selectMonitoringClass(c.classId);
 
-          let statusBadgeHtml = '';
-          if (uncheckCount === 0 && classMembers.length > 0) {
-            statusBadgeHtml = `<span class="text-xs font-black px-1.5 py-0.2 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'}">완료</span>`;
-          } else {
-            statusBadgeHtml = `<span class="text-xs font-black px-1.5 py-0.2 rounded ${isSelected ? 'bg-amber-400 text-amber-950' : 'bg-amber-100 text-amber-900'}">${uncheckCount}명</span>`;
-          }
-
           card.innerHTML = `
-            <div class="flex items-center justify-between">
-              <span class="font-black text-sm sm:text-base truncate">${c.className}</span>
-              ${statusBadgeHtml}
-            </div>
+            <div class="flex items-center justify-between"><span class="font-black text-sm sm:text-base truncate">${c.className}</span>${statusBadgeHtml}</div>
             <div class="flex items-baseline justify-between my-1">
-              <div>
-                <span class="text-lg sm:text-xl font-black ${isSelected ? 'text-white' : 'text-emerald-700'}">${presentCount}</span>
-                <span class="text-xs font-bold ${isSelected ? 'text-emerald-100' : 'text-slate-500'}">/ ${classMembers.length}명</span>
-              </div>
-              <span class="text-sm font-black ${isSelected ? 'text-emerald-200' : 'text-slate-600'}">${rate}%</span>
+              <div><span class="text-lg sm:text-xl font-black ${isSelected ? 'text-white' : (isVisitorClass ? 'text-blue-700' : 'text-emerald-700')}">${presentCount}</span><span class="text-xs font-bold ${isSelected ? 'text-emerald-100' : 'text-slate-500'}">/ ${totalCount}명</span></div>
+              <span class="text-sm font-black ${isSelected ? 'text-emerald-200' : 'text-slate-600'}">${isVisitorClass ? '방명록' : rate + '%'}</span>
             </div>
-            <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-              <div class="bg-emerald-500 h-full rounded-full transition-all duration-300" style="width: ${rate}%"></div>
-            </div>
+            <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden"><div class="${isVisitorClass ? 'bg-blue-500' : 'bg-emerald-500'} h-full rounded-full transition-all duration-300" style="width: ${rate}%"></div></div>
           `;
-
           container.appendChild(card);
         });
       }

@@ -1243,18 +1243,39 @@
         container.appendChild(masterCard);
 
         activeClasses.forEach(c => {
-          const classMembers = activeMembersOnly.filter(m => m.classId === c.classId);
-          let presentCount = 0, checkedCount = 0;
-
-          classMembers.forEach(m => {
-            const r = this.rawRecords.find(rec => this.normalizeDateStr(rec.date) === curDate && rec.memberId === m.memberId);
-            if (r && (r.status === '출석' || r.status === '지각')) presentCount++;
-            if (r && r.status) checkedCount++;
-          });
-
-          const uncheckCount = classMembers.length - checkedCount;
-          const rate = classMembers.length > 0 ? ((presentCount / classMembers.length) * 100).toFixed(0) : '0';
+          const isVisitorClass = (c.classId === 'C12' || c.classId === 'VISITOR');
           const isSelected = this.selectedFilterClass === c.classId;
+
+          let presentCount = 0;
+          let totalCount = 0;
+          let rate = '0';
+          let statusBadgeHtml = '';
+
+          // 💡 방문자 반인 경우: rawVisitors에서 당일 방문자 수 카운트
+          if (isVisitorClass) {
+            presentCount = todayVisitorCount;
+            totalCount = todayVisitorCount;
+            rate = todayVisitorCount > 0 ? '100' : '0';
+            statusBadgeHtml = `<span class="text-xs font-black px-1.5 py-0.2 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-900'}">${todayVisitorCount}명</span>`;
+          } else {
+            // 일반 정규 교과반인 경우
+            const classMembers = activeMembersOnly.filter(m => m.classId === c.classId);
+            totalCount = classMembers.length;
+            let checkedCount = 0;
+
+            classMembers.forEach(m => {
+              const r = this.rawRecords.find(rec => this.normalizeDateStr(rec.date) === curDate && rec.memberId === m.memberId);
+              if (r && (r.status === '출석' || r.status === '지각')) presentCount++;
+              if (r && r.status) checkedCount++;
+            });
+
+            const uncheckCount = totalCount - checkedCount;
+            rate = totalCount > 0 ? ((presentCount / totalCount) * 100).toFixed(0) : '0';
+
+            statusBadgeHtml = uncheckCount === 0 && totalCount > 0
+              ? `<span class="text-xs font-black px-1.5 py-0.2 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'}">완료</span>`
+              : `<span class="text-xs font-black px-1.5 py-0.2 rounded ${isSelected ? 'bg-amber-400 text-amber-950' : 'bg-amber-100 text-amber-900'}">${uncheckCount}명</span>`;
+          }
 
           const card = document.createElement('div');
           card.className = `p-2 sm:p-2.5 rounded-2xl border transition cursor-pointer select-none flex flex-col justify-between shadow-2xs ${
@@ -1262,17 +1283,13 @@
           }`;
           card.onclick = () => this.selectMonitoringClass(c.classId);
 
-          let statusBadgeHtml = uncheckCount === 0 && classMembers.length > 0
-            ? `<span class="text-xs font-black px-1.5 py-0.2 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'}">완료</span>`
-            : `<span class="text-xs font-black px-1.5 py-0.2 rounded ${isSelected ? 'bg-amber-400 text-amber-950' : 'bg-amber-100 text-amber-900'}">${uncheckCount}명</span>`;
-
           card.innerHTML = `
             <div class="flex items-center justify-between"><span class="font-black text-sm sm:text-base truncate">${c.className}</span>${statusBadgeHtml}</div>
             <div class="flex items-baseline justify-between my-1">
-              <div><span class="text-lg sm:text-xl font-black ${isSelected ? 'text-white' : 'text-emerald-700'}">${presentCount}</span><span class="text-xs font-bold ${isSelected ? 'text-emerald-100' : 'text-slate-500'}">/ ${classMembers.length}명</span></div>
-              <span class="text-sm font-black ${isSelected ? 'text-emerald-200' : 'text-slate-600'}">${rate}%</span>
+              <div><span class="text-lg sm:text-xl font-black ${isSelected ? 'text-white' : (isVisitorClass ? 'text-blue-700' : 'text-emerald-700')}">${presentCount}</span><span class="text-xs font-bold ${isSelected ? 'text-emerald-100' : 'text-slate-500'}">/ ${totalCount}명</span></div>
+              <span class="text-sm font-black ${isSelected ? 'text-emerald-200' : 'text-slate-600'}">${isVisitorClass ? '방명록' : rate + '%'}</span>
             </div>
-            <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden"><div class="bg-emerald-500 h-full rounded-full transition-all duration-300" style="width: ${rate}%"></div></div>
+            <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden"><div class="${isVisitorClass ? 'bg-blue-500' : 'bg-emerald-500'} h-full rounded-full transition-all duration-300" style="width: ${rate}%"></div></div>
           `;
           container.appendChild(card);
         });

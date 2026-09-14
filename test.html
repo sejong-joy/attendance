@@ -3412,6 +3412,9 @@
       // 💡 ----------------------------------------------------
       // 📸 [추가] 종이 장부 사진 AI 분석 및 자동 입력 메서드
       // ----------------------------------------------------
+      // 💡 ----------------------------------------------------
+      // 📸 [추가] 종이 장부 사진 AI 분석 및 자동 입력 메서드
+      // ----------------------------------------------------
       async handlePaperScan(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -3465,7 +3468,7 @@
           }
 
           // 💡 리더님이 눈으로 확인하고 선택할 수 있도록 커스텀 확인 창(모달 또는 컨펌) 띄우기
-          let confirmMessage = `✨ AI가 총 ${scannedVisitors.length명의 기록을 읽었습니다!\n\n[인식된 명단 미리보기]\n`;
+          let confirmMessage = `✨ AI가 총 ${scannedVisitors.length}명의 기록을 읽었습니다!\n\n[인식된 명단 미리보기]\n`;
           scannedVisitors.forEach((v, idx) => {
             confirmMessage += `${idx + 1}. 이름: ${v.name} | 날짜: ${v.visitDate || '미인식'} | 인도자: ${v.introducer || '-'}\n`;
           });
@@ -3497,7 +3500,7 @@
               classId: 'C12',
               role: '방문자',
               status: '방문자',
-              notes: `[장부날짜:${visitor.visitDate || '당일'}] 인도자: ${visitor.introducer || ''} / ${visitor.notes || ''}`.trim(),
+              notes: `[장부날짜:${visitor.visitDate || '당일'}] 인도자: ${visitor.introducer || ''} / 메모: ${visitor.notes || ''}`.trim(),
               visitDate: targetDate
             };
 
@@ -3524,7 +3527,7 @@
 
           this.renderAttendanceList();
           this.renderClassMonitoringBar();
-          this.showToast(`🎉 총 ${successCount명의 방문자가 안전하게 등록되었습니다!`, 'success');
+          this.showToast(`🎉 총 ${successCount}명의 방문자가 안전하게 등록되었습니다!`, 'success');
 
         } catch (error) {
           console.error(error, "AI 스캔 실패");

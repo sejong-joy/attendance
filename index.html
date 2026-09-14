@@ -3505,7 +3505,7 @@ ${className} ${leaderName} 리더입니다.
         }
       }
 
-    printReport(type) {
+   printReport(type) {
         this.closeExportModal();
 
         const year = document.getElementById('yearSelect')?.value || '2026';
@@ -3538,42 +3538,42 @@ ${className} ${leaderName} 리더입니다.
         // 💡 1번: 13주 출석부 생성 헬퍼 함수
         const generateType1Html = (targetClassName, membersList) => {
           return `
-            <div style="font-family: 'Noto Sans KR', sans-serif; padding: 10px; page-break-after: always;">
-              <table style="width: 100%; border: none; margin-bottom: 12px;">
+            <div style="font-family: 'Noto Sans KR', sans-serif; padding: 4px; page-break-after: always;">
+              <table style="width: 100%; border: none; margin-bottom: 8px;">
                 <tr>
                   <td style="border: none; padding: 0; text-align: left; vertical-align: bottom;">
-                    <h2 style="font-size: 22px; font-weight: 900; margin: 0; color: #111827;">${year}년 ${quarter} 안식일학교 출석부 (${targetClassName})</h2>
-                    <p style="font-size: 12px; color: #4b5563; margin: 3px 0 0 0;">세종 조이 안식일학교 · 출력일: ${new Date().toLocaleDateString('ko-KR')}</p>
+                    <h2 style="font-size: 18px; font-weight: 900; margin: 0; color: #111827;">${year}년 ${quarter} 안식일학교 출석부 (${targetClassName})</h2>
+                    <p style="font-size: 11px; color: #4b5563; margin: 2px 0 0 0;">세종 조이 안식일학교 · 출력일: ${new Date().toLocaleDateString('ko-KR')}</p>
                   </td>
                 </tr>
               </table>
-              <table class="report-table" style="width: 100%; text-align: center; font-size: 13px;">
+              <table class="report-table" style="width: 100%; text-align: center; font-size: 11px;">
                 <thead>
-                  <tr style="background-color: #f8fafc; height: 38px;">
-                    <th style="border: 1px solid #cbd5e1; padding: 6px 4px; width: 65px;">성명</th>
-                    <th style="border: 1px solid #cbd5e1; padding: 6px 4px; width: 45px;">직분</th>
-                    ${sabbaths.map((s, idx) => `<th style="border: 1px solid #cbd5e1; padding: 4px; font-size: 11px; width: 34px;">${idx + 1}과<br><span style="font-size: 9px; color: #64748b;">${s.monthNum}/${s.dayNum}</span></th>`).join('')}
-                    <th style="border: 1px solid #cbd5e1; padding: 6px; color: #047857;">출</th>
-                    <th style="border: 1px solid #cbd5e1; padding: 6px; color: #b45309;">지</th>
-                    <th style="border: 1px solid #cbd5e1; padding: 6px; color: #4338ca;">예배</th>
-                    <th style="border: 1px solid #cbd5e1; padding: 6px; color: #b91c1c;">결</th>
-                    <th style="border: 1px solid #cbd5e1; padding: 6px;">출석률</th>
+                  <tr style="background-color: #f8fafc; height: 32px;">
+                    <th style="border: 1px solid #cbd5e1; padding: 4px 2px; width: 55px; white-space: nowrap;">성명</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 4px 2px; width: 38px; white-space: nowrap;">직분</th>
+                    ${sabbaths.map((s, idx) => `<th style="border: 1px solid #cbd5e1; padding: 2px 1px; font-size: 10px; width: 28px; white-space: nowrap;">${idx + 1}과<br><span style="font-size: 8px; color: #64748b;">${s.monthNum}/${s.dayNum}</span></th>`).join('')}
+                    <th style="border: 1px solid #cbd5e1; padding: 4px 1px; color: #047857; width: 24px; white-space: nowrap;">출</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 4px 1px; color: #b45309; width: 24px; white-space: nowrap;">지</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 4px 1px; color: #4338ca; width: 26px; white-space: nowrap;">예배</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 4px 1px; color: #b91c1c; width: 24px; white-space: nowrap;">결</th>
+                    <th style="border: 1px solid #cbd5e1; padding: 4px 2px; width: 44px; white-space: nowrap;">출석률</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${membersList.length === 0 ? `<tr><td colspan="${sabbaths.length + 7}" style="border: 1px solid #cbd5e1; padding: 20px; color: #64748b;">소속된 교인이 없습니다.</td></tr>` : 
+                  ${membersList.length === 0 ? `<tr><td colspan="${sabbaths.length + 7}" style="border: 1px solid #cbd5e1; padding: 15px; color: #64748b;">소속된 교인이 없습니다.</td></tr>` : 
                     membersList.map(m => {
                       let p = 0, l = 0, a = 0, w = 0;
                       const weekTds = sabbaths.map(s => {
                         const rec = globalRecMap[`${s.dateStr}_${m.memberId}`];
-                        if (rec && rec.status === '출석') { p++; return '<td style="border: 1px solid #cbd5e1; color: #059669; font-weight: bold; font-size: 15px;">⭕</td>'; }
-                        if (rec && rec.status === '지각') { l++; return '<td style="border: 1px solid #cbd5e1; color: #d97706; font-weight: bold; font-size: 15px;">△</td>'; }
+                        if (rec && rec.status === '출석') { p++; return '<td style="border: 1px solid #cbd5e1; color: #059669; font-weight: bold; font-size: 13px; padding: 2px 1px;">⭕</td>'; }
+                        if (rec && rec.status === '지각') { l++; return '<td style="border: 1px solid #cbd5e1; color: #d97706; font-weight: bold; font-size: 13px; padding: 2px 1px;">△</td>'; }
                         if (rec && rec.status === '결석') { 
                           a++; 
-                          if (rec.worshipAttended) { w++; return '<td style="border: 1px solid #cbd5e1; color: #4338ca; font-weight: bold; font-size: 15px;">⛪</td>'; }
-                          return '<td style="border: 1px solid #cbd5e1; color: #dc2626; font-weight: bold; font-size: 15px;">❌</td>'; 
+                          if (rec.worshipAttended) { w++; return '<td style="border: 1px solid #cbd5e1; color: #4338ca; font-weight: bold; font-size: 13px; padding: 2px 1px;">⛪</td>'; }
+                          return '<td style="border: 1px solid #cbd5e1; color: #dc2626; font-weight: bold; font-size: 13px; padding: 2px 1px;">❌</td>'; 
                         }
-                        return '<td style="border: 1px solid #cbd5e1; color: #cbd5e1;">-</td>';
+                        return '<td style="border: 1px solid #cbd5e1; color: #cbd5e1; padding: 2px 1px;">-</td>';
                       }).join('');
 
                       const totalChecked = p + l + a;
@@ -3581,15 +3581,15 @@ ${className} ${leaderName} 리더입니다.
                       const rate = totalChecked > 0 ? ((score / totalChecked) * 100).toFixed(0) + '%' : '-';
 
                       return `
-                        <tr style="height: 40px;">
-                          <td style="border: 1px solid #cbd5e1; padding: 4px; font-weight: 900; text-align: center; font-size: 14px;">${m.name}</td>
-                          <td style="border: 1px solid #cbd5e1; padding: 4px; color: #475569;">${m.role || '성도'}</td>
+                        <tr style="height: 30px;">
+                          <td style="border: 1px solid #cbd5e1; padding: 2px 4px; font-weight: 900; text-align: center; font-size: 13px; white-space: nowrap;">${m.name}</td>
+                          <td style="border: 1px solid #cbd5e1; padding: 2px; color: #475569; font-size: 11px; white-space: nowrap;">${m.role || '성도'}</td>
                           ${weekTds}
-                          <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #047857;">${p}</td>
-                          <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #b45309;">${l}</td>
-                          <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #4338ca;">${w}</td>
-                          <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #b91c1c;">${a}</td>
-                          <td style="border: 1px solid #cbd5e1; font-weight: bold; font-size: 14px;">${rate}</td>
+                          <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #047857; padding: 2px 1px;">${p}</td>
+                          <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #b45309; padding: 2px 1px;">${l}</td>
+                          <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #4338ca; padding: 2px 1px;">${w}</td>
+                          <td style="border: 1px solid #cbd5e1; font-weight: bold; color: #b91c1c; padding: 2px 1px;">${a}</td>
+                          <td style="border: 1px solid #cbd5e1; font-weight: bold; font-size: 12px; padding: 2px;">${rate}</td>
                         </tr>
                       `;
                     }).join('')}
@@ -3700,7 +3700,6 @@ ${className} ${leaderName} 리더입니다.
             else if (type === 5) html += generateType5Html(classNameStr, targetMembers);
           }
         } else if (type === 2) {
-          // [2번 결산 코드: 생략 없이 원본 유지]
           let targetMembers = this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
           if (!isYearly) {
             const validRecs = this.rawRecords.filter(r => (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
@@ -3897,16 +3896,16 @@ ${className} ${leaderName} 리더입니다.
         const frameDoc = printFrame.contentWindow.document;
         frameDoc.open();
         
-        // 💡 [핵심 보완] iframe 내부에 아이폰/아이패드 사파리 무한 로딩 방지 전용 CSS를 직접 강력하게 삽입!
+        const pageOrientation = (type === 1) ? 'landscape' : 'auto';
+
         frameDoc.write(`
           <!DOCTYPE html>
           <html>
           <head>
             <style>
-              @page { size: auto; margin: 12mm 10mm; } 
+              @page { size: ${pageOrientation}; margin: 8mm 6mm; } 
               body { font-family: 'Noto Sans KR', sans-serif; background: white; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
               
-              /* 사파리 로딩 뻗음 방지 CSS (리더님 원본 픽스 100% 적용) */
               table.report-table { width: 100% !important; border-collapse: separate !important; border-spacing: 0 !important; page-break-inside: auto !important; } 
               table.report-table tr, table.report-table td, table.report-table th { page-break-inside: auto !important; break-inside: auto !important; } 
               table.report-table thead { display: table-row-group !important; }

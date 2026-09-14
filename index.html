@@ -913,45 +913,57 @@
       }
 
       async loadClassesList() {
+        // 1. 휴대폰 캐시(임시 저장소)에서 먼저 반 목록 꺼내기
         const cachedClasses = localStorage.getItem('church_cached_classes');
+        let hasCache = false;
+
         if (cachedClasses) {
           try {
             const parsed = JSON.parse(cachedClasses);
             if (Array.isArray(parsed) && parsed.length > 0) {
               this.classList = parsed;
               this.populateClassSelect();
+              hasCache = true; // 캐시가 정상적으로 있음을 확인!
             }
           } catch(e) {}
         }
 
-        try {
-          const res = await fetch(`${SHEETS_API_URL}?action=getClasses`);
-          const json = await res.json();
-          if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
-            this.classList = json.data;
-            localStorage.setItem('church_cached_classes', JSON.stringify(this.classList));
-            this.populateClassSelect();
-            return;
+        // 2. 서버에서 최신 반 목록을 가져오는 전용 함수
+        const fetchFromServer = async () => {
+          try {
+            const res = await fetch(`${SHEETS_API_URL}?action=getClasses`);
+            const json = await res.json();
+            if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
+              this.classList = json.data;
+              localStorage.setItem('church_cached_classes', JSON.stringify(this.classList));
+              this.populateClassSelect(); // 백그라운드에서 최신화 완료
+            }
+          } catch (err) {
+            console.warn("서버 반 목록 로드 실패, 기본값으로 복구합니다:", err);
+            if (!hasCache) {
+              this.classList = [
+                { classId: 'ADMIN', className: '관리자(전체)', leaderName: '교역자', isAdmin: true },
+                { classId: 'C01', className: '사랑반', leaderName: '최변근', isAdmin: false },
+                { classId: 'C02', className: '기쁨반', leaderName: '서종헌', isAdmin: false },
+                { classId: 'C03', className: '은혜반', leaderName: '김수희', isAdmin: false },
+                { classId: 'C04', className: '감사반', leaderName: '조영주', isAdmin: false },
+                { classId: 'C05', className: '소망반', leaderName: '이종문', isAdmin: false },
+                { classId: 'C06', className: '믿음반', leaderName: '차상석', isAdmin: false },
+                { classId: 'C07', className: '새신자반', leaderName: '고윤호', isAdmin: false },
+                { classId: 'C08', className: '학생반', leaderName: '신정호', isAdmin: false },
+                { classId: 'C09', className: '어린이반', leaderName: '방은지', isAdmin: false },
+                { classId: 'C10', className: '청년반', leaderName: '노준섭', isAdmin: false }
+              ];
+              this.populateClassSelect();
+            }
           }
-        } catch (err) {
-          console.warn("서버 반 목록 로드 실패, 기본값으로 복구합니다:", err);
-        }
+        };
 
-        if (!this.classList || this.classList.length === 0) {
-          this.classList = [
-            { classId: 'ADMIN', className: '관리자(전체)', leaderName: '교역자', isAdmin: true },
-            { classId: 'C01', className: '사랑반', leaderName: '최변근', isAdmin: false },
-            { classId: 'C02', className: '기쁨반', leaderName: '서종헌', isAdmin: false },
-            { classId: 'C03', className: '은혜반', leaderName: '김수희', isAdmin: false },
-            { classId: 'C04', className: '감사반', leaderName: '조영주', isAdmin: false },
-            { classId: 'C05', className: '소망반', leaderName: '이종문', isAdmin: false },
-            { classId: 'C06', className: '믿음반', leaderName: '차상석', isAdmin: false },
-            { classId: 'C07', className: '새신자반', leaderName: '고윤호', isAdmin: false },
-            { classId: 'C08', className: '학생반', leaderName: '신정호', isAdmin: false },
-            { classId: 'C09', className: '어린이반', leaderName: '방은지', isAdmin: false },
-            { classId: 'C10', className: '청년반', leaderName: '노준섭', isAdmin: false }
-          ];
-          this.populateClassSelect();
+        // 💡 3. 핵심 마법: 캐시가 있으면 기다리지 않고 즉시 통과! (0초 컷)
+        if (hasCache) {
+          fetchFromServer(); // await 없이 뒷배경에서 조용히 실행만 시켜둠
+        } else {
+          await fetchFromServer(); // 캐시가 없는 최초 1회 방문 시에만 기다림
         }
       }
 

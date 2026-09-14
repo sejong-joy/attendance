@@ -3425,15 +3425,15 @@
           const base64Data = await this.fileToBase64(file);
           
           const apiKey = "AIzaSyBPLKkIEnEr2GTogJFJUPnMJJdlvSyvbCw"; 
-          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+          // 안심하고 안정적으로 동작하는 1.5-flash 모델로 지정
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
           
-          // 💡 핵심: 각 사람별로 적혀 있는 방문 날짜(visitDate)까지 같이 추출하도록 지시
           const promptText = `
-            이 이미지는 교회 안식일학교 종이 방문기록부 사진입니다. 페이지에 여러 날짜의 기록이 섞여 있을 수 있습니다.
-            사진에 적힌 **모든 방문자들의 정보**를 읽어서 정확히 아래와 같은 JSON 배열 형태로만 추출해 주세요. 
-            각 행에 적혀 있거나 유추되는 방문 날짜(YYYY-MM-DD 형식 또는 'MM월 DD일' 형태)를 반드시 포함해 주세요. 다른 설명이나 텍스트는 절대 포함하지 마세요.
+            너는 교회 종이 방문기록부를 읽어내는 AI OCR 전문가야.
+            이미지에 적힌 모든 방문자들의 정보를 분석해서 오직 아래 형식의 JSON 배열만 출력해.
+            다른 설명이나 마크다운 백틱(---나 \`\`\`json)은 절대 붙이지 말고 순수 JSON 배열만 출력할 것.
             [
-              { "name": "이름", "phone": "전화번호", "introducer": "인도자", "notes": "메모", "visitDate": "기록된 날짜" }
+              { "name": "이름", "phone": "전화번호", "introducer": "인도자", "notes": "메모", "visitDate": "YYYY-MM-DD 또는 적힌 날짜" }
             ]
           `;
 
@@ -3455,24 +3455,31 @@
           const result = await response.json();
           const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
           
-          const jsonMatch = rawText.match(/\[[\s\S]*\]/);
-          if (!jsonMatch) {
-            throw new Error('AI가 데이터를 올바른 형식으로 읽어내지 못했습니다.');
+          console.log("AI 원본 응답:", rawText); // F12 콘솔에서 확인 가능
+
+          // 💡 마크다운 백틱(```json 등)이나 불필요한 텍스트를 깨끗하게 제거하고 JSON 배열만 추출
+          let cleanText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+          const firstBracket = cleanText.indexOf('[');
+          const lastBracket = cleanText.lastIndexOf(']');
+
+          if (firstBracket === -1 || lastBracket === -1) {
+            throw new Error('AI가 올바른 JSON 배열을 반환하지 않았습니다.');
           }
 
-          const scannedVisitors = JSON.parse(jsonMatch[0]);
+          const jsonString = cleanText.substring(firstBracket, lastBracket + 1);
+          const scannedVisitors = JSON.parse(jsonString);
 
-          if (scannedVisitors.length === 0) {
+          if (!Array.isArray(scannedVisitors) || scannedVisitors.length === 0) {
             this.showToast('인식된 방문자 정보가 없습니다. 다시 촬영해 주세요.', 'error');
             return;
           }
 
-          // 💡 리더님이 눈으로 확인하고 선택할 수 있도록 커스텀 확인 창(모달 또는 컨펌) 띄우기
+          // 💡 리더님이 눈으로 확인하고 선택할 수 있도록 확인 창 띄우기
           let confirmMessage = `✨ AI가 총 ${scannedVisitors.length}명의 기록을 읽었습니다!\n\n[인식된 명단 미리보기]\n`;
           scannedVisitors.forEach((v, idx) => {
-            confirmMessage += `${idx + 1}. 이름: ${v.name} | 날짜: ${v.visitDate || '미인식'} | 인도자: ${v.introducer || '-'}\n`;
+            confirmMessage += `${idx + 1}. 이름: ${v.name || '이름없음'} | 날짜: ${v.visitDate || '당일'} | 인도자: ${v.introducer || '-'}\n`;
           });
-          confirmMessage += `\n이 명단을 당일 방명록에 일괄 등록할까요? (취소를 누르면 등록되지 않습니다)`;
+          confirmMessage += `\n이 명단을 방명록에 일괄 등록할까요? (취소를 누르면 등록되지 않습니다)`;
 
           if (!confirm(confirmMessage)) {
             this.showToast('등록이 취소되었습니다.', 'info');
@@ -3487,16 +3494,15 @@
           for (const visitor of scannedVisitors) {
             if (!visitor.name) continue;
 
-            // 리더님이 선택한 날짜가 있으면 그 날짜를 쓰고, 없으면 현재 선택된 안식일 날짜 사용
             let targetDate = curDate;
             if (visitor.visitDate && visitor.visitDate.includes('-')) {
-              targetDate = visitor.visitDate; // AI가 읽어낸 날짜가 정확하면 그 날짜 적용
+              targetDate = visitor.visitDate;
             }
 
             const payloadData = {
               action: 'registerNewMember',
-              name: visitor.name.trim(),
-              phone: (visitor.phone || '').trim(),
+              name: String(visitor.name).trim(),
+              phone: String(visitor.phone || '').trim(),
               classId: 'C12',
               role: '방문자',
               status: '방문자',
@@ -3530,8 +3536,8 @@
           this.showToast(`🎉 총 ${successCount}명의 방문자가 안전하게 등록되었습니다!`, 'success');
 
         } catch (error) {
-          console.error(error, "AI 스캔 실패");
-          this.showToast('사진 분석 중 오류가 발생했습니다.', 'error');
+          console.error("AI 스캔 실패 상세:", error);
+          this.showToast('사진 분석 중 오류가 발생했습니다. (F12 콘솔 확인)', 'error');
         } finally {
           event.target.value = '';
         }

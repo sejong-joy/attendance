@@ -3543,7 +3543,6 @@ ${className} ${leaderName} 리더입니다.
         `;
 
         // 💡 1번: 13주 출석부 생성 헬퍼 함수
-        // 💡 1번: 13주 출석부 생성 헬퍼 함수 (사파리 줄바꿈 방지 및 A4 최적화)
         const generateType1Html = (targetClassName, membersList) => {
           return `
             <div style="font-family: 'Noto Sans KR', sans-serif; padding: 4px; page-break-after: always;">
@@ -3708,7 +3707,6 @@ ${className} ${leaderName} 리더입니다.
             else if (type === 5) html += generateType5Html(classNameStr, targetMembers);
           }
         } else if (type === 2) {
-          // [2번 결산 코드: 생략 없이 원본 유지]
           let targetMembers = this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
           if (!isYearly) {
             const validRecs = this.rawRecords.filter(r => (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
@@ -3905,10 +3903,8 @@ ${className} ${leaderName} 리더입니다.
         const frameDoc = printFrame.contentWindow.document;
         frameDoc.open();
         
-       // 💡 1번 출석부(type === 1)는 landscape(가로), 나머지는 auto
         const pageOrientation = (type === 1) ? 'landscape' : 'auto';
 
-        // 💡 [핵심 보완] iframe 내부에 아이폰/아이패드 사파리 무한 로딩 방지 전용 CSS를 직접 강력하게 삽입!
         frameDoc.write(`
           <!DOCTYPE html>
           <html>
@@ -3917,7 +3913,6 @@ ${className} ${leaderName} 리더입니다.
               @page { size: ${pageOrientation}; margin: 8mm 6mm; } 
               body { font-family: 'Noto Sans KR', sans-serif; background: white; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
               
-              /* 사파리 로딩 뻗음 방지 CSS (리더님 원본 픽스 100% 적용) */
               table.report-table { width: 100% !important; border-collapse: separate !important; border-spacing: 0 !important; page-break-inside: auto !important; } 
               table.report-table tr, table.report-table td, table.report-table th { page-break-inside: auto !important; break-inside: auto !important; } 
               table.report-table thead { display: table-row-group !important; }

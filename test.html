@@ -355,14 +355,14 @@
             </div>
             <button onclick="window.appInstance.runMigrationV1toV2()" class="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-black text-sm rounded-xl transition shadow-md">시트 데이터를 파이어베이스로 압축 이관</button>
           </div>
-         <!-- 📷 AI 종이 장부 스캔 업로드 버튼 (카메라 촬영 + 갤러리 파일 선택 모두 가능) -->
+          <!-- 📷 AI 종이 장부 스캔 업로드 버튼 -->
 <div style="margin: 10px 0; padding: 12px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 8px; text-align: center;">
   <label for="paperScanInput" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; color: #1e293b; font-weight: bold; font-size: 14px;">
-    <span>📸 종이 방문기록부 사진 촬영 또는 갤러리 불러오기</span>
-    <!-- 💡 capture="environment" 속성을 제거하여 갤러리 선택과 카메라 촬영을 둘 다 선택할 수 있게 바꿉니다 -->
-    <input type="file" id="paperScanInput" accept="image/*" style="display: none;" onchange="window.appInstance.handlePaperScan(event)">
+    <span>📸 종이 방문기록부 사진으로 자동 입력</span>
+    <!-- 💡 window.appInstance를 통하도록 수정 -->
+    <input type="file" id="paperScanInput" accept="image/*" capture="environment" style="display: none;" onchange="window.appInstance.handlePaperScan(event)">
   </label>
-  <p style="font-size: 11px; color: #64748b; margin: 4px 0 0 0;">스마트폰이나 PC에서 종이 장부 사진을 선택하면 AI가 일괄 분석합니다.</p>
+  <p style="font-size: 11px; color: #64748b; margin: 4px 0 0 0;">스마트폰으로 종이 장부를 촬영하면 AI가 내용을 읽어옵니다.</p>
 </div>
           
           <div id="adminResetSection" class="hidden p-3 bg-red-50 border border-red-300 rounded-xl space-y-2 mt-4">
@@ -3416,50 +3416,30 @@
         const file = event.target.files[0];
         if (!file) return;
 
-        this.showToast('🤖 AI가 종이 장부의 모든 방문자 기록을 분석 중입니다...', 'info');
-        this.showLoading('AI 장부 이미지 분석 중...');
+        this.showToast('🤖 AI가 종이 장부를 분석하고 있습니다. 잠시만 기다려주세요...', 'info');
 
         try {
           const base64Data = await this.fileToBase64(file);
-          const apiKey = "AIzaSyBPLKkIEnEr2GTogJFJUPnMJJdlvSyvbCw"; 
-          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
           
-          const currentYear = document.getElementById('yearSelect')?.value || '2026';
-          const defaultDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
-
+          // ⚠️ 테스트용 Gemini API Key (사용하시는 개인 키로 교체하세요)
+          const apiKey = "AIzaSyBPLKkIEnEr2GTogJFJUPnMJJdlvSyvbCw"; 
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
           const promptText = `
-너는 교회 종이 방문기록부를 판독하는 전문 OCR 시스템이다.
-제공된 이미지에 적힌 모든 방문자의 정보를 빠짐없이 읽어서 정확한 JSON 배열 형식으로 반환하라.
-
-규칙:
-1. 연도가 생략된 날짜(예: 9/5, 9월 12일)는 기준 연도인 ${currentYear}년을 적용하여 반드시 'YYYY-MM-DD' 형식으로 변환하라.
-2. 날짜를 유추할 수 없는 경우 '${defaultDate}'를 사용하라.
-3. 전화번호는 숫자와 하이픈(-) 위주로 정리하라.
-4. 항목이 누락된 경우 빈 문자열("")로 채워라.
-
-반환할 JSON 구조 예시:
-[
-  {
-    "name": "홍길동",
-    "phone": "010-1234-5678",
-    "introducer": "김인도",
-    "notes": "처음 방문, 감사 헌금",
-    "visitDate": "2026-09-05"
-  }
-]
-`;
+            이 이미지는 교회 안식일학교 종이 방문기록부 사진입니다.
+            사진에 적힌 방문자의 정보를 읽어서 정확히 아래와 같은 JSON 배열 형태로만 추출해 주세요. 다른 설명이나 텍스트는 절대 포함하지 마세요.
+            [
+              { "name": "이름", "phone": "전화번호", "introducer": "인도자", "notes": "메모 또는 특이사항" }
+            ]
+            만약 정보가 없으면 빈 문자열("")로 채워주세요.
+          `;
 
           const payload = {
             contents: [{
               parts: [
                 { text: promptText },
-                { inline_data: { mime_type: file.type || 'image/jpeg', data: base64Data } }
+                { inline_data: { mime_type: file.type, data: base64Data } }
               ]
-            }],
-            generationConfig: {
-              response_mime_type: "application/json",
-              temperature: 0.1
-            }
+            }]
           };
 
           const response = await fetch(endpoint, {
@@ -3469,107 +3449,51 @@
           });
 
           const result = await response.json();
-          this.hideLoading();
-
-          if (result.error) {
-            throw new Error(`Gemini API 오류: ${result.error.message}`);
+          const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          
+          const jsonMatch = rawText.match(/\[[\s\S]*\]/);
+          if (!jsonMatch) {
+            throw new Error('AI가 데이터를 올바른 형식으로 읽어내지 못했습니다.');
           }
 
-          const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-          console.log("AI 원본 응답:", rawText);
+          const scannedVisitors = JSON.parse(jsonMatch[0]);
 
-          let scannedVisitors = [];
-          try {
-            scannedVisitors = JSON.parse(rawText);
-          } catch (pe) {
-            // 예외 방어: 만약 백틱이 남아있는 경우 정규식 추출
-            const match = rawText.match(/\[[\s\S]*\]/);
-            if (match) {
-              scannedVisitors = JSON.parse(match[0]);
-            } else {
-              throw new Error('AI 응답을 JSON으로 파싱할 수 없습니다.');
-            }
-          }
-
-          if (!Array.isArray(scannedVisitors) || scannedVisitors.length === 0) {
-            this.showToast('인식된 방문자 정보가 없습니다. 사진을 더 가깝고 선명하게 촬영해 주세요.', 'error');
+          if (scannedVisitors.length === 0) {
+            this.showToast('인식된 방문자 정보가 없습니다. 다시 촬영해 주세요.', 'error');
             return;
           }
 
-          // 미리보기 확인 팝업
-          let confirmMessage = `✨ 총 ${scannedVisitors.length}명의 방문자 기록이 인식되었습니다.\n\n[명단 미리보기]\n`;
-          scannedVisitors.forEach((v, idx) => {
-            confirmMessage += `${idx + 1}. ${v.name || '이름없음'} | 날짜: ${v.visitDate || defaultDate} | 연락처: ${v.phone || '-'} | 인도자: ${v.introducer || '-'}\n`;
-          });
-          confirmMessage += `\n이 명단을 방문자 방명록에 등록하시겠습니까?`;
+          const visitor = scannedVisitors[0];
+          
+          // 새가족/방문자 등록 모달창 내부 입력 필드들에 자동 주입
+          // (새가족 등록 모달이 열려있거나 열릴 때 연동되도록 필드 확인)
+          this.openNewMemberModal();
+          
+          setTimeout(() => {
+            if (document.getElementById('newMemberName')) document.getElementById('newMemberName').value = visitor.name || '';
+            if (document.getElementById('newMemberPhone')) document.getElementById('newMemberPhone').value = visitor.phone || '';
+            if (document.getElementById('newMemberNote')) document.getElementById('newMemberNote').value = `인도자: ${visitor.introducer || ''} / ${visitor.notes || ''}`;
+            if (document.getElementById('newMemberStatus')) document.getElementById('newMemberStatus').value = '방문자';
+            this.onNewMemberTypeChange();
+          }, 100);
 
-          if (!confirm(confirmMessage)) {
-            this.showToast('등록이 취소되었습니다.', 'info');
-            return;
-          }
-
-          this.showLoading(`방문자 ${scannedVisitors.length}명 등록 중...`);
-          let successCount = 0;
-
-          for (const visitor of scannedVisitors) {
-            if (!visitor.name || String(visitor.name).trim() === '') continue;
-
-            const targetDate = (visitor.visitDate && visitor.visitDate.match(/^\d{4}-\d{2}-\d{2}$/)) 
-              ? visitor.visitDate 
-              : defaultDate;
-
-            const notesArr = [];
-            if (visitor.introducer) notesArr.push(`인도자: ${visitor.introducer}`);
-            if (visitor.notes) notesArr.push(visitor.notes);
-            const finalNotes = notesArr.join(' / ');
-
-            const payloadData = {
-              action: 'registerNewMember',
-              name: String(visitor.name).trim(),
-              phone: String(visitor.phone || '').trim(),
-              classId: 'C12',
-              role: '방문자',
-              status: '방문자',
-              notes: finalNotes,
-              visitDate: targetDate
-            };
-
-            try {
-              const res = await fetch(SHEETS_API_URL, { 
-                method: 'POST', 
-                body: JSON.stringify(payloadData) 
-              });
-              const json = await res.json();
-
-              if (json.success) {
-                successCount++;
-                this.rawVisitors.push({
-                  visitorId: json.visitorId || ('V_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6)),
-                  visitDate: targetDate,
-                  date: targetDate,
-                  name: payloadData.name,
-                  phone: payloadData.phone,
-                  role: '방문자',
-                  notes: payloadData.notes
-                });
-              }
-            } catch (err) {
-              console.error("개별 방문자 시트 등록 실패:", err);
-            }
-          }
-
-          this.hideLoading();
-          this.renderAttendanceList();
-          this.renderClassMonitoringBar();
-          this.showToast(`🎉 총 ${successCount}명의 방문자가 성공적으로 등록되었습니다!`, 'success');
+          this.showToast(`✨ AI 스캔 완료! (${visitor.name} 성도 정보 입력됨)`, 'success');
 
         } catch (error) {
-          this.hideLoading();
-          console.error("AI 스캔 실패 상세:", error);
-          this.showToast(`분석 실패: ${error.message}`, 'error');
+          console.error(error, "AI 스캔 실패");
+          this.showToast('사진 분석 중 오류가 발생했습니다. API 키를 확인해 주세요.', 'error');
         } finally {
           event.target.value = '';
         }
+      }
+
+      fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = error => reject(error);
+        });
       }
     }
 

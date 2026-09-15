@@ -3530,28 +3530,28 @@ ${className} ${leaderName} 리더입니다.
         modal.classList.remove('pointer-events-none', 'opacity-0');
         box.classList.remove('scale-95');
         box.classList.add('scale-100');
-      },
+      }
 
       closePromotionModal() {
         const modal = document.getElementById('promotionModal');
         const box = document.getElementById('promotionModalBox');
         if (box) { box.classList.remove('scale-100'); box.classList.add('scale-95'); }
         if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
-      },
+      }
 
       togglePromotionCandidate(index, checked) {
         if (this.promotionCandidates && this.promotionCandidates[index]) {
           this.promotionCandidates[index].selected = checked;
         }
         this.updatePromotionSubmitButtonText();
-      },
+      }
 
       updatePromotionSubmitButtonText() {
         const textEl = document.getElementById('promotionSubmitBtnText');
         if (!textEl || !this.promotionCandidates) return;
         const count = this.promotionCandidates.filter(c => c.selected).length;
         textEl.textContent = count > 0 ? `${count}명 일괄 승급 확정` : '선택된 인원 없음';
-      },
+      }
 
       async executeBatchPromotion() {
         const selected = (this.promotionCandidates || []).filter(c => c.selected);

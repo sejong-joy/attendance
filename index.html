@@ -2625,11 +2625,13 @@ ${className} ${leaderName} 리더입니다.
         container.innerHTML = '';
 
         const currentYear = new Date().getFullYear();
+        const curQuarter = document.getElementById('quarterSelect')?.value || '3기';
+
         // 등록 활동 성도 (전출, 이명, 휴면, 별세 제외)
         const activeMembers = this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
         const totalCount = activeMembers.length;
 
-        // 연령대 그룹 정의 (70대와 80대 이상 분리)
+        // 연령대 그룹 정의 (70대, 80대 이상 분리)
         const groups = [
           { key: 'child_student', label: '어린이·학생', sub: '19세 이하', min: 0, max: 19, color: 'emerald', members: [] },
           { key: 'youth', label: '청년', sub: '20~35세', min: 20, max: 35, color: 'teal', members: [] },
@@ -2666,30 +2668,69 @@ ${className} ${leaderName} 리더입니다.
           else groups[6].members.push(m);
         });
 
-        // 연령대 데이터 저장 (팝업 모달 연동용)
         this.ageDemographicGroups = groups;
+
+        // 현재 분기의 유효 출석 기록 필터링
+        const validRecords = this.rawRecords.filter(r => {
+          const isQuarterMatch = !r.quarter || r.quarter === curQuarter;
+          return isQuarterMatch && (r.status === '출석' || r.status === '지각' || r.status === '결석');
+        });
 
         groups.forEach((g, idx) => {
           if (g.key === 'unknown' && g.members.length === 0) return;
 
           const count = g.members.length;
-          const ratio = totalCount > 0 ? ((count / totalCount) * 100).toFixed(0) : 0;
+          const popRatio = totalCount > 0 ? ((count / totalCount) * 100).toFixed(0) : 0; // 교인 구성비
+
+          // 해당 연령대의 출석률 계산 (출석 1.0, 지각 0.5)
+          const memberIdSet = new Set(g.members.map(m => m.memberId));
+          let groupScore = 0;
+          let groupCheckedCount = 0;
+
+          validRecords.forEach(r => {
+            if (memberIdSet.has(r.memberId)) {
+              groupCheckedCount++;
+              if (r.status === '출석') groupScore += 1.0;
+              else if (r.status === '지각') groupScore += 0.5;
+            }
+          });
+
+          const attRate = groupCheckedCount > 0 
+            ? ((groupScore / groupCheckedCount) * 100).toFixed(1) 
+            : null;
 
           const card = document.createElement('div');
           card.onclick = () => this.openAgeGroupMembersModal(idx);
-          card.className = `p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-${g.color}-400 transition cursor-pointer select-none flex flex-col justify-between shadow-2xs`;
+          card.className = `p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-indigo-400 transition cursor-pointer select-none flex flex-col justify-between shadow-2xs`;
+
+          // 출석률 뱃지 색상
+          let rateBadgeColor = 'text-slate-500 bg-slate-100';
+          if (attRate !== null) {
+            const num = parseFloat(attRate);
+            if (num >= 85) rateBadgeColor = 'text-emerald-800 bg-emerald-100 border border-emerald-300';
+            else if (num >= 70) rateBadgeColor = 'text-blue-800 bg-blue-100 border border-blue-300';
+            else if (num >= 50) rateBadgeColor = 'text-amber-900 bg-amber-100 border border-amber-300';
+            else rateBadgeColor = 'text-red-800 bg-red-100 border border-red-300';
+          }
 
           card.innerHTML = `
             <div class="flex items-center justify-between">
               <span class="text-xs sm:text-sm font-black text-slate-800">${g.label}</span>
               <span class="text-[10px] font-bold text-slate-600 bg-white border border-slate-200 px-1.5 py-0.2 rounded">${g.sub}</span>
             </div>
-            <div class="flex items-baseline justify-between mt-1 mb-1.5">
-              <span class="text-xl sm:text-2xl font-black text-slate-900">${count}<span class="text-xs font-bold text-slate-600">명</span></span>
-              <span class="text-xs font-black text-indigo-700">${ratio}%</span>
+
+            <div class="flex items-baseline justify-between mt-1.5 mb-1">
+              <div>
+                <span class="text-xl sm:text-2xl font-black text-slate-900">${count}<span class="text-xs font-bold text-slate-600">명</span></span>
+                <span class="text-[11px] font-bold text-slate-500 ml-1">(${popRatio}%)</span>
+              </div>
+              <span class="text-xs sm:text-sm font-black px-1.5 py-0.5 rounded ${rateBadgeColor}">
+                ${attRate !== null ? `출석 ${attRate}%` : '기록 없음'}
+              </span>
             </div>
+
             <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-              <div class="bg-indigo-600 h-full rounded-full transition-all duration-300" style="width: ${ratio}%"></div>
+              <div class="bg-indigo-600 h-full rounded-full transition-all duration-300" style="width: ${attRate !== null ? attRate : 0}%"></div>
             </div>
           `;
           container.appendChild(card);

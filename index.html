@@ -416,6 +416,20 @@
             <button onclick="window.appInstance.backupToGoogleSheets()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-xl transition shadow-md">데이터 원본 백업 실행</button>
           </div>
 
+          <!-- 💡 [추가] 관리자 전용: 새해 교인 일괄 진급(승급) 도구 -->
+          <div id="adminPromotionSection" class="hidden p-3 bg-indigo-50 border border-indigo-300 rounded-xl space-y-2 mt-4">
+            <div class="flex items-center justify-between">
+              <span class="font-black text-indigo-950 text-sm sm:text-base flex items-center space-x-1.5">
+                <span>🎓</span><span>관리자 전용: 새해 부서/직분 일괄 진급</span>
+              </span>
+              <span class="text-xs font-black bg-indigo-200 text-indigo-900 px-2 py-0.5 rounded">신년 전용</span>
+            </div>
+            <p class="text-xs text-indigo-900 font-bold leading-relaxed">생년월일 기준 진급 대상자(유치, 초등, 학생, 청년)를 검토하고 소속반과 직분을 일괄 변경합니다.</p>
+            <button type="button" onclick="window.appInstance.openPromotionModal()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm rounded-xl transition shadow-md flex items-center justify-center space-x-1">
+              <span>🎯 진급 대상자 확인 및 승급 실행</span>
+            </button>
+          </div>
+
           <div id="adminResetSection" class="hidden p-3 bg-red-50 border border-red-300 rounded-xl space-y-2 mt-4">
             <div class="flex items-center justify-between">
               <span class="font-black text-red-900 text-sm sm:text-base flex items-center space-x-1.5"><span>⚠️</span><span>관리자 전용: 출석 데이터 초기화 (Reset)</span></span><span class="text-xs font-black bg-red-200 text-red-900 px-2 py-0.5 rounded">교역자 전용</span>
@@ -675,6 +689,38 @@
         </div>
         <div id="classPickerList" class="p-3 max-h-[60vh] overflow-y-auto custom-scrollbar space-y-1.5">
           <!-- 반 목록 버튼들이 자바스크립트로 자동 생성됩니다 -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 🎓 새해 일괄 진급 검토 및 확정 모달 -->
+    <div id="promotionModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-2.5 transition-opacity duration-200 opacity-0 pointer-events-none">
+      <div class="bg-white rounded-2xl shadow-2xl border border-indigo-200 w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-200" id="promotionModalBox">
+        <div class="px-4 py-3 bg-indigo-50 border-b border-indigo-100 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="text-2xl">🎓</span>
+            <div>
+              <h3 class="text-lg font-black text-indigo-950 leading-tight">새해 부서/직분 일괄 진급</h3>
+              <p id="promotionModalYearText" class="text-xs text-indigo-800 font-bold">새해 진급 대상자 검토</p>
+            </div>
+          </div>
+          <button type="button" onclick="window.appInstance.closePromotionModal()" class="text-slate-400 hover:text-slate-700 font-bold text-2xl p-1">✕</button>
+        </div>
+        
+        <div class="p-3.5 space-y-2.5">
+          <div class="bg-amber-50 border border-amber-300 p-2.5 rounded-xl text-xs text-amber-950 font-bold leading-relaxed">
+            💡 <b>승급 대상자 목록입니다.</b> 유예나 잔류가 필요한 학생은 체크를 해제한 후 <b>[일괄 승급 확정]</b>을 누르세요.
+          </div>
+          <div id="promotionListContainer" class="max-h-[55vh] overflow-y-auto custom-scrollbar space-y-2">
+            <!-- 자바스크립트로 대상자 목록 생성 -->
+          </div>
+        </div>
+
+        <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 flex space-x-2">
+          <button type="button" onclick="window.appInstance.closePromotionModal()" class="w-1/3 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-black text-sm rounded-xl transition">취소</button>
+          <button type="button" id="promotionSubmitBtn" onclick="window.appInstance.executeBatchPromotion()" class="w-2/3 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm rounded-xl transition shadow-md flex items-center justify-center space-x-1">
+            <span>✨</span><span id="promotionSubmitBtnText">일괄 승급 확정 실행</span>
+          </button>
         </div>
       </div>
     </div>
@@ -1420,6 +1466,7 @@
         const adminResetSec = document.getElementById('adminResetSection');
         const adminNewMemberBtn = document.getElementById('adminNewMemberBtn');
         const adminBackupSec = document.getElementById('adminBackupSection');
+        const adminPromotionSec = document.getElementById('adminPromotionSection'); // 💡 선언
 
         if (this.currentUser.isAdmin) {
           statusBarWrap?.classList.remove('hidden');
@@ -1427,12 +1474,14 @@
           adminResetSec?.classList.remove('hidden');
           adminNewMemberBtn?.classList.remove('hidden');
           adminBackupSec?.classList.remove('hidden');
+          adminPromotionSec?.classList.remove('hidden'); // 💡 관리자일 때 보임
         } else {
           statusBarWrap?.classList.add('hidden');
           leaderRefreshWrap?.classList.remove('hidden');
           adminResetSec?.classList.add('hidden');
           adminNewMemberBtn?.classList.add('hidden');
           adminBackupSec?.classList.add('hidden');
+          adminPromotionSec?.classList.add('hidden'); // 💡 일반 리더일 때 숨김
         }
 
         this.calculateConsecutiveAbsentees();
@@ -3039,24 +3088,10 @@ ${className} ${leaderName} 리더입니다.
           if (m.status === '활동') statusBadgeClass = 'bg-emerald-100 text-emerald-900 border-emerald-300';
           else if (m.status === '새가족') statusBadgeClass = 'bg-amber-100 text-amber-900 border-amber-300';
 
-         // 💡 [추가] 나이 / 학년 계산 로직
-          const ageInfo = this.getMemberAgeInfo(m.birth || m.birthday || m.birthDate);
-          let ageBadgeHtml = '';
-
-          if (ageInfo) {
-            if (ageInfo.isStudentOrChild) {
-              // 💡 영아~고등학생: 전체 공개 (파란색 미니 뱃지)
-              ageBadgeHtml = `<span class="ml-1 inline-block px-1.5 py-0.5 text-[10px] font-black bg-blue-100 text-blue-700 rounded-md tracking-tight align-middle">${ageInfo.gradeLabel}</span>`;
-            } else if (isAdmin) {
-              // 💡 20세 이상 성인: 관리자에게만 차분한 회색으로 연나이 노출
-              ageBadgeHtml = `<span class="ml-1 inline-block text-[11px] font-bold text-slate-400 align-middle">(${ageInfo.annualAge}세)</span>`;
-            }
-          }
-
-          // 💡 [수정] 관리자로 로그인 시, 이름 부분에 클릭 가능한 버튼(수정 팝업 열기)을 씌워줍니다.
-          let finalNameHtml = `<span>${displayName}</span>${ageBadgeHtml}`;
+         // 💡 명부 목록은 원래대로 깔끔하게 이름과 수정 버튼만 유지
+          let finalNameHtml = displayName;
           if (isAdmin) {
-            finalNameHtml = `<button type="button" onclick="window.appInstance.openEditMemberModal('${m.memberId}')" class="text-left font-black text-[17px] text-blue-700 hover:text-blue-900 flex flex-col sm:flex-row sm:items-center gap-1 transition"><span class="flex items-center">${displayName}${ageBadgeHtml}</span><span class="text-[10px] bg-blue-100 border border-blue-300 text-blue-800 px-1.5 py-0.5 rounded shadow-2xs">수정✏️</span></button>`;
+            finalNameHtml = `<button type="button" onclick="window.appInstance.openEditMemberModal('${m.memberId}')" class="text-left font-black text-[17px] text-blue-700 hover:text-blue-900 flex flex-col sm:flex-row sm:items-center gap-1 transition"><span>${displayName}</span><span class="text-[10px] bg-blue-100 border border-blue-300 text-blue-800 px-1.5 py-0.5 rounded shadow-2xs">수정✏️</span></button>`;
           }
 
           tr.innerHTML = 
@@ -3374,6 +3409,206 @@ ${className} ${leaderName} 리더입니다.
         if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
       }
 
+      // 💡 [신규] 일괄 진급 모달 열기 및 대상자 자동 추출
+      openPromotionModal() {
+        const modal = document.getElementById('promotionModal');
+        const box = document.getElementById('promotionModalBox');
+        const listContainer = document.getElementById('promotionListContainer');
+        const yearText = document.getElementById('promotionModalYearText');
+        if (!modal || !box || !listContainer) return;
+
+        const currentYear = new Date().getFullYear();
+        if (yearText) yearText.textContent = `${currentYear}년도 기준 학령기 진급 대상자`;
+
+        // 💡 진급 기준: 영아(5세도달)->유치, 유치(8세도달)->어린이/유년, 어린이(14세도달)->학생, 학생(20세도달)->청년
+        // 반 ID 매핑 (설정 시트의 반 ID 자동 탐색)
+        const childClass = this.classList.find(c => c.className.includes('어린이')) || { classId: 'C09', className: '어린이반' };
+        const studentClass = this.classList.find(c => c.className.includes('학생')) || { classId: 'C08', className: '학생반' };
+        const youthClass = this.classList.find(c => c.className.includes('청년')) || { classId: 'C10', className: '청년반' };
+
+        this.promotionCandidates = [];
+
+        this.rawMembers.forEach(m => {
+          if (['전출', '이명', '휴면', '별세'].includes(m.status)) return;
+          const birthStr = m.birth || m.birthday || m.birthDate;
+          if (!birthStr) return;
+
+          const clean = String(birthStr).replace(/[^0-9]/g, '');
+          if (clean.length < 6) return;
+          const birthYear = parseInt(clean.substring(0, 4), 10);
+          if (birthYear < 1920 || birthYear > currentYear) return;
+
+          const annualAge = currentYear - birthYear;
+          const currentRole = (m.role || '성도').trim();
+          const currentClassId = m.classId;
+
+          let targetClassId = currentClassId;
+          let targetRole = currentRole;
+          let reasonText = '';
+
+          // 1. 5세 진입: 직분 영아 -> 유치
+          if (annualAge >= 5 && annualAge <= 7 && currentRole === '영아') {
+            targetRole = '유치';
+            reasonText = `5세 진입: 직분 변경 (영아 ➔ 유치)`;
+          }
+          // 2. 8~10세 진입 (초1~초3): 어린이반 배정 및 직분 '유년'
+          else if (annualAge >= 8 && annualAge <= 10 && (currentRole === '유치' || currentRole === '영아' || currentRole !== '유년' || currentClassId !== childClass.classId)) {
+            targetClassId = childClass.classId;
+            targetRole = '유년';
+            reasonText = `8세(초등 저학년) 진입: [${childClass.className}] 이동 및 직분 '유년'`;
+          }
+          // 3. 11~13세 진입 (초4~초6): 어린이반 배정 및 직분 '소년' (유년 ➔ 소년 진급)
+          else if (annualAge >= 11 && annualAge <= 13 && (currentRole === '유년' || currentRole === '유치' || currentRole !== '소년' || currentClassId !== childClass.classId)) {
+            targetClassId = childClass.classId;
+            targetRole = '소년';
+            reasonText = `11세(초등 고학년) 진입: 직분 승급 ('유년' ➔ '소년')`;
+          }
+          // 4. 14세 진입 (중1): 어린이반 -> 학생반
+          else if (annualAge >= 14 && annualAge <= 19 && (currentClassId === childClass.classId || currentRole === '소년' || currentRole === '유년')) {
+            targetClassId = studentClass.classId;
+            targetRole = '학생';
+            reasonText = `14세(중등) 진입: [${studentClass.className}] 이동 및 직분 '학생'`;
+          }
+          // 5. 20세 진입 (청년): 학생반 -> 청년반
+          else if (annualAge >= 20 && (currentClassId === studentClass.classId || currentRole === '학생')) {
+            targetClassId = youthClass.classId;
+            targetRole = '청년';
+            reasonText = `20세(청년) 진입: [${youthClass.className}] 이동 및 직분 '청년'`;
+          }
+
+          if (reasonText !== '') {
+            this.promotionCandidates.push({
+              memberId: m.memberId,
+              name: m.name,
+              annualAge: annualAge,
+              currentClassId: currentClassId,
+              currentRole: currentRole,
+              targetClassId: targetClassId,
+              targetRole: targetRole,
+              reasonText: reasonText,
+              selected: true
+            });
+          }
+        });
+
+        listContainer.innerHTML = '';
+
+        if (this.promotionCandidates.length === 0) {
+          listContainer.innerHTML = `
+            <div class="p-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-xl space-y-1">
+              <span class="text-3xl">🎉</span>
+              <p class="text-sm font-black text-slate-800">현재 승급/이동 대상자가 없습니다.</p>
+              <p class="text-xs text-slate-500 font-bold">모든 학령기 교인이 현재 나이에 맞게 편성되어 있습니다.</p>
+            </div>
+          `;
+          document.getElementById('promotionSubmitBtn').classList.add('hidden');
+        } else {
+          document.getElementById('promotionSubmitBtn').classList.remove('hidden');
+          this.promotionCandidates.forEach((item, idx) => {
+            const card = document.createElement('div');
+            card.className = 'p-3 bg-white border-2 border-indigo-100 rounded-xl flex items-start space-x-3 shadow-2xs hover:border-indigo-300 transition';
+            card.innerHTML = `
+              <input type="checkbox" id="promoteCheck_${idx}" checked onchange="window.appInstance.togglePromotionCandidate(${idx}, this.checked)" class="mt-1 w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer">
+              <label for="promoteCheck_${idx}" class="flex-1 cursor-pointer">
+                <div class="flex items-center justify-between">
+                  <span class="font-black text-slate-900 text-base">${item.name} <span class="text-xs font-bold text-indigo-700">(${item.annualAge}세)</span></span>
+                  <span class="text-[11px] font-black px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">${this.getClassName(item.currentClassId)} · ${item.currentRole}</span>
+                </div>
+                <div class="text-xs font-bold text-indigo-900 mt-1 flex items-center space-x-1">
+                  <span>➔</span>
+                  <span class="bg-indigo-100 px-1.5 py-0.5 rounded font-black text-indigo-950">${this.getClassName(item.targetClassId)} · ${item.targetRole}</span>
+                </div>
+                <p class="text-[11px] text-slate-500 font-medium mt-0.5">${item.reasonText}</p>
+              </label>
+            `;
+            listContainer.appendChild(card);
+          });
+        }
+
+        this.updatePromotionSubmitButtonText();
+
+        modal.classList.remove('pointer-events-none', 'opacity-0');
+        box.classList.remove('scale-95');
+        box.classList.add('scale-100');
+      },
+
+      closePromotionModal() {
+        const modal = document.getElementById('promotionModal');
+        const box = document.getElementById('promotionModalBox');
+        if (box) { box.classList.remove('scale-100'); box.classList.add('scale-95'); }
+        if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
+      },
+
+      togglePromotionCandidate(index, checked) {
+        if (this.promotionCandidates && this.promotionCandidates[index]) {
+          this.promotionCandidates[index].selected = checked;
+        }
+        this.updatePromotionSubmitButtonText();
+      },
+
+      updatePromotionSubmitButtonText() {
+        const textEl = document.getElementById('promotionSubmitBtnText');
+        if (!textEl || !this.promotionCandidates) return;
+        const count = this.promotionCandidates.filter(c => c.selected).length;
+        textEl.textContent = count > 0 ? `${count}명 일괄 승급 확정` : '선택된 인원 없음';
+      },
+
+      async executeBatchPromotion() {
+        const selected = (this.promotionCandidates || []).filter(c => c.selected);
+        if (selected.length === 0) {
+          this.showToast('선택된 승급 대상자가 없습니다.', 'error');
+          return;
+        }
+
+        if (!confirm(`선택한 ${selected.length}명의 소속반 및 직분을 새해 편제에 맞춰 일괄 변경하시겠습니까?`)) return;
+
+        this.showLoading(`${selected.length}명 승급 처리 중...`);
+
+        try {
+          const payload = {
+            action: 'batchPromoteMembers',
+            promotions: selected.map(s => ({
+              memberId: s.memberId,
+              newClassId: s.targetClassId,
+              newRole: s.targetRole
+            }))
+          };
+
+          const res = await fetch(SHEETS_API_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+          const json = await res.json();
+
+          this.hideLoading();
+
+          if (json.success) {
+            // 로컬 메모리 즉시 반영
+            selected.forEach(s => {
+              const m = this.rawMembers.find(mem => mem.memberId === s.memberId);
+              if (m) {
+                m.classId = s.targetClassId;
+                m.role = s.targetRole;
+              }
+            });
+
+            this.rawMembers = this.sortMembersList(this.rawMembers); // 💡 추가: 반 이동에 따른 가나다/리더 순 재정렬
+            this.closePromotionModal();
+            this.closeExportModal();
+            this.showToast(`🎉 ${selected.length}명이 성공적으로 진급 처리되었습니다!`, 'success');
+
+            this.renderMemberDirectory();
+            this.renderAttendanceList();
+            this.renderClassMonitoringBar();
+          } else {
+            this.showToast(json.message || '승급 처리에 실패했습니다.', 'error');
+          }
+        } catch (err) {
+          this.hideLoading();
+          this.showToast('서버 통신 중 오류가 발생했습니다.', 'error');
+        }
+      }
+
       // 💡 [수정] 5일 경과 시 기존 로컬 캐시를 삭제하고 최신 데이터로 강제 갱신
       checkCacheExpiration() {
         const lastSync = localStorage.getItem('last_church_sync_time');
@@ -3400,51 +3635,40 @@ ${className} ${leaderName} 리더입니다.
         }
       }
 
-      // 💡 [추가] 생년월일 기반 학년/나이 계산 함수
       getMemberAgeInfo(birthStr) {
         if (!birthStr) return null;
         const clean = String(birthStr).replace(/[^0-9]/g, '');
-        if (clean.length < 4) return null;
+        
+        // 💡 4자리 미만이거나, 월/일 4자리(예: 0514)만 있는 경우 방어
+        // 통상 출생연도가 포함되려면 최소 6자리(YYYYMM) 또는 8자리(YYYYMMDD)여야 합니다.
+        if (clean.length < 6) return null;
 
         const birthYear = parseInt(clean.substring(0, 4), 10);
-        const birthMonth = clean.length >= 6 ? parseInt(clean.substring(4, 6), 10) - 1 : 0;
-        const birthDay = clean.length >= 8 ? parseInt(clean.substring(6, 8), 10) : 1;
-
         const today = new Date();
         const currentYear = today.getFullYear();
 
-        // 한국 연 나이 (학령기 기준)
+        // 💡 1900년 이전이거나 미래 연도인 경우(비정상 연도) 무시
+        if (birthYear < 1920 || birthYear > currentYear) return null;
+
+        const birthMonth = clean.length >= 6 ? parseInt(clean.substring(4, 6), 10) - 1 : 0;
+        const birthDay = clean.length >= 8 ? parseInt(clean.substring(6, 8), 10) : 1;
+
         const annualAge = currentYear - birthYear;
 
-        // 만 나이
         let manAge = currentYear - birthYear;
         const hasPassed = today.getMonth() > birthMonth || 
           (today.getMonth() === birthMonth && today.getDate() >= birthDay);
         if (!hasPassed) manAge -= 1;
 
-        // 학년/부서 구분
         let gradeLabel = '';
         let isStudentOrChild = false;
 
-        if (annualAge <= 5) {
-          gradeLabel = '영아';
-          isStudentOrChild = true;
-        } else if (annualAge >= 6 && annualAge <= 7) {
-          gradeLabel = `유치(${annualAge}세)`;
-          isStudentOrChild = true;
-        } else if (annualAge >= 8 && annualAge <= 10) {
-          gradeLabel = `초${annualAge - 7}`;
-          isStudentOrChild = true;
-        } else if (annualAge >= 11 && annualAge <= 13) {
-          gradeLabel = `초${annualAge - 7}`;
-          isStudentOrChild = true;
-        } else if (annualAge >= 14 && annualAge <= 16) {
-          gradeLabel = `중${annualAge - 13}`;
-          isStudentOrChild = true;
-        } else if (annualAge >= 17 && annualAge <= 19) {
-          gradeLabel = `고${annualAge - 16}`;
-          isStudentOrChild = true;
-        }
+        if (annualAge <= 4) { gradeLabel = '영아'; isStudentOrChild = true; }
+        else if (annualAge >= 5 && annualAge <= 7) { gradeLabel = `유치(${annualAge}세)`; isStudentOrChild = true; }
+        else if (annualAge >= 8 && annualAge <= 10) { gradeLabel = `초${annualAge - 7}`; isStudentOrChild = true; }
+        else if (annualAge >= 11 && annualAge <= 13) { gradeLabel = `초${annualAge - 7}`; isStudentOrChild = true; }
+        else if (annualAge >= 14 && annualAge <= 16) { gradeLabel = `중${annualAge - 13}`; isStudentOrChild = true; }
+        else if (annualAge >= 17 && annualAge <= 19) { gradeLabel = `고${annualAge - 16}`; isStudentOrChild = true; }
 
         return {
           annualAge,

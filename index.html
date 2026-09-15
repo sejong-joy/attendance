@@ -3420,8 +3420,6 @@ ${className} ${leaderName} 리더입니다.
         const currentYear = new Date().getFullYear();
         if (yearText) yearText.textContent = `${currentYear}년도 기준 학령기 진급 대상자`;
 
-        // 💡 진급 기준: 영아(5세도달)->유치, 유치(8세도달)->어린이/유년, 어린이(14세도달)->학생, 학생(20세도달)->청년
-        // 반 ID 매핑 (설정 시트의 반 ID 자동 탐색)
         const childClass = this.classList.find(c => c.className.includes('어린이')) || { classId: 'C09', className: '어린이반' };
         const studentClass = this.classList.find(c => c.className.includes('학생')) || { classId: 'C08', className: '학생반' };
         const youthClass = this.classList.find(c => c.className.includes('청년')) || { classId: 'C10', className: '청년반' };
@@ -3438,39 +3436,44 @@ ${className} ${leaderName} 리더입니다.
           const birthYear = parseInt(clean.substring(0, 4), 10);
           if (birthYear < 1920 || birthYear > currentYear) return;
 
-          const annualAge = currentYear - birthYear;
+          // 💡 한국식 나이 (+1)
+          const annualAge = currentYear - birthYear + 1;
           const currentRole = (m.role || '성도').trim();
           const currentClassId = m.classId;
+
+          // 💡 [교사 및 성인 방어] 20세 초과 성인 및 안수 직분자는 학생반/어린이반에 속해 있어도 승급 제외
+          const isTeacherOrAdult = annualAge > 20 || ['집사', '장로', '권사', '목사', '전도사', '사모'].includes(currentRole);
+          if (isTeacherOrAdult) return;
 
           let targetClassId = currentClassId;
           let targetRole = currentRole;
           let reasonText = '';
 
-          // 1. 5세 진입: 직분 영아 -> 유치
+          // 1. 5~7세 진입: 직분이 '영아'인 경우만 '유치'로 변경
           if (annualAge >= 5 && annualAge <= 7 && currentRole === '영아') {
             targetRole = '유치';
             reasonText = `5세 진입: 직분 변경 (영아 ➔ 유치)`;
           }
-          // 2. 8~10세 진입 (초1~초3): 어린이반 배정 및 직분 '유년'
-          else if (annualAge >= 8 && annualAge <= 10 && (currentRole === '유치' || currentRole === '영아' || currentRole !== '유년' || currentClassId !== childClass.classId)) {
+          // 2. 8~10세 진입 (초1~초3): 영아/유치에서 올라오는 경우 어린이반 배정 및 '유년' 부여
+          else if (annualAge >= 8 && annualAge <= 10 && (currentRole === '영아' || currentRole === '유치')) {
             targetClassId = childClass.classId;
             targetRole = '유년';
             reasonText = `8세(초등 저학년) 진입: [${childClass.className}] 이동 및 직분 '유년'`;
           }
-          // 3. 11~13세 진입 (초4~초6): 어린이반 배정 및 직분 '소년' (유년 ➔ 소년 진급)
-          else if (annualAge >= 11 && annualAge <= 13 && (currentRole === '유년' || currentRole === '유치' || currentRole !== '소년' || currentClassId !== childClass.classId)) {
+          // 3. 11~13세 진입 (초4~초6): 기존 직분이 '유년'일 때만 '소년'으로 승급
+          else if (annualAge >= 11 && annualAge <= 13 && currentRole === '유년') {
             targetClassId = childClass.classId;
             targetRole = '소년';
             reasonText = `11세(초등 고학년) 진입: 직분 승급 ('유년' ➔ '소년')`;
           }
-          // 4. 14세 진입 (중1): 어린이반 -> 학생반
-          else if (annualAge >= 14 && annualAge <= 19 && (currentClassId === childClass.classId || currentRole === '소년' || currentRole === '유년')) {
+          // 4. 14세 이상 진입 (중1~고3): 아직 어린이반에 남아있는 경우만 학생반으로 진급
+          else if (annualAge >= 14 && annualAge <= 19 && currentClassId === childClass.classId) {
             targetClassId = studentClass.classId;
             targetRole = '학생';
             reasonText = `14세(중등) 진입: [${studentClass.className}] 이동 및 직분 '학생'`;
           }
-          // 5. 20세 진입 (청년): 학생반 -> 청년반
-          else if (annualAge >= 20 && (currentClassId === studentClass.classId || currentRole === '학생')) {
+          // 5. 20세 진입 (청년): 갓 20세가 된 학생만 청년반으로 진급
+          else if (annualAge === 20 && currentClassId === studentClass.classId) {
             targetClassId = youthClass.classId;
             targetRole = '청년';
             reasonText = `20세(청년) 진입: [${youthClass.className}] 이동 및 직분 '청년'`;
@@ -3638,37 +3641,49 @@ ${className} ${leaderName} 리더입니다.
       getMemberAgeInfo(birthStr) {
         if (!birthStr) return null;
         const clean = String(birthStr).replace(/[^0-9]/g, '');
-        
-        // 💡 4자리 미만이거나, 월/일 4자리(예: 0514)만 있는 경우 방어
-        // 통상 출생연도가 포함되려면 최소 6자리(YYYYMM) 또는 8자리(YYYYMMDD)여야 합니다.
         if (clean.length < 6) return null;
 
         const birthYear = parseInt(clean.substring(0, 4), 10);
         const today = new Date();
         const currentYear = today.getFullYear();
 
-        // 💡 1900년 이전이거나 미래 연도인 경우(비정상 연도) 무시
         if (birthYear < 1920 || birthYear > currentYear) return null;
 
         const birthMonth = clean.length >= 6 ? parseInt(clean.substring(4, 6), 10) - 1 : 0;
         const birthDay = clean.length >= 8 ? parseInt(clean.substring(6, 8), 10) : 1;
 
-        const annualAge = currentYear - birthYear;
+        // 💡 한국식 학령기 나이 기준 (+1)
+        const annualAge = currentYear - birthYear + 1;
 
+        // 만 나이
         let manAge = currentYear - birthYear;
         const hasPassed = today.getMonth() > birthMonth || 
           (today.getMonth() === birthMonth && today.getDate() >= birthDay);
         if (!hasPassed) manAge -= 1;
 
+        // 학년/부서 구분 (4세 이하 영아, 5~7세 유치, 8~13세 초등, 14~16세 중등, 17~19세 고등)
         let gradeLabel = '';
         let isStudentOrChild = false;
 
-        if (annualAge <= 4) { gradeLabel = '영아'; isStudentOrChild = true; }
-        else if (annualAge >= 5 && annualAge <= 7) { gradeLabel = `유치(${annualAge}세)`; isStudentOrChild = true; }
-        else if (annualAge >= 8 && annualAge <= 10) { gradeLabel = `초${annualAge - 7}`; isStudentOrChild = true; }
-        else if (annualAge >= 11 && annualAge <= 13) { gradeLabel = `초${annualAge - 7}`; isStudentOrChild = true; }
-        else if (annualAge >= 14 && annualAge <= 16) { gradeLabel = `중${annualAge - 13}`; isStudentOrChild = true; }
-        else if (annualAge >= 17 && annualAge <= 19) { gradeLabel = `고${annualAge - 16}`; isStudentOrChild = true; }
+        if (annualAge <= 4) {
+          gradeLabel = '영아';
+          isStudentOrChild = true;
+        } else if (annualAge >= 5 && annualAge <= 7) {
+          gradeLabel = `유치(${annualAge}세)`;
+          isStudentOrChild = true;
+        } else if (annualAge >= 8 && annualAge <= 10) {
+          gradeLabel = `초${annualAge - 7}`; // 8세(초1) ~ 10세(초3)
+          isStudentOrChild = true;
+        } else if (annualAge >= 11 && annualAge <= 13) {
+          gradeLabel = `초${annualAge - 7}`; // 11세(초4) ~ 13세(초6)
+          isStudentOrChild = true;
+        } else if (annualAge >= 14 && annualAge <= 16) {
+          gradeLabel = `중${annualAge - 13}`; // 14세(중1) ~ 16세(중3)
+          isStudentOrChild = true;
+        } else if (annualAge >= 17 && annualAge <= 19) {
+          gradeLabel = `고${annualAge - 16}`; // 17세(고1) ~ 19세(고3)
+          isStudentOrChild = true;
+        }
 
         return {
           annualAge,

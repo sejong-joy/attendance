@@ -282,6 +282,17 @@
           <h3 class="text-sm sm:text-base font-black text-slate-900 mb-1.5 flex items-center justify-between"><span>📈 주차별 출석 인원 추이</span><span class="text-xs font-bold text-slate-500">실시간 데이터</span></h3>
           <div class="h-36 sm:h-44 relative"><canvas id="weeklyChart"></canvas></div>
         </div>
+        <!-- 💡 [관리자 전용] 연령대별 분포 및 인원 집계 -->
+        <div id="adminAgeStatsWrap" class="hidden bg-white p-3 rounded-xl border border-slate-200 shadow-xs space-y-2">
+          <div class="flex items-center justify-between pb-1.5 border-b border-slate-100">
+            <h3 class="text-sm sm:text-base font-black text-slate-900 flex items-center space-x-1.5">
+              <span>👥</span><span>세대 및 연령대별 교인 구성</span>
+            </h3>
+            <span class="text-[11px] font-black bg-indigo-100 text-indigo-900 px-2 py-0.5 rounded">관리자 전용</span>
+          </div>
+          <p class="text-xs text-slate-500 font-bold">카드를 터치하면 해당 연령대 성도 명부(연락처/출석률)가 표시됩니다.</p>
+          <div id="ageStatsCardsContainer" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+        </div>
         <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
           <div class="px-3 py-2 border-b border-slate-100 flex items-center justify-between">
             <div><h3 class="text-sm sm:text-base font-black text-slate-900">개인별 출석</h3><p class="text-xs text-slate-500 font-bold">성명을 터치하면 과별 세부 출석 팝업이 표시됩니다.</p></div>
@@ -609,13 +620,21 @@
             <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">연락처</label>
             <input type="tel" id="editMemberPhone" maxlength="13" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/^(\d{2,3})(\d{3,4})(\d{1,4})$/g, '$1-$2-$3');" class="w-full px-3 py-2 bg-white border-2 border-slate-300 rounded-xl text-base font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
           </div>
-          <!-- 💡 [수정] oninput 실시간 검증 이벤트 추가 -->
+          <!-- 💡 [수정] oninput 실시간 검증 및 자동 하이픈(-) 마스크 적용 -->
           <div>
-            <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">생년월일 (YYYYMMDD)</label>
-            <input type="text" id="editMemberBirth" 
-              oninput="const info = window.appInstance.getMemberAgeInfo(this.value); const el = document.getElementById('editMemberAgeDetail'); if(el) el.textContent = info ? `💡 기준 연령: ${info.summaryText}` : '';"
-              placeholder="예: 20120514 또는 1980-01-01" 
-              class="w-full px-2 py-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-xs sm:text-sm font-black text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">생년월일 (YYYY-MM-DD)</label>
+            <input type="text" id="editMemberBirth" maxlength="10"
+              oninput="
+                let v = this.value.replace(/[^0-9]/g, ''); 
+                if(v.length > 6) { v = v.substring(0,4) + '-' + v.substring(4,6) + '-' + v.substring(6,8); } 
+                else if(v.length > 4) { v = v.substring(0,4) + '-' + v.substring(4); } 
+                this.value = v; 
+                const info = window.appInstance.getMemberAgeInfo(this.value); 
+                const el = document.getElementById('editMemberAgeDetail'); 
+                if(el) el.textContent = info ? `💡 기준 연령: ${info.summaryText}` : '';
+              "
+              placeholder="예: 2012-05-14" 
+              class="w-full px-3 py-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-sm font-black text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
             <p id="editMemberAgeDetail" class="text-[11px] font-bold text-blue-600 mt-1 min-h-[16px]"></p>
           </div>
           <div class="grid grid-cols-2 gap-2">
@@ -831,7 +850,8 @@
           const xDiff = endX - this.touchstartX;
           const yDiff = endY - this.touchstartY;
           
-          if (Math.abs(xDiff) > Math.abs(yDiff) && Math.abs(xDiff) > 80 && Math.abs(yDiff) < 60) {
+          // 💡 [민감도 개선] 가로 최소 130px 이상 이동 & 세로 오차 40px 미만 & 좌우 이동량이 상하의 2.5배 이상일 때만 발동
+          if (Math.abs(xDiff) > 130 && Math.abs(yDiff) < 40 && Math.abs(xDiff) > Math.abs(yDiff) * 2.5) {
             if (xDiff < 0 && this.currentTabIdx < 2) {
               this.currentTabIdx++;
               this.switchTab(this.tabsArray[this.currentTabIdx]);
@@ -2574,6 +2594,151 @@ ${className} ${leaderName} 리더입니다.
 
         this.renderMemberStatsTable(memberStatsMap, uniqueDates.length);
         this.renderWeeklyTrendChart(uniqueDates, targetMembers);
+        // 💡 [추가] 관리자 전용 연령대별 인원 집계 렌더링
+        this.renderAgeDemographics();
+      }
+
+      renderAgeDemographics() {
+        const wrap = document.getElementById('adminAgeStatsWrap');
+        const container = document.getElementById('ageStatsCardsContainer');
+        if (!wrap || !container) return;
+
+        // 관리자가 아니면 영역 숨김
+        if (!this.currentUser || !this.currentUser.isAdmin) {
+          wrap.classList.add('hidden');
+          return;
+        }
+        wrap.classList.remove('hidden');
+        container.innerHTML = '';
+
+        const currentYear = new Date().getFullYear();
+        // 등록 활동 성도 (전출, 휴면 등 제외)
+        const activeMembers = this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
+        const totalCount = activeMembers.length;
+
+        // 연령대 그룹 정의
+        const groups = [
+          { key: 'child_student', label: '어린이·학생', sub: '19세 이하', min: 0, max: 19, color: 'emerald', members: [] },
+          { key: 'youth', label: '청년', sub: '20~35세', min: 20, max: 35, color: 'teal', members: [] },
+          { key: 'prime', label: '30·40대', sub: '36~49세', min: 36, max: 49, color: 'blue', members: [] },
+          { key: 'fifties', label: '50대', sub: '50~59세', min: 50, max: 59, color: 'indigo', members: [] },
+          { key: 'sixties', label: '60대', sub: '60~69세', min: 60, max: 69, color: 'purple', members: [] },
+          { key: 'seventies', label: '70대 이상', sub: '70세 이상', min: 70, max: 150, color: 'amber', members: [] },
+          { key: 'unknown', label: '미등록', sub: '생일 미입력', min: -1, max: -1, color: 'slate', members: [] }
+        ];
+
+        activeMembers.forEach(m => {
+          const birthStr = m.birth || m.birthday || m.birthDate;
+          const clean = String(birthStr || '').replace(/[^0-9]/g, '');
+          if (clean.length < 6) {
+            groups[6].members.push(m);
+            return;
+          }
+          const birthYear = parseInt(clean.substring(0, 4), 10);
+          if (birthYear < 1920 || birthYear > currentYear) {
+            groups[6].members.push(m);
+            return;
+          }
+
+          const annualAge = currentYear - birthYear + 1;
+          m.calculatedAge = annualAge;
+
+          if (annualAge <= 19) groups[0].members.push(m);
+          else if (annualAge <= 35) groups[1].members.push(m);
+          else if (annualAge <= 49) groups[2].members.push(m);
+          else if (annualAge <= 59) groups[3].members.push(m);
+          else if (annualAge <= 69) groups[4].members.push(m);
+          else groups[5].members.push(m);
+        });
+
+        // 💡 연령대 데이터 저장 (팝업 모달용)
+        this.ageDemographicGroups = groups;
+
+        groups.forEach((g, idx) => {
+          if (g.key === 'unknown' && g.members.length === 0) return;
+
+          const count = g.members.length;
+          const ratio = totalCount > 0 ? ((count / totalCount) * 100).toFixed(0) : 0;
+
+          const card = document.createElement('div');
+          card.onclick = () => this.openAgeGroupMembersModal(idx);
+          card.className = `p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-${g.color}-400 transition cursor-pointer select-none flex flex-col justify-between shadow-2xs`;
+
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <span class="text-xs sm:text-sm font-black text-slate-800">${g.label}</span>
+              <span class="text-[10px] font-bold text-slate-600 bg-white border border-slate-200 px-1.5 py-0.2 rounded">${g.sub}</span>
+            </div>
+            <div class="flex items-baseline justify-between mt-1 mb-1.5">
+              <span class="text-xl sm:text-2xl font-black text-slate-900">${count}<span class="text-xs font-bold text-slate-600">명</span></span>
+              <span class="text-xs font-black text-indigo-700">${ratio}%</span>
+            </div>
+            <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+              <div class="bg-indigo-600 h-full rounded-full transition-all duration-300" style="width: ${ratio}%"></div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      }
+
+      openAgeGroupMembersModal(groupIdx) {
+        if (!this.ageDemographicGroups || !this.ageDemographicGroups[groupIdx]) return;
+        const g = this.ageDemographicGroups[groupIdx];
+
+        const modal = document.getElementById('statDetailModal');
+        const box = document.getElementById('statModalBox');
+        const titleEl = document.getElementById('statModalTitle');
+        const subEl = document.getElementById('statModalSub');
+        const iconEl = document.getElementById('statModalIcon');
+        const bodyEl = document.getElementById('statModalBody');
+        const footerEl = document.getElementById('statModalFooterNote');
+
+        if (!modal || !box || !bodyEl) return;
+
+        iconEl.textContent = '🎂';
+        titleEl.textContent = `${g.label} 성도 명단 (${g.members.length}명)`;
+        subEl.textContent = `기준: ${g.sub}`;
+        if (footerEl) footerEl.textContent = `재적 성도 중 비율: ${((g.members.length / this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status)).length) * 100).toFixed(1)}%`;
+
+        if (g.members.length === 0) {
+          bodyEl.innerHTML = '<div class="p-8 text-center text-slate-500 font-bold text-sm">해당 연령대 성도가 없습니다.</div>';
+        } else {
+          // 나이 내림차순(연장자 우선) 정렬
+          const sorted = [...g.members].sort((a, b) => (b.calculatedAge || 0) - (a.calculatedAge || 0));
+
+          bodyEl.innerHTML = `
+            <div class="space-y-1.5">
+              ${sorted.map((m, i) => {
+                const cleanPhone = (m.phone || '').replace(/[^0-9]/g, '');
+                return `
+                  <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                      <span class="text-xs text-slate-600 font-bold w-4">${i + 1}</span>
+                      <div>
+                        <div class="flex items-center space-x-1.5">
+                          <span class="font-black text-slate-900 text-base">${m.name}</span>
+                          ${m.calculatedAge ? `<span class="text-xs font-black text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded">${m.calculatedAge}세</span>` : ''}
+                          <span class="text-xs font-bold text-slate-700 bg-white border border-slate-200 px-1 py-0.5 rounded">${m.role || '성도'}</span>
+                        </div>
+                        <p class="text-xs text-slate-600 font-bold mt-0.5">${this.getClassName(m.classId)} · 📞 ${m.phone || '연락처 없음'}</p>
+                      </div>
+                    </div>
+                    ${cleanPhone ? `
+                      <div class="flex space-x-1">
+                        <a href="tel:${cleanPhone}" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-black rounded-lg border border-emerald-300 transition">📞 전화</a>
+                        <button type="button" onclick="window.appInstance.copyKakaoCareMessage('${m.memberId}', 3)" class="px-2 py-1 bg-amber-300 text-amber-950 text-xs font-black rounded-lg transition">카톡</button>
+                      </div>
+                    ` : ''}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `;
+        }
+
+        modal.classList.remove('pointer-events-none', 'opacity-0');
+        box.classList.remove('scale-95');
+        box.classList.add('scale-100');
       }
 
       renderMemberStatsTable(statsMap, totalWeeks) {
@@ -4199,6 +4364,10 @@ ${className} ${leaderName} 리더입니다.
             const t2AvgPresent = (t2WorshipSum / conductedWeeks).toFixed(1) + '명';
             const t2AvgRate = t1TotalMembers > 0 ? ((t2WorshipSum / conductedWeeks / t1TotalMembers) * 100).toFixed(1) + '%' : '0.0%';
           
+            // 💡 [추가] 분기 누적 방문자 수 계산
+            const qSabbaths = sabbaths.map(s => s.dateStr);
+            const quarterVisitors = this.rawVisitors.filter(v => qSabbaths.includes(this.normalizeDateStr(v.date || v.visitDate))).length;
+
             html = `
               <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
                 <table style="width: 100%; border: none; margin-bottom: 20px; border-bottom: 3px solid #0f172a; padding-bottom: 12px;">
@@ -4210,11 +4379,12 @@ ${className} ${leaderName} 리더입니다.
                   </tr>
                 </table>
                 <table class="report-table" style="width: 100%; font-size: 14px; text-align: center; margin-bottom: 24px;">
-                  <tr style="background: #f1f5f9; font-weight: bold; height: 40px;"><th style="border: 1px solid #cbd5e1; padding: 8px;">총 등록 교인</th><th style="border: 1px solid #cbd5e1; padding: 8px;">활동 교인</th><th style="border: 1px solid #cbd5e1; padding: 8px;">새가족</th><th style="border: 1px solid #cbd5e1; padding: 8px;">분기 진행 예배</th><th style="border: 1px solid #cbd5e1; padding: 8px;">안교 평균 출석률</th></tr>
+                  <tr style="background: #f1f5f9; font-weight: bold; height: 40px;"><th style="border: 1px solid #cbd5e1; padding: 8px;">총 등록 교인</th><th style="border: 1px solid #cbd5e1; padding: 8px;">활동 교인</th><th style="border: 1px solid #cbd5e1; padding: 8px;">새가족</th><th style="border: 1px solid #cbd5e1; padding: 8px; color: #4338ca;">누적 방문자</th><th style="border: 1px solid #cbd5e1; padding: 8px;">분기 진행 예배</th><th style="border: 1px solid #cbd5e1; padding: 8px;">안교 평균 출석률</th></tr>
                   <tr style="font-size: 16px; font-weight: 900; height: 46px;">
                     <td style="border: 1px solid #cbd5e1; padding: 8px;">${targetMembers.length}명</td>
                     <td style="border: 1px solid #cbd5e1; padding: 8px; color: #047857;">${targetMembers.filter(m => m.status === '활동').length}명</td>
                     <td style="border: 1px solid #cbd5e1; padding: 8px; color: #b45309;">${targetMembers.filter(m => m.status === '새가족').length}명</td>
+                    <td style="border: 1px solid #cbd5e1; padding: 8px; color: #4338ca;">${quarterVisitors}명</td>
                     <td style="border: 1px solid #cbd5e1; padding: 8px;">${conductedWeeks}회 (전체 13회)</td>
                     <td style="border: 1px solid #cbd5e1; padding: 8px; color: #059669;">${totalAvgRate}</td>
                   </tr>
@@ -4288,9 +4458,13 @@ ${className} ${leaderName} 리더입니다.
           } else {
             const quarters = ['1기', '2기', '3기', '4기'];
             const yearRecs = this.rawRecords.filter(r => r.date && this.normalizeDateStr(r.date).startsWith(year) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
+            
+            // 💡 [추가] 연간 누적 방문자 수 계산
+            const yearVisitors = this.rawVisitors.filter(v => this.normalizeDateStr(v.date || v.visitDate).startsWith(year)).length;
+
             html = `
               <div style="font-family: 'Noto Sans KR', sans-serif; padding: 15px;">
-                <table style="width: 100%; border: none; margin-bottom: 24px; border-bottom: 3px solid #0f172a; padding-bottom: 12px;"><tr><td style="border: none; padding: 0; text-align: left; vertical-align: bottom;"><h2 style="font-size: 24px; font-weight: 900; margin: 0; color: #0f172a;">${year}년도 안식일학교 연간(1개년) 종합 결산 보고서</h2><p style="font-size: 13px; color: #475569; margin: 4px 0 0 0;">세종 조이 안식일학교 · 정기 사무총회 및 당회 보고용</p></td></tr></table>
+                <table style="width: 100%; border: none; margin-bottom: 24px; border-bottom: 3px solid #0f172a; padding-bottom: 12px;"><tr><td style="border: none; padding: 0; text-align: left; vertical-align: bottom;"><h2 style="font-size: 24px; font-weight: 900; margin: 0; color: #0f172a;">${year}년도 안식일학교 연간(1개년) 종합 결산 보고서</h2><p style="font-size: 13px; color: #475569; margin: 4px 0 0 0;">세종 조이 안식일학교 · 정기 사무총회 및 당회 보고용 · <strong style="color: #4338ca;">연간 방명록 누적: ${yearVisitors}명</strong></p></td></tr></table>
                 <table class="report-table" style="width: 100%; font-size: 13px; text-align: center; margin-bottom: 24px;">
                   <thead>
                     <tr style="background: #f1f5f9; font-weight: bold; height: 45px;"><th style="border: 1px solid #cbd5e1; padding: 10px; text-align: center; width: 80px; white-space: nowrap;">교과반명</th><th style="border: 1px solid #cbd5e1; padding: 10px; width: 60px;">재적</th><th style="border: 1px solid #cbd5e1; padding: 10px;">1기 출석률</th><th style="border: 1px solid #cbd5e1; padding: 10px;">2기 출석률</th><th style="border: 1px solid #cbd5e1; padding: 10px;">3기 출석률</th><th style="border: 1px solid #cbd5e1; padding: 10px;">4기 출석률</th><th style="border: 1px solid #cbd5e1; padding: 10px; color: #059669;">연간 종합</th></tr>
@@ -4526,9 +4700,13 @@ ${className} ${leaderName} 리더입니다.
             const t2AvgPresent = (t2WorshipSum / conductedWeeks).toFixed(1) + '명';
             const t2AvgRate = t1TotalMembers > 0 ? ((t2WorshipSum / conductedWeeks / t1TotalMembers) * 100).toFixed(1) + '%' : '0.0%';
 
+            // 💡 [추가] 분기 누적 방문자 계산 (엑셀용)
+            const qSabbaths = sabbaths.map(s => s.dateStr);
+            const quarterVisitors = this.rawVisitors.filter(v => qSabbaths.includes(this.normalizeDateStr(v.date || v.visitDate))).length;
+
             const sheetData = [
               [{ v: `${year}년 ${quarter} 안식일학교 분기 종합 결산 보고서`, s: { font: { bold: true, sz: 16 } } }],
-              [{ v: `세종 조이 안식일학교 · 출력일: ${new Date().toLocaleDateString('ko-KR')} · 진행 주차: ${conductedWeeks}회`, s: { font: { sz: 10, color: { rgb: "64748B" } } } }],
+              [{ v: `세종 조이 안식일학교 · 출력일: ${new Date().toLocaleDateString('ko-KR')} · 진행 주차: ${conductedWeeks}회 · 방명록 누적 방문자: ${quarterVisitors}명`, s: { font: { sz: 10, color: { rgb: "64748B" } } } }],
               [],
               [{ v: "교과반별 주차(과)별 실제 출석 인원 현황 (1과~13과)", s: { font: { bold: true, sz: 12 } } }],
               [
@@ -4577,9 +4755,13 @@ ${className} ${leaderName} 리더입니다.
           } else {
             const quarters = ['1기', '2기', '3기', '4기'];
             const yearRecs = this.rawRecords.filter(r => r.date && this.normalizeDateStr(r.date).startsWith(year) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
+            
+            // 💡 [추가] 연간 누적 방문자 계산 (엑셀용)
+            const yearVisitors = this.rawVisitors.filter(v => this.normalizeDateStr(v.date || v.visitDate).startsWith(year)).length;
+
             const sheetData = [
               [{ v: `${year}년도 안식일학교 연간(1개년) 종합 결산 보고서`, s: { font: { bold: true, sz: 16 } } }],
-              [{ v: `세종 조이 안식일학교 · 출력일: ${new Date().toLocaleDateString('ko-KR')} · 정기 사무총회 및 당회 보고용`, s: { font: { sz: 10, color: { rgb: "64748B" } } } }],
+              [{ v: `세종 조이 안식일학교 · 출력일: ${new Date().toLocaleDateString('ko-KR')} · 정기 사무총회 및 당회 보고용 · 연간 방명록 누적: ${yearVisitors}명`, s: { font: { sz: 10, color: { rgb: "64748B" } } } }],
               [],
               [{ v: "교과반명", s: styleHeader }, { v: "담당 리더", s: styleHeader }, { v: "재적", s: styleHeader }, { v: "1기 출석률", s: styleHeader }, { v: "2기 출석률", s: styleHeader }, { v: "3기 출석률", s: styleHeader }, { v: "4기 출석률", s: styleHeader }, { v: "연간 종합", s: styleHeader }]
             ];

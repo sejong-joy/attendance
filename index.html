@@ -753,7 +753,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, writeBatch, enableIndexedDbPersistence, disableNetwork, enableNetwork, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, writeBatch, enableIndexedDbPersistence, disableNetwork, enableNetwork, deleteField, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js";
 
     const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzn2kkDIqszr-dMUbYPHffHlubtBjXb-mYUWApYeU9ot3lYkvrhVl_KPsNL9Y72-ZhK/exec";
@@ -1052,6 +1052,14 @@
       onQuarterOrYearChange() {
         const year = parseInt(document.getElementById('yearSelect')?.value || '2026', 10);
         const quarter = document.getElementById('quarterSelect')?.value || '1기';
+        
+        // 💡 [추가] 연도가 변경되었을 경우에만 과거 데이터를 비우고 새 연도 데이터를 구독
+        const strYear = String(year);
+        if (this.lastSubscribedYear && this.lastSubscribedYear !== strYear) {
+          this.rawRecords = []; // 기존 메모리 비우기
+          this.subscribeRealtimeRecords(); // 새 연도 쿼리로 재구독
+        }
+
         this.generateSabbathOptions(year, quarter);
         this.onSabbathSelectChange();
 
@@ -1393,9 +1401,14 @@
         if (this.unsubscribeRecords) { this.unsubscribeRecords(); this.unsubscribeRecords = null; }
 
         try {
-          // 💡 V2 컬렉션으로 연결
+          // 💡 [수정] 당해 연도 데이터만 가져오도록 필터(where) 적용
+          const currentYear = String(document.getElementById('yearSelect')?.value || new Date().getFullYear());
+          this.lastSubscribedYear = currentYear; // 연도 변경 감지용
+
           const recordsCol = collection(db, 'attendance_records_v2');
-          this.unsubscribeRecords = onSnapshot(recordsCol, (snapshot) => {
+          const recordsQuery = query(recordsCol, where('year', '==', currentYear));
+          
+          this.unsubscribeRecords = onSnapshot(recordsQuery, (snapshot) => {
             snapshot.docChanges().forEach((change) => {
               const docData = change.doc.data();
               const memberId = docData.memberId;

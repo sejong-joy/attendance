@@ -2625,18 +2625,19 @@ ${className} ${leaderName} 리더입니다.
         container.innerHTML = '';
 
         const currentYear = new Date().getFullYear();
-        // 등록 활동 성도 (전출, 휴면 등 제외)
+        // 등록 활동 성도 (전출, 이명, 휴면, 별세 제외)
         const activeMembers = this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
         const totalCount = activeMembers.length;
 
-        // 연령대 그룹 정의
+        // 연령대 그룹 정의 (70대와 80대 이상 분리)
         const groups = [
           { key: 'child_student', label: '어린이·학생', sub: '19세 이하', min: 0, max: 19, color: 'emerald', members: [] },
           { key: 'youth', label: '청년', sub: '20~35세', min: 20, max: 35, color: 'teal', members: [] },
           { key: 'prime', label: '30·40대', sub: '36~49세', min: 36, max: 49, color: 'blue', members: [] },
           { key: 'fifties', label: '50대', sub: '50~59세', min: 50, max: 59, color: 'indigo', members: [] },
           { key: 'sixties', label: '60대', sub: '60~69세', min: 60, max: 69, color: 'purple', members: [] },
-          { key: 'seventies', label: '70대 이상', sub: '70세 이상', min: 70, max: 150, color: 'amber', members: [] },
+          { key: 'seventies', label: '70대', sub: '70~79세', min: 70, max: 79, color: 'amber', members: [] },
+          { key: 'eighties', label: '80대 이상', sub: '80세 이상', min: 80, max: 150, color: 'rose', members: [] },
           { key: 'unknown', label: '미등록', sub: '생일 미입력', min: -1, max: -1, color: 'slate', members: [] }
         ];
 
@@ -2644,12 +2645,12 @@ ${className} ${leaderName} 리더입니다.
           const birthStr = m.birth || m.birthday || m.birthDate;
           const clean = String(birthStr || '').replace(/[^0-9]/g, '');
           if (clean.length < 6) {
-            groups[6].members.push(m);
+            groups[7].members.push(m);
             return;
           }
           const birthYear = parseInt(clean.substring(0, 4), 10);
           if (birthYear < 1920 || birthYear > currentYear) {
-            groups[6].members.push(m);
+            groups[7].members.push(m);
             return;
           }
 
@@ -2661,10 +2662,11 @@ ${className} ${leaderName} 리더입니다.
           else if (annualAge <= 49) groups[2].members.push(m);
           else if (annualAge <= 59) groups[3].members.push(m);
           else if (annualAge <= 69) groups[4].members.push(m);
-          else groups[5].members.push(m);
+          else if (annualAge <= 79) groups[5].members.push(m);
+          else groups[6].members.push(m);
         });
 
-        // 💡 연령대 데이터 저장 (팝업 모달용)
+        // 연령대 데이터 저장 (팝업 모달 연동용)
         this.ageDemographicGroups = groups;
 
         groups.forEach((g, idx) => {

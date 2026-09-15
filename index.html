@@ -278,9 +278,10 @@
             <p id="statCareCount" class="text-2xl sm:text-3xl font-black text-red-600 mt-0.5">0명</p>
           </div>
         </div>
-        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
-          <h3 class="text-sm sm:text-base font-black text-slate-900 mb-1.5 flex items-center justify-between"><span>📈 주차별 출석 인원 추이</span><span class="text-xs font-bold text-slate-500">실시간 데이터</span></h3>
-          <div class="h-36 sm:h-44 relative"><canvas id="weeklyChart"></canvas></div>
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-bold text-slate-800">주차별 출석 인원 추이</h3>
+          <!-- 💡 실시간 문구 대신 분기 표시 뱃지로 교체 -->
+          <span id="statsQuarterBadge" class="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full"></span>
         </div>
         <!-- 💡 [관리자 전용] 연령대별 분포 및 인원 집계 -->
         <div id="adminAgeStatsWrap" class="hidden bg-white p-3 rounded-xl border border-slate-200 shadow-xs space-y-2">
@@ -2522,6 +2523,12 @@ ${className} ${leaderName} 리더입니다.
       }
 
       calculateAndRenderStatistics() {
+        // 💡 [추가] 통계 탭 상단 뱃지에 연도와 분기 자동 반영
+        const yearVal = document.getElementById('yearSelect')?.value || '2026';
+        const curQuarter = document.getElementById('quarterSelect')?.value || '3기';
+        const badgeElem = document.getElementById('statsQuarterBadge');
+        if (badgeElem) badgeElem.textContent = `${yearVal}년 ${curQuarter}`;
+
         const isAdmin = !!(this.currentUser && this.currentUser.isAdmin);
         const myClassId = this.currentUser ? this.currentUser.classId : 'ALL';
         
@@ -2536,8 +2543,6 @@ ${className} ${leaderName} 리더입니다.
         const totLblEl = document.getElementById('statTotalLabel');
         if (totMemEl) totMemEl.textContent = `${targetMembers.length}명`;
         if (totLblEl) totLblEl.textContent = isAdmin ? '총 등록 교인' : '반 등록 교인';
-
-        const curQuarter = document.getElementById('quarterSelect')?.value || '3기';
 
         const validRecords = this.rawRecords.filter(r => {
           const isQuarterMatch = !r.quarter || r.quarter === curQuarter;

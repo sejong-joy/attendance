@@ -595,6 +595,15 @@
             <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">연락처</label>
             <input type="tel" id="editMemberPhone" maxlength="13" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/^(\d{2,3})(\d{3,4})(\d{1,4})$/g, '$1-$2-$3');" class="w-full px-3 py-2 bg-white border-2 border-slate-300 rounded-xl text-base font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
           </div>
+          <!-- 💡 [수정] oninput 실시간 검증 이벤트 추가 -->
+          <div>
+            <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">생년월일 (YYYYMMDD)</label>
+            <input type="text" id="editMemberBirth" 
+              oninput="const info = window.appInstance.getMemberAgeInfo(this.value); const el = document.getElementById('editMemberAgeDetail'); if(el) el.textContent = info ? `💡 기준 연령: ${info.summaryText}` : '';"
+              placeholder="예: 20120514 또는 1980-01-01" 
+              class="w-full px-2 py-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-xs sm:text-sm font-black text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <p id="editMemberAgeDetail" class="text-[11px] font-bold text-blue-600 mt-1 min-h-[16px]"></p>
+          </div>
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">소속반 *</label>
@@ -740,6 +749,7 @@
       }
 
       async init() {
+        this.checkCacheExpiration(); // 💡 여기에 한 줄 추가
         this.initCurrentYearAndQuarter();
         
         if (!localStorage.getItem('church_auth')) {
@@ -3029,10 +3039,24 @@ ${className} ${leaderName} 리더입니다.
           if (m.status === '활동') statusBadgeClass = 'bg-emerald-100 text-emerald-900 border-emerald-300';
           else if (m.status === '새가족') statusBadgeClass = 'bg-amber-100 text-amber-900 border-amber-300';
 
+         // 💡 [추가] 나이 / 학년 계산 로직
+          const ageInfo = this.getMemberAgeInfo(m.birth || m.birthday || m.birthDate);
+          let ageBadgeHtml = '';
+
+          if (ageInfo) {
+            if (ageInfo.isStudentOrChild) {
+              // 💡 영아~고등학생: 전체 공개 (파란색 미니 뱃지)
+              ageBadgeHtml = `<span class="ml-1 inline-block px-1.5 py-0.5 text-[10px] font-black bg-blue-100 text-blue-700 rounded-md tracking-tight align-middle">${ageInfo.gradeLabel}</span>`;
+            } else if (isAdmin) {
+              // 💡 20세 이상 성인: 관리자에게만 차분한 회색으로 연나이 노출
+              ageBadgeHtml = `<span class="ml-1 inline-block text-[11px] font-bold text-slate-400 align-middle">(${ageInfo.annualAge}세)</span>`;
+            }
+          }
+
           // 💡 [수정] 관리자로 로그인 시, 이름 부분에 클릭 가능한 버튼(수정 팝업 열기)을 씌워줍니다.
-          let finalNameHtml = displayName;
+          let finalNameHtml = `<span>${displayName}</span>${ageBadgeHtml}`;
           if (isAdmin) {
-            finalNameHtml = `<button type="button" onclick="window.appInstance.openEditMemberModal('${m.memberId}')" class="text-left font-black text-[17px] text-blue-700 hover:text-blue-900 flex flex-col sm:flex-row sm:items-center gap-1 transition"><span>${displayName}</span><span class="text-[10px] bg-blue-100 border border-blue-300 text-blue-800 px-1.5 py-0.5 rounded shadow-2xs">수정✏️</span></button>`;
+            finalNameHtml = `<button type="button" onclick="window.appInstance.openEditMemberModal('${m.memberId}')" class="text-left font-black text-[17px] text-blue-700 hover:text-blue-900 flex flex-col sm:flex-row sm:items-center gap-1 transition"><span class="flex items-center">${displayName}${ageBadgeHtml}</span><span class="text-[10px] bg-blue-100 border border-blue-300 text-blue-800 px-1.5 py-0.5 rounded shadow-2xs">수정✏️</span></button>`;
           }
 
           tr.innerHTML = 
@@ -3350,6 +3374,87 @@ ${className} ${leaderName} 리더입니다.
         if (modal) modal.classList.add('pointer-events-none', 'opacity-0');
       }
 
+      // 💡 [수정] 5일 경과 시 기존 로컬 캐시를 삭제하고 최신 데이터로 강제 갱신
+      checkCacheExpiration() {
+        const lastSync = localStorage.getItem('last_church_sync_time');
+        const now = Date.now();
+        const FIVE_DAYS = 5 * 24 * 60 * 60 * 1000; // 5일 기준 (토요일 출석 전 갱신 보장)
+
+        if (!lastSync) {
+          localStorage.setItem('last_church_sync_time', String(now));
+        } else if (now - parseInt(lastSync, 10) > FIVE_DAYS) {
+          console.log('🔄 캐시 만료(5일 경과): 로컬 캐시를 비우고 최신 데이터를 동기화합니다.');
+          localStorage.setItem('last_church_sync_time', String(now));
+          
+          // 💡 구버전 캐시를 비워야 새로고침 시 시트 원본을 다시 읽어옵니다.
+          const authData = localStorage.getItem('church_auth');
+          if (authData) {
+            try {
+              const { classId } = JSON.parse(authData);
+              localStorage.removeItem(`church_cache_${classId}`);
+            } catch (e) {}
+          }
+          localStorage.removeItem('church_cached_classes');
+
+          window.location.reload();
+        }
+      },
+
+      // 💡 [추가] 생년월일 기반 학년/나이 계산 함수
+      getMemberAgeInfo(birthStr) {
+        if (!birthStr) return null;
+        const clean = String(birthStr).replace(/[^0-9]/g, '');
+        if (clean.length < 4) return null;
+
+        const birthYear = parseInt(clean.substring(0, 4), 10);
+        const birthMonth = clean.length >= 6 ? parseInt(clean.substring(4, 6), 10) - 1 : 0;
+        const birthDay = clean.length >= 8 ? parseInt(clean.substring(6, 8), 10) : 1;
+
+        const today = new Date();
+        const currentYear = today.getFullYear();
+
+        // 한국 연 나이 (학령기 기준)
+        const annualAge = currentYear - birthYear;
+
+        // 만 나이
+        let manAge = currentYear - birthYear;
+        const hasPassed = today.getMonth() > birthMonth || 
+          (today.getMonth() === birthMonth && today.getDate() >= birthDay);
+        if (!hasPassed) manAge -= 1;
+
+        // 학년/부서 구분
+        let gradeLabel = '';
+        let isStudentOrChild = false;
+
+        if (annualAge <= 5) {
+          gradeLabel = '영아';
+          isStudentOrChild = true;
+        } else if (annualAge >= 6 && annualAge <= 7) {
+          gradeLabel = `유치(${annualAge}세)`;
+          isStudentOrChild = true;
+        } else if (annualAge >= 8 && annualAge <= 10) {
+          gradeLabel = `초${annualAge - 7}`;
+          isStudentOrChild = true;
+        } else if (annualAge >= 11 && annualAge <= 13) {
+          gradeLabel = `초${annualAge - 7}`;
+          isStudentOrChild = true;
+        } else if (annualAge >= 14 && annualAge <= 16) {
+          gradeLabel = `중${annualAge - 13}`;
+          isStudentOrChild = true;
+        } else if (annualAge >= 17 && annualAge <= 19) {
+          gradeLabel = `고${annualAge - 16}`;
+          isStudentOrChild = true;
+        }
+
+        return {
+          annualAge,
+          manAge,
+          gradeLabel,
+          isStudentOrChild,
+          summaryText: gradeLabel ? `${gradeLabel} (${annualAge}세/만${manAge}세)` : `${annualAge}세 (만${manAge}세)`
+        };
+      },
+      
       // 💡 [수정] 교인 정보 수정 모달 열기 (세분화된 12개 직분 완벽 적용)
       openEditMemberModal(memberId) {
         if (!this.currentUser || !this.currentUser.isAdmin) return;
@@ -3359,6 +3464,16 @@ ${className} ${leaderName} 리더입니다.
         document.getElementById('editMemberId').value = memberId;
         document.getElementById('editMemberName').value = member.name || '';
         document.getElementById('editMemberPhone').value = member.phone || '';
+        // 💡 [추가] 생년월일 세팅 및 기준 나이/학년 안내 문구 렌더링
+        const birthVal = member.birth || member.birthday || member.birthDate || '';
+        const birthInput = document.getElementById('editMemberBirth');
+        if (birthInput) birthInput.value = birthVal;
+
+        const ageDetailEl = document.getElementById('editMemberAgeDetail');
+        if (ageDetailEl) {
+          const ageInfo = this.getMemberAgeInfo(birthVal);
+          ageDetailEl.textContent = ageInfo ? `💡 기준 연령: ${ageInfo.summaryText}` : '';
+        }
         document.getElementById('editMemberStatus').value = member.status || '활동';
         document.getElementById('editMemberNote').value = member.notes || '';
 
@@ -3427,6 +3542,7 @@ ${className} ${leaderName} 리더입니다.
         const memberId = document.getElementById('editMemberId')?.value;
         const name = document.getElementById('editMemberName')?.value?.trim();
         const phone = document.getElementById('editMemberPhone')?.value?.trim();
+        const birth = document.getElementById('editMemberBirth')?.value.trim() || '';
         const classId = document.getElementById('editMemberClassSelect')?.value;
         const role = document.getElementById('editMemberRole')?.value?.trim() || '성도';
         const status = document.getElementById('editMemberStatus')?.value || '활동';
@@ -3445,6 +3561,7 @@ ${className} ${leaderName} 리더입니다.
             memberId: memberId,
             name: name,
             phone: phone,
+            birth: birth, // 💡 추가
             classId: classId,
             role: role,
             status: status,
@@ -3465,6 +3582,7 @@ ${className} ${leaderName} 리더입니다.
             if (targetMember) {
               targetMember.name = name;
               targetMember.phone = phone;
+              targetMember.birth = birth; // 💡 추가
               targetMember.classId = classId;
               targetMember.role = role;
               targetMember.status = status;

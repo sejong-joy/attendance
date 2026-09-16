@@ -1410,9 +1410,20 @@
           const currentYear = String(document.getElementById('yearSelect')?.value || new Date().getFullYear());
           this.lastSubscribedYear = currentYear; // 연도 변경 감지용
 
+          // 💡 [최적화 적용] 관리자는 전체 데이터, 일반 리더는 본인 반 데이터만 호출 (읽기 비용 1/10 감소)
           const recordsCol = collection(db, 'attendance_records_v2');
-          const recordsQuery = query(recordsCol, where('year', '==', currentYear));
-          
+          let recordsQuery;
+
+          if (this.currentUser && this.currentUser.isAdmin) {
+            recordsQuery = query(recordsCol, where('year', '==', currentYear));
+          } else {
+            recordsQuery = query(
+              recordsCol, 
+              where('year', '==', currentYear), 
+              where('classId', '==', this.currentUser.classId)
+            );
+          }
+
           this.unsubscribeRecords = onSnapshot(recordsQuery, (snapshot) => {
             snapshot.docChanges().forEach((change) => {
               const docData = change.doc.data();

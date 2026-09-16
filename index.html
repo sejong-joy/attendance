@@ -1737,9 +1737,13 @@ ${className} ${leaderName} 리더입니다.
         const list = document.getElementById('urgentModalList');
         if (!modal || !box || !list) return;
 
+        // 💡 [수정] 내 반 성도이면서 동시에 '심방을 아직 안 한(careNotesMap에 없는)' 사람만 걸러냄
         const alerts = Object.values(this.absentAlertMap).filter(a => {
-          return this.currentUser.isAdmin || a.classId === this.currentUser.classId;
+          const isMyClass = this.currentUser.isAdmin || a.classId === this.currentUser.classId;
+          const isNotHandled = !this.careNotesMap[a.memberId]; 
+          return isMyClass && isNotHandled;
         });
+        
         list.innerHTML = '';
 
         if (alerts.length === 0) {

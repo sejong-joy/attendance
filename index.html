@@ -1101,7 +1101,9 @@
         // 2. 서버에서 최신 반 목록을 가져오는 전용 함수
         const fetchFromServer = async () => {
           try {
-            const res = await fetch(`${SHEETS_API_URL}?action=getClasses`);
+            // 수정 전: const res = await fetch(`${SHEETS_API_URL}?action=getClasses`);
+            // 수정 후:
+            const res = await fetch(`${SHEETS_API_URL}?action=getClasses&secretKey=SejongJoy!2026`);
             const json = await res.json();
             if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
               this.classList = json.data;
@@ -1113,16 +1115,16 @@
             if (!hasCache) {
               this.classList = [
                 { classId: 'ADMIN', className: '관리자(전체)', leaderName: '교역자', isAdmin: true },
-                { classId: 'C01', className: '사랑반', leaderName: '최변근', isAdmin: false },
-                { classId: 'C02', className: '기쁨반', leaderName: '서종헌', isAdmin: false },
-                { classId: 'C03', className: '은혜반', leaderName: '김수희', isAdmin: false },
-                { classId: 'C04', className: '감사반', leaderName: '조영주', isAdmin: false },
-                { classId: 'C05', className: '소망반', leaderName: '이종문', isAdmin: false },
-                { classId: 'C06', className: '믿음반', leaderName: '차상석', isAdmin: false },
-                { classId: 'C07', className: '새신자반', leaderName: '고윤호', isAdmin: false },
-                { classId: 'C08', className: '학생반', leaderName: '신정호', isAdmin: false },
-                { classId: 'C09', className: '어린이반', leaderName: '방은지', isAdmin: false },
-                { classId: 'C10', className: '청년반', leaderName: '노준섭', isAdmin: false }
+                { classId: 'C01', className: '사랑반', leaderName: '리더', isAdmin: false },
+                { classId: 'C02', className: '기쁨반', leaderName: '리더', isAdmin: false },
+                { classId: 'C03', className: '은혜반', leaderName: '리더', isAdmin: false },
+                { classId: 'C04', className: '감사반', leaderName: '리더', isAdmin: false },
+                { classId: 'C05', className: '소망반', leaderName: '리더', isAdmin: false },
+                { classId: 'C06', className: '믿음반', leaderName: '리더', isAdmin: false },
+                { classId: 'C07', className: '새신자반', leaderName: '리더', isAdmin: false },
+                { classId: 'C08', className: '학생반', leaderName: '리더', isAdmin: false },
+                { classId: 'C09', className: '어린이반', leaderName: '리더', isAdmin: false },
+                { classId: 'C10', className: '청년반', leaderName: '리더', isAdmin: false }
               ];
               this.populateClassSelect();
             }
@@ -1241,7 +1243,9 @@
         }
 
         try {
-          const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}`;
+          // 수정 전: const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}`;
+          // 수정 후:
+          const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}&secretKey=SejongJoy!2026`;
           const res = await fetch(url);
           const json = await res.json();
 
@@ -2430,7 +2434,9 @@ ${className} ${leaderName} 리더입니다.
             try { pinCode = JSON.parse(authData).pinCode; } catch(e){}
           }
 
-          const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}`;
+          // 수정 전: const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}`;
+          // 수정 후:
+          const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}&secretKey=SejongJoy!2026`;
           const res = await fetch(url);
           const json = await res.json();
 
@@ -3363,6 +3369,7 @@ ${className} ${leaderName} 리더입니다.
 
         try {
           const payload = {
+            secretKey: 'SejongJoy!2026', // 👈 💡 모든 payload 맨 윗줄에 이 항목 추가!
             action: 'updateMemberClass',
             memberId: memberId,
             newClassId: newClassId
@@ -3585,6 +3592,7 @@ ${className} ${leaderName} 리더입니다.
 
         try {
           const payload = {
+            secretKey: 'SejongJoy!2026', // 👈 💡 모든 payload 맨 윗줄에 이 항목 추가!
             action: 'backupAttendanceData',
             records: this.rawRecords
           };
@@ -3814,6 +3822,7 @@ ${className} ${leaderName} 리더입니다.
 
         try {
           const payload = {
+            secretKey: 'SejongJoy!2026', // 👈 💡 모든 payload 맨 윗줄에 이 항목 추가!
             action: 'batchPromoteMembers',
             promotions: selected.map(s => ({
               memberId: s.memberId,
@@ -4041,6 +4050,7 @@ ${className} ${leaderName} 리더입니다.
 
         try {
           const payload = {
+            secretKey: 'SejongJoy!2026', // 👈 💡 모든 payload 맨 윗줄에 이 항목 추가!
             action: 'updateMemberInfo', // 구글 시트용 API 액션 이름 (GAS 수정 필요)
             memberId: memberId,
             name: name,
@@ -4142,6 +4152,7 @@ ${className} ${leaderName} 리더입니다.
 
         try {
           const payload = {
+            secretKey: 'SejongJoy!2026', // 👈 💡 모든 payload 맨 윗줄에 이 항목 추가!
             action: 'registerNewMember',
             name: name,
             phone: phone,
@@ -4968,6 +4979,7 @@ ${className} ${leaderName} 리더입니다.
           const response = await fetch(SHEETS_API_URL, {
             method: 'POST',
             body: JSON.stringify({
+              secretKey: 'SejongJoy!2026', // 👈 💡 모든 payload 맨 윗줄에 이 항목 추가!
               action: 'scanVisitors',
               promptText: promptText,
               base64Data: base64Data,

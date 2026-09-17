@@ -1428,10 +1428,9 @@
           this.lastSubscribedYear = currentYear;
           this.lastSubscribedQuarter = currentQuarter;
 
-          // 💡 V3 컬렉션: 문서를 '날짜별'로 1개씩만 가져옵니다!
+          // 💡 V3 컬렉션: 날짜별 단일 문서 방식
           const recordsCol = collection(db, 'attendance_records_v3');
           
-          // 164명의 문서를 찾는게 아니라, 해당 분기의 13주치 날짜 문서 13개만 찾습니다.
           const recordsQuery = query(
             recordsCol, 
             where('year', '==', currentYear),
@@ -1443,10 +1442,9 @@
 
             snapshot.forEach((docSnap) => {
               const docData = docSnap.data();
-              const dateStr = docSnap.id; // 문서 ID가 날짜 (예: 2026-09-12)
+              const dateStr = docSnap.id; // 문서 ID가 날짜
               
               if (docData.records) {
-                // 단일 문서 안의 160명 데이터를 기존 프론트엔드가 이해할 수 있게 낱장으로 풀어서 전달
                 for (const [memberId, rec] of Object.entries(docData.records)) {
                   newRawRecords.push({
                     recordId: `${dateStr}_${memberId}`, 

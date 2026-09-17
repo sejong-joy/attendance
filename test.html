@@ -1423,18 +1423,13 @@
 
         try {
           const currentYear = String(document.getElementById('yearSelect')?.value || new Date().getFullYear());
-          const currentQuarter = document.getElementById('quarterSelect')?.value || '3기';
-
           this.lastSubscribedYear = currentYear;
-          this.lastSubscribedQuarter = currentQuarter;
 
-          // 💡 V3 컬렉션: 날짜별 단일 문서 방식
           const recordsCol = collection(db, 'attendance_records_v3');
-          
+          // 💡 분기(quarter) 오차로 인한 문서 누락 방지를 위해 연도 기준으로 구독
           const recordsQuery = query(
             recordsCol, 
-            where('year', '==', currentYear),
-            where('quarter', '==', currentQuarter)
+            where('year', '==', currentYear)
           );
 
           this.unsubscribeRecords = onSnapshot(recordsQuery, (snapshot) => {
@@ -1442,7 +1437,7 @@
 
             snapshot.forEach((docSnap) => {
               const docData = docSnap.data();
-              const dateStr = docSnap.id; // 문서 ID가 날짜
+              const dateStr = docSnap.id;
               
               if (docData.records) {
                 for (const [memberId, rec] of Object.entries(docData.records)) {
@@ -1465,11 +1460,13 @@
 
             this.rawRecords = newRawRecords;
 
-            // UI 갱신
             this.calculateConsecutiveAbsentees();
             this.updateAbsentBanner();
+
             const curDate = document.getElementById('sabbathSelect')?.value;
-            if (curDate) this.loadAttendanceForSelectedDate(curDate);
+            if (curDate) {
+              this.loadAttendanceForSelectedDate(curDate);
+            }
             this.renderClassMonitoringBar();
             
             const statsContent = document.getElementById('tabContent-stats');
@@ -1871,9 +1868,6 @@ ${className} ${leaderName} 리더입니다.
 
       loadAttendanceForSelectedDate(targetDate) {
         const normDate = this.normalizeDateStr(targetDate);
-        this.currentAttendance = {};
-        
-        // 💡 V3 구조에서 가져온 rawRecords와 현재 선택된 날짜를 정확하게 매칭합니다.
         const dateRecords = this.rawRecords.filter(r => this.normalizeDateStr(r.date) === normDate);
 
         this.rawMembers.forEach(m => {
@@ -1885,15 +1879,18 @@ ${className} ${leaderName} 리더입니다.
               worshipAttended: !!found.worshipAttended
             };
           } else {
-            this.currentAttendance[m.memberId] = {
-              status: null,
-              reason: '',
-              worshipAttended: false
-            };
+            // 💡 서버에 데이터가 아직 도착하지 않았더라도, 내 화면에 방금 체크한 값이 있다면 유지
+            if (!this.currentAttendance[m.memberId]) {
+              this.currentAttendance[m.memberId] = {
+                status: null,
+                reason: '',
+                worshipAttended: false
+              };
+            }
           }
         });
 
-        this.updateAttendanceSummary(); // 💡 요약 숫자 통계도 함께 갱신되도록 추가
+        this.updateAttendanceSummary();
         this.renderAttendanceList();
       }
 
@@ -2087,7 +2084,7 @@ ${className} ${leaderName} 리더입니다.
 
         const currentStatus = this.currentAttendance[memberId].status;
         const targetDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
-        const quarter = document.getElementById('quarterSelect')?.value || '1기';
+        const quarter = document.getElementById('quarterSelect')?.value || '3기';
         const year = document.getElementById('yearSelect')?.value || '2026';
         
         const member = this.rawMembers.find(m => m.memberId === memberId);
@@ -2096,7 +2093,7 @@ ${className} ${leaderName} 리더입니다.
         const isCancelling = (currentStatus === status);
         const finalStatus = isCancelling ? null : status;
         
-        // 💡 1. 내 화면의 현재 상태를 즉시 변경하여 고정합니다 (불 꺼짐 방지 핵심)
+        // 1. 화면 상태 즉시 반영 (낙관적 락)
         this.currentAttendance[memberId].status = finalStatus;
 
         if (finalStatus === '출석' || finalStatus === '지각') {
@@ -2106,7 +2103,7 @@ ${className} ${leaderName} 리더입니다.
           }
         }
 
-        // 💡 2. 로컬 rawRecords 메모리에도 즉시 반영하여 실시간 감시기가 헷갈리지 않게 합니다
+        // 2. 로컬 rawRecords 메모리 즉시 동기화
         const idx = this.rawRecords.findIndex(r => this.normalizeDateStr(r.date) === targetDate && r.memberId === memberId);
         const score = finalStatus === '출석' ? 1.0 : (finalStatus === '지각' ? 0.5 : 0.0);
 
@@ -2115,8 +2112,13 @@ ${className} ${leaderName} 리더입니다.
         } else {
           const recordDataForMemory = {
             recordId: `${targetDate}_${memberId}`, 
-            date: targetDate, quarter: quarter, memberId: memberId, classId: member.classId,
-            status: finalStatus, score: score, reason: this.currentAttendance[memberId].reason || '',
+            date: targetDate, 
+            quarter: quarter, 
+            memberId: memberId, 
+            classId: member.classId,
+            status: finalStatus, 
+            score: score, 
+            reason: this.currentAttendance[memberId].reason || '',
             worshipAttended: (finalStatus === '출석' || finalStatus === '지각') ? false : !!this.currentAttendance[memberId].worshipAttended,
             checkedBy: this.currentUser?.leaderName || '리더',
             updatedAt: new Date().toISOString()
@@ -2126,7 +2128,7 @@ ${className} ${leaderName} 리더입니다.
           else this.rawRecords.push(recordDataForMemory);
         }
 
-        // 💡 3. 화면을 즉시 다시 그려서 초록색 불을 튼튼하게 고정합니다
+        // 3. UI 갱신 (버튼 불 즉시 유지)
         this.calculateConsecutiveAbsentees();
         this.updateAbsentBanner();
         this.updateAttendanceSummary();
@@ -2134,7 +2136,7 @@ ${className} ${leaderName} 리더입니다.
         this.renderClassMonitoringBar();
         this.updateCloudStatusBadge('saved', '서버에 저장됨');
 
-        // 💡 4. 백그라운드에서 안전하게 파이어베이스 서버로 전송
+        // 4. Firestore V3 저장
         const dateDocRef = (isFirebaseReady && db) ? doc(db, 'attendance_records_v3', targetDate) : null;
 
         if (isCancelling) {
@@ -2144,7 +2146,7 @@ ${className} ${leaderName} 리더입니다.
                 [`records.${memberId}`]: deleteField()
               });
             } catch (e) {
-              console.error("Firestore V3 부분 삭제 오류:", e);
+              console.error("Firestore V3 삭제 오류:", e);
             }
           }
         } else {
@@ -2164,25 +2166,38 @@ ${className} ${leaderName} 리더입니다.
           }
 
           if (dateDocRef) {
-            try {
-              const memberRecordForDB = {
-                status: finalStatus,
-                score: score,
-                reason: this.currentAttendance[memberId].reason || '',
-                worshipAttended: !!this.currentAttendance[memberId].worshipAttended,
-                checkedBy: this.currentUser?.leaderName || '리더',
-                updatedAt: new Date().toISOString(),
-                classId: member.classId
-              };
+            const memberRecordForDB = {
+              status: finalStatus,
+              score: score,
+              reason: this.currentAttendance[memberId].reason || '',
+              worshipAttended: !!this.currentAttendance[memberId].worshipAttended,
+              checkedBy: this.currentUser?.leaderName || '리더',
+              updatedAt: new Date().toISOString(),
+              classId: member.classId
+            };
 
-              await setDoc(dateDocRef, {
-                date: targetDate, 
-                year: String(year), 
+            try {
+              // 💡 updateDoc으로 해당 성도 필드만 정확히 찔러서 업데이트 (다른 성도 데이터 보존)
+              await updateDoc(dateDocRef, {
+                date: targetDate,
+                year: String(year),
                 quarter: quarter,
                 [`records.${memberId}`]: memberRecordForDB
-              }, { merge: true });
-            } catch (e) {
-              console.error("Firestore V3 단일 문서 저장 오류:", e);
+              });
+            } catch (err) {
+              // 문서가 아예 없을 때만 최초 1회 setDoc 실행
+              try {
+                await setDoc(dateDocRef, {
+                  date: targetDate,
+                  year: String(year),
+                  quarter: quarter,
+                  records: {
+                    [memberId]: memberRecordForDB
+                  }
+                }, { merge: true });
+              } catch (e) {
+                console.error("Firestore 저장 오류:", e);
+              }
             }
           }
         }
@@ -2451,14 +2466,23 @@ ${className} ${leaderName} 리더입니다.
         const targetDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
         if (!targetDate) return;
 
+        // 로컬 rawRecords에도 반영
+        const rec = this.rawRecords.find(r => this.normalizeDateStr(r.date) === targetDate && r.memberId === memberId);
+        if (rec) rec.reason = reason;
+
         if (isFirebaseReady && db) {
+          const dateDocRef = doc(db, 'attendance_records_v3', targetDate);
           try {
-            const dateDocRef = doc(db, 'attendance_records_v3', targetDate);
-            // 해당 날짜 문서 안에서, 이 멤버의 사유 부분만 콕 집어서 업데이트
-            await setDoc(dateDocRef, {
+            await updateDoc(dateDocRef, {
               [`records.${memberId}.reason`]: reason
-            }, { merge: true });
-          } catch (e) {}
+            });
+          } catch (e) {
+            try {
+              await setDoc(dateDocRef, {
+                records: { [memberId]: { reason: reason } }
+              }, { merge: true });
+            } catch (err) {}
+          }
         }
       }
 

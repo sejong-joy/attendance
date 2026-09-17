@@ -674,7 +674,7 @@
               
               <option disabled>──────────</option>
               <option value="전출">✈️ 전출 (출석부 제외)</option>
-              <option value="이명">✈️ 이명 (출석부 제외)</option>
+              
               <option value="휴면">💤 휴면 (장기결석 제외)</option>
               <option value="별세">🕊️ 별세 (명부 보존용)</option>
             </select>
@@ -758,7 +758,12 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getFirestore, doc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, writeBatch, enableIndexedDbPersistence, disableNetwork, enableNetwork, deleteField, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { 
+      initializeFirestore, 
+      persistentLocalCache, 
+      persistentMultipleTabManager,
+      doc, setDoc, updateDoc, deleteDoc, collection, getDocs, onSnapshot, writeBatch, disableNetwork, enableNetwork, deleteField, query, where 
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app-check.js";
 
     const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzn2kkDIqszr-dMUbYPHffHlubtBjXb-mYUWApYeU9ot3lYkvrhVl_KPsNL9Y72-ZhK/exec";
@@ -777,20 +782,21 @@
 
     try {
       app = initializeApp(firebaseConfig);
+      
       // 👇 여기서부터 App Check 활성화 코드 3줄 추가
       const appCheck = initializeAppCheck(app, {
         provider: new ReCaptchaEnterpriseProvider('6Lenfr4tAAAAAAxNYAuivU2b9fSrqvi7R7F4h2VV'),
         isTokenAutoRefreshEnabled: true // 토큰 자동 갱신
       });
       // 👆 여기까지
-      db = getFirestore(app);
-      enableIndexedDbPersistence(db).catch((err) => {
-        if (err.code == 'failed-precondition') {
-          console.warn("다중 탭 열림으로 인해 오프라인 캐시를 켤 수 없습니다.");
-        } else if (err.code == 'unimplemented') {
-          console.warn("현재 브라우저가 오프라인 캐시를 지원하지 않습니다.");
-        }
+
+      // 👇 기존 경고가 뜨던 방식을 최신 방식(localCache)으로 완벽히 교체
+      db = initializeFirestore(app, {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager() // 다중 탭 충돌 자동 방지
+        })
       });
+      
       isFirebaseReady = true;
     } catch (e) {
       console.warn("Firebase 초기화 오류:", e);

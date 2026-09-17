@@ -1874,6 +1874,8 @@ ${className} ${leaderName} 리더입니다.
       loadAttendanceForSelectedDate(targetDate) {
         const normDate = this.normalizeDateStr(targetDate);
         this.currentAttendance = {};
+        
+        // 💡 V3 구조에서 가져온 rawRecords와 현재 선택된 날짜를 정확하게 매칭합니다.
         const dateRecords = this.rawRecords.filter(r => this.normalizeDateStr(r.date) === normDate);
 
         this.rawMembers.forEach(m => {
@@ -1893,6 +1895,7 @@ ${className} ${leaderName} 리더입니다.
           }
         });
 
+        this.updateAttendanceSummary(); // 💡 요약 숫자 통계도 함께 갱신되도록 추가
         this.renderAttendanceList();
       }
 

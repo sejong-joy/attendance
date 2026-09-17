@@ -1422,60 +1422,74 @@
         if (this.unsubscribeRecords) { this.unsubscribeRecords(); this.unsubscribeRecords = null; }
 
         try {
-          // 💡 [수정] 당해 연도 데이터만 가져오도록 필터(where) 적용
           const currentYear = String(document.getElementById('yearSelect')?.value || new Date().getFullYear());
-          this.lastSubscribedYear = currentYear; // 연도 변경 감지용
+          const currentQuarter = document.getElementById('quarterSelect')?.value || '3기';
 
-          // 💡 [최적화 적용] 관리자는 전체 데이터, 일반 리더는 본인 반 데이터만 호출 (읽기 비용 1/10 감소)
-          const recordsCol = collection(db, 'attendance_records_v2');
-          let recordsQuery;
+          this.lastSubscribedYear = currentYear;
+          this.lastSubscribedQuarter = currentQuarter;
 
-          if (this.currentUser && this.currentUser.isAdmin) {
-            recordsQuery = query(recordsCol, where('year', '==', currentYear));
-          } else {
-            recordsQuery = query(
-              recordsCol, 
-              where('year', '==', currentYear), 
-              where('classId', '==', this.currentUser.classId)
-            );
-          }
+          // 💡 핵심: 반드시 V3 컬렉션을 바라보아야 합니다!
+          const recordsCol = collection(db, 'attendance_records_v3');
+          
+          const recordsQuery = query(
+            recordsCol, 
+            where('year', '==', currentYear),
+            where('quarter', '==', currentQuarter)
+          );
 
           this.unsubscribeRecords = onSnapshot(recordsQuery, (snapshot) => {
-            snapshot.docChanges().forEach((change) => {
-              const docData = change.doc.data();
-              const memberId = docData.memberId;
-              const docQuarter = docData.quarter;
-              const docYear = docData.year;
+            let newRawRecords = [];
 
-              // 기존 메모리에 있던 해당 분기 데이터 임시 삭제 (중복 방지)
-              this.rawRecords = this.rawRecords.filter(r => !(r.memberId === memberId && r.quarter === docQuarter && r.date.startsWith(docYear)));
-
-              // 💡 압축된 weeks 데이터를 풀어서 낱장(V1 형태)으로 메모리에 밀어넣기
-              if (change.type !== "removed" && docData.weeks) {
-                for (const [dateStr, weekData] of Object.entries(docData.weeks)) {
-                  this.rawRecords.push({
+            snapshot.forEach((docSnap) => {
+              const docData = docSnap.data();
+              const dateStr = docSnap.id; // 문서 ID가 날짜 (예: 2026-09-19)
+              
+              if (docData.records) {
+                for (const [memberId, rec] of Object.entries(docData.records)) {
+                  newRawRecords.push({
                     recordId: `${dateStr}_${memberId}`, 
                     date: dateStr,
-                    quarter: docQuarter,
+                    quarter: docData.quarter,
                     memberId: memberId,
-                    classId: docData.classId || weekData.classId,
-                    status: weekData.status,
-                    score: weekData.score,
-                    reason: weekData.reason || '',
-                    worshipAttended: !!weekData.worshipAttended,
-                    checkedBy: weekData.checkedBy || '',
-                    updatedAt: weekData.updatedAt || ''
+                    classId: rec.classId,
+                    status: rec.status,
+                    score: rec.score,
+                    reason: rec.reason || '',
+                    worshipAttended: !!rec.worshipAttended,
+                    checkedBy: rec.checkedBy || '',
+                    updatedAt: rec.updatedAt || ''
                   });
                 }
               }
             });
 
-            // 화면 및 현황판 즉시 새로고침
+            this.rawRecords = newRawRecords;
+
             this.calculateConsecutiveAbsentees();
             this.updateAbsentBanner();
-
+            
             const curDate = document.getElementById('sabbathSelect')?.value;
-            if (curDate) this.loadAttendanceForSelectedDate(curDate);
+            if (curDate) {
+              const normDate = this.normalizeDateStr(curDate);
+              const dateRecords = this.rawRecords.filter(r => this.normalizeDateStr(r.date) === normDate);
+
+              this.rawMembers.forEach(m => {
+                if (!this.currentAttendance[m.memberId]) {
+                  this.currentAttendance[m.memberId] = { status: null, reason: '', worshipAttended: false };
+                }
+                const found = dateRecords.find(r => r.memberId === m.memberId);
+                if (found && (found.status === '출석' || found.status === '지각' || found.status === '결석')) {
+                  if (!this.currentAttendance[m.memberId].status) {
+                    this.currentAttendance[m.memberId].status = found.status;
+                    this.currentAttendance[m.memberId].reason = found.reason || '';
+                    this.currentAttendance[m.memberId].worshipAttended = !!found.worshipAttended;
+                  }
+                }
+              });
+            }
+
+            this.updateAttendanceSummary();
+            this.renderAttendanceList();
             this.renderClassMonitoringBar();
             
             const statsContent = document.getElementById('tabContent-stats');
@@ -1483,7 +1497,7 @@
               this.calculateAndRenderStatistics();
             }
           }, (error) => {
-            console.warn("Firestore 실시간 수신 알림:", error);
+            console.warn("Firestore V3 수신 오류:", error);
           });
         } catch (e) {
           console.warn("Firestore 구독 오류:", e);

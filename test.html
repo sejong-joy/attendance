@@ -2095,6 +2095,8 @@ ${className} ${leaderName} 리더입니다.
 
         const isCancelling = (currentStatus === status);
         const finalStatus = isCancelling ? null : status;
+        
+        // 💡 1. 내 화면의 현재 상태를 즉시 변경하여 고정합니다 (불 꺼짐 방지 핵심)
         this.currentAttendance[memberId].status = finalStatus;
 
         if (finalStatus === '출석' || finalStatus === '지각') {
@@ -2104,30 +2106,13 @@ ${className} ${leaderName} 리더입니다.
           }
         }
 
+        // 💡 2. 로컬 rawRecords 메모리에도 즉시 반영하여 실시간 감시기가 헷갈리지 않게 합니다
         const idx = this.rawRecords.findIndex(r => this.normalizeDateStr(r.date) === targetDate && r.memberId === memberId);
-        if (idx >= 0 && (finalStatus === '출석' || finalStatus === '지각')) { 
-          this.rawRecords[idx].worshipAttended = false; 
-        }
-
-        // 💡 V3 핵심: 문서 ID가 성도별 ID가 아니라 '날짜(targetDate)' 입니다!
-        const dateDocRef = (isFirebaseReady && db) ? doc(db, 'attendance_records_v3', targetDate) : null;
+        const score = finalStatus === '출석' ? 1.0 : (finalStatus === '지각' ? 0.5 : 0.0);
 
         if (isCancelling) {
           if (idx >= 0) this.rawRecords.splice(idx, 1);
-
-          if (dateDocRef) {
-            try {
-              // 날짜 문서 안의 records 맵에서 해당 성도만 쏙 지웁니다
-              await updateDoc(dateDocRef, {
-                [`records.${memberId}`]: deleteField()
-              });
-            } catch (e) {
-              console.error("Firestore V3 부분 삭제 오류:", e);
-            }
-          }
         } else {
-          const score = finalStatus === '출석' ? 1.0 : (finalStatus === '지각' ? 0.5 : 0.0);
-          
           const recordDataForMemory = {
             recordId: `${targetDate}_${memberId}`, 
             date: targetDate, quarter: quarter, memberId: memberId, classId: member.classId,
@@ -2139,7 +2124,30 @@ ${className} ${leaderName} 리더입니다.
 
           if (idx >= 0) this.rawRecords[idx] = recordDataForMemory;
           else this.rawRecords.push(recordDataForMemory);
+        }
 
+        // 💡 3. 화면을 즉시 다시 그려서 초록색 불을 튼튼하게 고정합니다
+        this.calculateConsecutiveAbsentees();
+        this.updateAbsentBanner();
+        this.updateAttendanceSummary();
+        this.renderAttendanceList();
+        this.renderClassMonitoringBar();
+        this.updateCloudStatusBadge('saved', '서버에 저장됨');
+
+        // 💡 4. 백그라운드에서 안전하게 파이어베이스 서버로 전송
+        const dateDocRef = (isFirebaseReady && db) ? doc(db, 'attendance_records_v3', targetDate) : null;
+
+        if (isCancelling) {
+          if (dateDocRef) {
+            try {
+              await updateDoc(dateDocRef, {
+                [`records.${memberId}`]: deleteField()
+              });
+            } catch (e) {
+              console.error("Firestore V3 부분 삭제 오류:", e);
+            }
+          }
+        } else {
           if (finalStatus === '출석' || finalStatus === '지각') {
             delete this.absentAlertMap[memberId];
             delete this.careNotesMap[memberId];
@@ -2158,14 +2166,19 @@ ${className} ${leaderName} 리더입니다.
           if (dateDocRef) {
             try {
               const memberRecordForDB = {
-                status: recordDataForMemory.status, score: recordDataForMemory.score,
-                reason: recordDataForMemory.reason, worshipAttended: recordDataForMemory.worshipAttended,
-                checkedBy: recordDataForMemory.checkedBy, updatedAt: recordDataForMemory.updatedAt, classId: recordDataForMemory.classId
+                status: finalStatus,
+                score: score,
+                reason: this.currentAttendance[memberId].reason || '',
+                worshipAttended: !!this.currentAttendance[memberId].worshipAttended,
+                checkedBy: this.currentUser?.leaderName || '리더',
+                updatedAt: new Date().toISOString(),
+                classId: member.classId
               };
 
-              // 💡 V3 핵심: 날짜 문서 하나에 여러 반/여러 성도가 merge로 안전하게 쌓입니다
               await setDoc(dateDocRef, {
-                date: targetDate, year: String(year), quarter: quarter,
+                date: targetDate, 
+                year: String(year), 
+                quarter: quarter,
                 [`records.${memberId}`]: memberRecordForDB
               }, { merge: true });
             } catch (e) {
@@ -2173,15 +2186,9 @@ ${className} ${leaderName} 리더입니다.
             }
           }
         }
-
-        this.calculateConsecutiveAbsentees();
-        this.updateAbsentBanner();
-        this.updateAttendanceSummary();
-        this.renderAttendanceList();
-        this.renderClassMonitoringBar();
-        this.updateCloudStatusBadge('saved', '서버에 저장됨');
       }
 
+      
       openWorshipCheckModal() {
         if (!this.currentUser || !this.currentUser.isAdmin) return;
         const modal = document.getElementById('worshipCheckModal');

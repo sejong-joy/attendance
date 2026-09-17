@@ -2112,19 +2112,20 @@ ${className} ${leaderName} 리더입니다.
           this.rawRecords[idx].worshipAttended = false; 
         }
 
-        const quarterDocId = `${year}_${quarter}_${memberId}`;
+        // 💡 V3 핵심: 문서 ID가 성도별 ID가 아니라 '날짜(targetDate)' 입니다!
+        const dateDocRef = (isFirebaseReady && db) ? doc(db, 'attendance_records_v3', targetDate) : null;
 
         if (isCancelling) {
           if (idx >= 0) this.rawRecords.splice(idx, 1);
 
-          if (isFirebaseReady && db) {
+          if (dateDocRef) {
             try {
-              const docRef = doc(db, 'attendance_records_v2', quarterDocId);
-              await updateDoc(docRef, {
-                [`weeks.${targetDate}`]: deleteField()
+              // 날짜 문서 안의 records 맵에서 해당 성도만 쏙 지웁니다
+              await updateDoc(dateDocRef, {
+                [`records.${memberId}`]: deleteField()
               });
             } catch (e) {
-              console.error("Firestore 부분 삭제 오류:", e);
+              console.error("Firestore V3 부분 삭제 오류:", e);
             }
           }
         } else {
@@ -2157,21 +2158,21 @@ ${className} ${leaderName} 리더입니다.
             }
           }
 
-          if (isFirebaseReady && db) {
+          if (dateDocRef) {
             try {
-              const docRef = doc(db, 'attendance_records_v2', quarterDocId);
-              const weekDataForDB = {
+              const memberRecordForDB = {
                 status: recordDataForMemory.status, score: recordDataForMemory.score,
                 reason: recordDataForMemory.reason, worshipAttended: recordDataForMemory.worshipAttended,
                 checkedBy: recordDataForMemory.checkedBy, updatedAt: recordDataForMemory.updatedAt, classId: recordDataForMemory.classId
               };
 
-              await setDoc(docRef, {
-                memberId: memberId, classId: member.classId, quarter: quarter, year: String(year),
-                weeks: { [targetDate]: weekDataForDB }
+              // 💡 V3 핵심: 날짜 문서 하나에 여러 반/여러 성도가 merge로 안전하게 쌓입니다
+              await setDoc(dateDocRef, {
+                date: targetDate, year: String(year), quarter: quarter,
+                [`records.${memberId}`]: memberRecordForDB
               }, { merge: true });
             } catch (e) {
-              console.error("Firestore 압축 저장 오류:", e);
+              console.error("Firestore V3 단일 문서 저장 오류:", e);
             }
           }
         }

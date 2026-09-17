@@ -2104,20 +2104,42 @@ ${className} ${leaderName} 리더입니다.
           }
         }
 
-        // 💡 V3: 문서 ID가 무조건 '날짜(targetDate)' 입니다.
+        const idx = this.rawRecords.findIndex(r => this.normalizeDateStr(r.date) === targetDate && r.memberId === memberId);
+        if (idx >= 0 && (finalStatus === '출석' || finalStatus === '지각')) { 
+          this.rawRecords[idx].worshipAttended = false; 
+        }
+
+        // 💡 V3 핵심: 문서 ID가 성도별 ID가 아니라 '날짜(targetDate)' 입니다!
         const dateDocRef = (isFirebaseReady && db) ? doc(db, 'attendance_records_v3', targetDate) : null;
 
         if (isCancelling) {
+          if (idx >= 0) this.rawRecords.splice(idx, 1);
+
           if (dateDocRef) {
             try {
+              // 날짜 문서 안의 records 맵에서 해당 성도만 쏙 지웁니다
               await updateDoc(dateDocRef, {
                 [`records.${memberId}`]: deleteField()
               });
-            } catch(e) {}
+            } catch (e) {
+              console.error("Firestore V3 부분 삭제 오류:", e);
+            }
           }
         } else {
           const score = finalStatus === '출석' ? 1.0 : (finalStatus === '지각' ? 0.5 : 0.0);
           
+          const recordDataForMemory = {
+            recordId: `${targetDate}_${memberId}`, 
+            date: targetDate, quarter: quarter, memberId: memberId, classId: member.classId,
+            status: finalStatus, score: score, reason: this.currentAttendance[memberId].reason || '',
+            worshipAttended: (finalStatus === '출석' || finalStatus === '지각') ? false : !!this.currentAttendance[memberId].worshipAttended,
+            checkedBy: this.currentUser?.leaderName || '리더',
+            updatedAt: new Date().toISOString()
+          };
+
+          if (idx >= 0) this.rawRecords[idx] = recordDataForMemory;
+          else this.rawRecords.push(recordDataForMemory);
+
           if (finalStatus === '출석' || finalStatus === '지각') {
             delete this.absentAlertMap[memberId];
             delete this.careNotesMap[memberId];
@@ -2126,27 +2148,31 @@ ${className} ${leaderName} 리더입니다.
             }
           }
 
+          if (finalStatus === '결석') {
+            this.calculateConsecutiveAbsentees();
+            if (this.absentAlertMap[memberId] && !this.careNotesMap[memberId]) {
+              setTimeout(() => { this.openUrgentModal(); }, 150);
+            }
+          }
+
           if (dateDocRef) {
             try {
-              // merge: true 를 써서 다른 반 리더가 동시에 체크해도 덮어써지지 않고 안전하게 합쳐짐
+              const memberRecordForDB = {
+                status: recordDataForMemory.status, score: recordDataForMemory.score,
+                reason: recordDataForMemory.reason, worshipAttended: recordDataForMemory.worshipAttended,
+                checkedBy: recordDataForMemory.checkedBy, updatedAt: recordDataForMemory.updatedAt, classId: recordDataForMemory.classId
+              };
+
+              // 💡 V3 핵심: 날짜 문서 하나에 여러 반/여러 성도가 merge로 안전하게 쌓입니다
               await setDoc(dateDocRef, {
-                date: targetDate,
-                year: String(year),
-                quarter: quarter,
-                [`records.${memberId}`]: {
-                  status: finalStatus,
-                  score: score,
-                  reason: this.currentAttendance[memberId].reason || '',
-                  worshipAttended: !!this.currentAttendance[memberId].worshipAttended,
-                  checkedBy: this.currentUser?.leaderName || '리더',
-                  updatedAt: new Date().toISOString(),
-                  classId: member.classId
-                }
+                date: targetDate, year: String(year), quarter: quarter,
+                [`records.${memberId}`]: memberRecordForDB
               }, { merge: true });
-            } catch(e) { console.error("V3 상태 저장 오류:", e); }
+            } catch (e) {
+              console.error("Firestore V3 단일 문서 저장 오류:", e);
+            }
           }
         }
-    
 
         this.calculateConsecutiveAbsentees();
         this.updateAbsentBanner();

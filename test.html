@@ -1250,13 +1250,30 @@
           } catch(e) {}
         }
 
-        if (!hasLoadedFromCache) {
-          this.showLoading('인증 및 최신 데이터 동기화 중...');
+        // 💡 1. 캐시가 이미 있다면 백그라운드 갱신만 걸고 즉시 리턴 (30초 대기 완전 차단)
+        if (hasLoadedFromCache) {
+          const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}&secretKey=SejongJoy!2026`;
+          fetch(url)
+            .then(res => res.json())
+            .then(json => {
+              if (json && json.success) {
+                json.pinCode = pinCode;
+                localStorage.setItem(cacheKey, JSON.stringify(json));
+                this.rawMembers = this.sortMembersList((json.members || []).filter(m => m.status !== '방문자'));
+                this.rawVisitors = json.visitors || (json.members || []).filter(m => m.status === '방문자');
+                this.renderAttendanceList();
+                this.renderMemberDirectory();
+                this.renderClassMonitoringBar();
+              }
+            })
+            .catch(() => {});
+          return; // 👈 핵심: await 대기열 진입 차단
         }
 
+        // 💡 2. 캐시가 없는 최초 로그인 상태일 때만 로딩 오버레이 띄우고 대기
+        this.showLoading('인증 및 최신 데이터 동기화 중...');
+
         try {
-          // 수정 전: const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}`;
-          // 수정 후:
           const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}&secretKey=SejongJoy!2026`;
           const res = await fetch(url);
           const json = await res.json();

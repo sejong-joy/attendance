@@ -3568,6 +3568,90 @@ ${className} ${leaderName} 리더입니다.
         }
       }
 
+      // 🚀 [1회 실행용] V2 데이터를 V3 구조로 자동 변환 및 이전
+      async migrateV2toV3() {
+        if (!isFirebaseReady || !db) {
+          alert('파이어베이스가 준비되지 않았습니다.');
+          return;
+        }
+
+        if (!confirm('기존 V2 출석 데이터를 V3 날짜별 문서로 일괄 변환하여 이전하시겠습니까?\n(기존 V2 데이터는 삭제되지 않고 그대로 유지됩니다)')) return;
+
+        this.showLoading('V2 데이터 읽어오는 중...');
+
+        try {
+          const v2Col = collection(db, 'attendance_records_v2');
+          const snapshot = await getDocs(v2Col);
+
+          if (snapshot.empty) {
+            this.hideLoading();
+            alert('이전할 V2 데이터가 없습니다.');
+            return;
+          }
+
+          this.showLoading(`V2 데이터 ${snapshot.size}건 변환 중...`);
+
+          // 1. 날짜별로 성도들 데이터를 묶을 임시 장부 생성
+          // 구조: { "2026-09-12": { year, quarter, records: { M0001: {...}, M0002: {...} } } }
+          const groupedByDate = {};
+
+          snapshot.forEach((docSnap) => {
+            const v2Data = docSnap.data();
+            const memberId = v2Data.memberId;
+            const docYear = String(v2Data.year || '2026');
+            const docQuarter = v2Data.quarter || '3기';
+
+            if (v2Data.weeks) {
+              for (const [dateStr, weekData] of Object.entries(v2Data.weeks)) {
+                const normDate = this.normalizeDateStr(dateStr);
+                if (!normDate) continue;
+
+                if (!groupedByDate[normDate]) {
+                  groupedByDate[normDate] = {
+                    date: normDate,
+                    year: docYear,
+                    quarter: docQuarter,
+                    records: {}
+                  };
+                }
+
+                groupedByDate[normDate].records[memberId] = {
+                  status: weekData.status || null,
+                  score: typeof weekData.score === 'number' ? weekData.score : (weekData.status === '출석' ? 1.0 : (weekData.status === '지각' ? 0.5 : 0)),
+                  reason: weekData.reason || '',
+                  worshipAttended: !!weekData.worshipAttended,
+                  checkedBy: weekData.checkedBy || '이전데이터',
+                  updatedAt: weekData.updatedAt || new Date().toISOString(),
+                  classId: v2Data.classId || weekData.classId || ''
+                };
+              }
+            }
+          });
+
+          const totalDates = Object.keys(groupedByDate).length;
+          this.showLoading(`총 ${totalDates}개 날짜 문서를 V3에 저장 중...`);
+
+          // 2. V3 컬렉션(attendance_records_v3)에 날짜별로 setDoc 저장
+          for (const [dateStr, docPayload] of Object.entries(groupedByDate)) {
+            const dateDocRef = doc(db, 'attendance_records_v3', dateStr);
+            await setDoc(dateDocRef, docPayload, { merge: true });
+          }
+
+          this.hideLoading();
+          this.showToast(`🎉 총 ${totalDates}개 일자의 V2 출석 데이터가 V3로 완벽히 이전되었습니다!`, 'success');
+
+          // 화면 새로고침하여 반영
+          const curDate = document.getElementById('sabbathSelect')?.value;
+          if (curDate) this.loadAttendanceForSelectedDate(curDate);
+          this.renderClassMonitoringBar();
+          
+        } catch (error) {
+          this.hideLoading();
+          console.error("V2 -> V3 이전 오류:", error);
+          alert('이전 중 오류가 발생했습니다: ' + error.message);
+        }
+      }
+
       async backupToGoogleSheets() {
         if (!this.currentUser || !this.currentUser.isAdmin) return;
         if (!confirm('현재 파이어베이스의 모든 출석 데이터를 구글 시트에 덮어써서 안전하게 백업하시겠습니까?')) return;

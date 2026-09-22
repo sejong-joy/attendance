@@ -2671,29 +2671,8 @@ ${className} ${leaderName} 리더입니다.
         const currentYear = new Date().getFullYear();
         const curQuarter = document.getElementById('quarterSelect')?.value || '3기';
 
-        // 등록 활동 성도 중 이번 분기 기록이 없는 미배정반(C11 등)을 제외하는 필터 보강
-const activeMembers = this.rawMembers.filter(m => {
-  // 1. 전출, 이명, 휴면, 별세 제외
-  if (['전출', '이명', '휴면', '별세'].includes(m.status)) return false;
-
-  // 2. 미배정 성도 판정 (C11, UNASSIGNED, 빈값, 교과반명 '미배정')
-  const cId = String(m.classId || '').toUpperCase().trim();
-  const cName = String(m.className || m.class || '').trim();
-  const isUnassigned = (cId === 'C11' || cId === 'UNASSIGNED' || cId === '' || cName === '미배정');
-
-  // 3. 미배정 성도라면 이번 분기 출결 기록이 있는 경우에만 포함
-  if (isUnassigned) {
-    const curQuarter = document.getElementById('quarterSelect')?.value || '3기';
-    const hasRecord = this.rawRecords.some(r => {
-      const isQMatch = !r.quarter || String(r.quarter).trim() === String(curQuarter).trim();
-      const isValid = ['출석', '지각', '결석'].includes(r.status);
-      return isQMatch && isValid && String(r.memberId).trim() === String(m.memberId).trim();
-    });
-    return hasRecord;
-  }
-
-  return true; // 정규반 성도는 포함
-});
+        // 등록 활동 성도 (전출, 이명, 휴면, 별세 제외)
+        const activeMembers = this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
         const totalCount = activeMembers.length;
 
         // 연령대 그룹 정의 (70대, 80대 이상 분리)

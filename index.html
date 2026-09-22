@@ -1592,7 +1592,7 @@
         const activeMembersOnly = this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
         
         // 💡 주의: 실제 데이터베이스에서 사용하는 미배정반의 classId로 반드시 변경해주세요. (예: 'unassigned', '미배정', 'NONE' 등)
-        const unassignedClassId = '미배정';
+        const unassignedClassId = 'c11';
 
         let totalRegularMembers = 0;
         let ssPresentCount = 0;

@@ -1574,7 +1574,7 @@
         this.renderClassMonitoringBar();
       }
 
-      renderClassMonitoringBar() {
+     renderClassMonitoringBar() {
         if (!this.currentUser || !this.currentUser.isAdmin) return;
         const container = document.getElementById('classChipsContainer');
         if (!container) return;
@@ -1591,23 +1591,26 @@
 
         const activeMembersOnly = this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
         
-        // 💡 주의: 실제 데이터베이스에서 사용하는 미배정반의 classId로 반드시 변경해주세요. (예: 'unassigned', '미배정', 'NONE' 등)
         const unassignedClassId = 'C11';
 
         let totalRegularMembers = 0;
         let ssPresentCount = 0;
         let worshipOnlyCount = 0;
 
-        // 1. 전체 현황(Master Card) 통계 집계 (한 번의 반복문으로 최적화 및 미배정반 제외 로직 적용)
+        // 1. 전체 현황(Master Card) 통계 집계 (미배정반 당일 미체크자는 재적에서 제외 -> 136명 유지)
         activeMembersOnly.forEach(m => {
           const r = this.rawRecords.find(rec => this.normalizeDateStr(rec.date) === curDate && rec.memberId === m.memberId);
           
-          // 핵심: 미배정반이면서 당일 출결 기록이 전혀 없는 경우 통계 총원에서 아예 제외
-          if (m.classId === unassignedClassId && !r) {
+          const cId = String(m.classId || '').toUpperCase().trim();
+          const cName = String(m.className || m.class || '').trim();
+          const isUnassigned = (cId === unassignedClassId || cId === 'UNASSIGNED' || cId === '' || cName === '미배정');
+
+          // 핵심: 전체 현황 집계 시 미배정 성도가 당일 기록이 없으면 재적(totalRegularMembers)에서 제외
+          if (isUnassigned && !r) {
             return;
           }
 
-          totalRegularMembers++; // 정규반이거나, 미배정반인데 체크를 한 경우 재적에 포함
+          totalRegularMembers++; // 정규반이거나, 미배정반 중 당일 체크된 인원만 전체 재적에 포함
 
           if (r) {
             if (r.status === '출석' || r.status === '지각') {
@@ -1680,15 +1683,24 @@
             rate = todayVisitorCount > 0 ? '100' : '0';
             statusBadgeHtml = `<span class="text-xs font-black px-1.5 py-0.2 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-900'}">${todayVisitorCount}명</span>`;
           } else {
-            const classMembers = activeMembersOnly.filter(m => m.classId === c.classId);
+            // 개별 반 성도 목록 산출 (미배정반 조건 대응 보강)
+            const classMembers = activeMembersOnly.filter(m => {
+              const cId = String(m.classId || '').toUpperCase().trim();
+              const cName = String(m.className || m.class || '').trim();
+              const isUnassigned = (cId === unassignedClassId || cId === 'UNASSIGNED' || cId === '' || cName === '미배정');
+
+              if (c.classId === unassignedClassId || c.className === '미배정') {
+                return isUnassigned;
+              }
+              return m.classId === c.classId;
+            });
+
             let checkedCount = 0;
 
             classMembers.forEach(m => {
               const r = this.rawRecords.find(rec => this.normalizeDateStr(rec.date) === curDate && rec.memberId === m.memberId);
               
-              // 개별 반 카드 렌더링 시에도 미배정반이면서 기록이 없으면 카운트(totalCount)에서 제외
-              if (c.classId === unassignedClassId && !r) return;
-
+              // ✨ 개별 미배정 카드에는 당일 기록 유무와 상관없이 명단 전체 인원(totalCount)을 카운트합니다.
               totalCount++;
               if (r && (r.status === '출석' || r.status === '지각')) presentCount++;
               if (r && r.status) checkedCount++;

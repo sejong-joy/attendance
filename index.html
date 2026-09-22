@@ -2609,8 +2609,23 @@ ${className} ${leaderName} 리더입니다.
           ? this.rawMembers.filter(m => m.classId === myClassId)
           : this.rawMembers;
 
-        // 💡 [필터링] 통계 계산 시 전출/휴면 교인은 전체 재적 및 차트에서 제외
+        // 1. 전출/휴면 교인 제외
         targetMembers = targetMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
+
+        // 2. ✨ [미배정반 C11 처리] 이번 분기에 출결 체크(기록)가 1번이라도 존재하는 미배정 성도 ID 추출
+        const activeUnassignedIds = new Set(
+          this.rawRecords
+            .filter(r => (!r.quarter || r.quarter === curQuarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'))
+            .map(r => r.memberId)
+        );
+
+        // 3. ✨ 미배정반(C11) 중 이번 분기 기록이 없는 성도는 통계 대상(targetMembers)에서 최종 제외
+        targetMembers = targetMembers.filter(m => {
+          if (m.classId === 'C11') {
+            return activeUnassignedIds.has(m.memberId); // 기록이 있을 때만 포함
+          }
+          return true; // 일반 정규반 성도는 항상 포함
+        });
 
         const totMemEl = document.getElementById('statTotalMembers');
         const totLblEl = document.getElementById('statTotalLabel');

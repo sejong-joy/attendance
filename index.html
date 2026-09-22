@@ -2700,11 +2700,11 @@ ${className} ${leaderName} 리더입니다.
 
         this.renderMemberStatsTable(memberStatsMap, uniqueDates.length);
         this.renderWeeklyTrendChart(uniqueDates, targetMembers);
-        // 💡 [추가] 관리자 전용 연령대별 인원 집계 렌더링
-        this.renderAgeDemographics();
+        // 💡 [추가] 관리자 전용 연령대별 인원 집계 렌더링 (targetMembers 전달)
+        this.renderAgeDemographics(targetMembers);
       }
 
-      renderAgeDemographics() {
+      renderAgeDemographics(targetMembers) {
         const wrap = document.getElementById('adminAgeStatsWrap');
         const container = document.getElementById('ageStatsCardsContainer');
         if (!wrap || !container) return;
@@ -2720,8 +2720,8 @@ ${className} ${leaderName} 리더입니다.
         const currentYear = new Date().getFullYear();
         const curQuarter = document.getElementById('quarterSelect')?.value || '3기';
 
-        // 등록 활동 성도 (전출, 이명, 휴면, 별세 제외)
-        const activeMembers = this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
+        // 등록 활동 성도 (targetMembers가 전달되면 사용, 없으면 기존 rawMembers 기반 필터)
+        const activeMembers = targetMembers || this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
         const totalCount = activeMembers.length;
 
         // 연령대 그룹 정의 (70대, 80대 이상 분리)

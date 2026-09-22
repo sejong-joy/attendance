@@ -1581,17 +1581,33 @@
         container.innerHTML = '';
 
         const activeMembersOnly = this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
-        const totalRegularMembers = activeMembersOnly.length;
         
-        const ssPresentCount = activeMembersOnly.filter(m => {
-          const r = this.rawRecords.find(rec => this.normalizeDateStr(rec.date) === curDate && rec.memberId === m.memberId);
-          return r && (r.status === '출석' || r.status === '지각');
-        }).length;
+        // 💡 주의: 실제 데이터베이스에서 사용하는 미배정반의 classId로 반드시 변경해주세요. (예: 'unassigned', '미배정', 'NONE' 등)
+        const unassignedClassId = '미배정';
 
-        const worshipOnlyCount = activeMembersOnly.filter(m => {
+        let totalRegularMembers = 0;
+        let ssPresentCount = 0;
+        let worshipOnlyCount = 0;
+
+        // 1. 전체 현황(Master Card) 통계 집계 (한 번의 반복문으로 최적화 및 미배정반 제외 로직 적용)
+        activeMembersOnly.forEach(m => {
           const r = this.rawRecords.find(rec => this.normalizeDateStr(rec.date) === curDate && rec.memberId === m.memberId);
-          return r && r.status === '결석' && r.worshipAttended;
-        }).length;
+          
+          // 핵심: 미배정반이면서 당일 출결 기록이 전혀 없는 경우 통계 총원에서 아예 제외
+          if (m.classId === unassignedClassId && !r) {
+            return;
+          }
+
+          totalRegularMembers++; // 정규반이거나, 미배정반인데 체크를 한 경우 재적에 포함
+
+          if (r) {
+            if (r.status === '출석' || r.status === '지각') {
+              ssPresentCount++;
+            } else if (r.status === '결석' && r.worshipAttended) {
+              worshipOnlyCount++;
+            }
+          }
+        });
 
         const totalWorshipAttended = ssPresentCount + worshipOnlyCount;
         const ssRate = totalRegularMembers > 0 ? ((ssPresentCount / totalRegularMembers) * 100).toFixed(1) : '0.0';
@@ -1639,6 +1655,7 @@
         `;
         container.appendChild(masterCard);
 
+        // 2. 개별 반(Class Chips) 렌더링
         activeClasses.forEach(c => {
           const isVisitorClass = (c.classId === 'C12' || c.classId === 'VISITOR');
           const isSelected = this.selectedFilterClass === c.classId;
@@ -1648,20 +1665,22 @@
           let rate = '0';
           let statusBadgeHtml = '';
 
-          // 💡 방문자 반인 경우: rawVisitors에서 당일 방문자 수 카운트
           if (isVisitorClass) {
             presentCount = todayVisitorCount;
             totalCount = todayVisitorCount;
             rate = todayVisitorCount > 0 ? '100' : '0';
             statusBadgeHtml = `<span class="text-xs font-black px-1.5 py-0.2 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-900'}">${todayVisitorCount}명</span>`;
           } else {
-            // 일반 정규 교과반인 경우
             const classMembers = activeMembersOnly.filter(m => m.classId === c.classId);
-            totalCount = classMembers.length;
             let checkedCount = 0;
 
             classMembers.forEach(m => {
               const r = this.rawRecords.find(rec => this.normalizeDateStr(rec.date) === curDate && rec.memberId === m.memberId);
+              
+              // 개별 반 카드 렌더링 시에도 미배정반이면서 기록이 없으면 카운트(totalCount)에서 제외
+              if (c.classId === unassignedClassId && !r) return;
+
+              totalCount++;
               if (r && (r.status === '출석' || r.status === '지각')) presentCount++;
               if (r && r.status) checkedCount++;
             });
@@ -2563,16 +2582,6 @@ ${className} ${leaderName} 리더입니다.
         const myClassId = this.currentUser ? this.currentUser.classId : 'ALL';
         
         let targetMembers = (!isAdmin && myClassId !== 'ALL')
-          ? this.rawMembers.filter(m => m.classId === myClassId)
-          : this.rawMembers;
-
-        // 💡 [필터링] 통계 계산 시 전출/휴면 교인은 전체 재적 및 차트에서 제외
-        targetMembers = targetMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
-
-        const totMemEl = document.getElementById('statTotalMembers');
-        const totLblEl = document.getElementById('statTotalLabel');
-        if (totMemEl) totMemEl.textContent = `${targetMembers.length}명`;
-        if (totLblEl) totLblEl.textContent = isAdmin ? '총 등록 교인' : '반 등록 교인';
 
         const validRecords = this.rawRecords.filter(r => {
           const isQuarterMatch = !r.quarter || r.quarter === curQuarter;

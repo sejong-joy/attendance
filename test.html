@@ -985,8 +985,13 @@
 
       initCurrentYearAndQuarter() {
         const today = new Date();
-        const year = today.getFullYear();
-        const month = today.getMonth() + 1;
+        const day = today.getDay(); // 0(일) ~ 6(토)
+        const diff = (6 - day + 7) % 7; // 다가오는 토요일까지 남은 일수
+        const targetSabbath = new Date(today);
+        targetSabbath.setDate(today.getDate() + diff);
+
+        const year = targetSabbath.getFullYear();
+        const month = targetSabbath.getMonth() + 1;
 
         const yearSelect = document.getElementById('yearSelect');
         if (yearSelect) yearSelect.value = String(year);
@@ -1581,17 +1586,31 @@
         container.innerHTML = '';
 
         const activeMembersOnly = this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
-        const totalRegularMembers = activeMembersOnly.length;
-        
-        const ssPresentCount = activeMembersOnly.filter(m => {
-          const r = this.rawRecords.find(rec => this.normalizeDateStr(rec.date) === curDate && rec.memberId === m.memberId);
-          return r && (r.status === '출석' || r.status === '지각');
-        }).length;
+        const unassignedClassId = 'C11';
 
-        const worshipOnlyCount = activeMembersOnly.filter(m => {
+        let totalRegularMembers = 0;
+        let ssPresentCount = 0;
+        let worshipOnlyCount = 0;
+
+        // 1. 전체 현황(Master Card) 통계: 당일 미체크 미배정 성도는 재적에서 제외 -> 136명 유지
+        activeMembersOnly.forEach(m => {
           const r = this.rawRecords.find(rec => this.normalizeDateStr(rec.date) === curDate && rec.memberId === m.memberId);
-          return r && r.status === '결석' && r.worshipAttended;
-        }).length;
+          const cId = String(m.classId || '').toUpperCase().trim();
+          const cName = String(m.className || m.class || '').trim();
+          const isUnassigned = (cId === unassignedClassId || cId === 'UNASSIGNED' || cId === '' || cName === '미배정');
+
+          if (isUnassigned && !r) return;
+
+          totalRegularMembers++;
+
+          if (r) {
+            if (r.status === '출석' || r.status === '지각') {
+              ssPresentCount++;
+            } else if (r.status === '결석' && r.worshipAttended) {
+              worshipOnlyCount++;
+            }
+          }
+        });
 
         const totalWorshipAttended = ssPresentCount + worshipOnlyCount;
         const ssRate = totalRegularMembers > 0 ? ((ssPresentCount / totalRegularMembers) * 100).toFixed(1) : '0.0';
@@ -1639,6 +1658,7 @@
         `;
         container.appendChild(masterCard);
 
+        // 2. 개별 반 카드: 미배정 카드도 명단상 1명을 집계하여 '0 / 1명'으로 노출
         activeClasses.forEach(c => {
           const isVisitorClass = (c.classId === 'C12' || c.classId === 'VISITOR');
           const isSelected = this.selectedFilterClass === c.classId;
@@ -1648,20 +1668,26 @@
           let rate = '0';
           let statusBadgeHtml = '';
 
-          // 💡 방문자 반인 경우: rawVisitors에서 당일 방문자 수 카운트
           if (isVisitorClass) {
             presentCount = todayVisitorCount;
             totalCount = todayVisitorCount;
             rate = todayVisitorCount > 0 ? '100' : '0';
             statusBadgeHtml = `<span class="text-xs font-black px-1.5 py-0.2 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-900'}">${todayVisitorCount}명</span>`;
           } else {
-            // 일반 정규 교과반인 경우
-            const classMembers = activeMembersOnly.filter(m => m.classId === c.classId);
-            totalCount = classMembers.length;
+            const classMembers = activeMembersOnly.filter(m => {
+              const cId = String(m.classId || '').toUpperCase().trim();
+              const cName = String(m.className || m.class || '').trim();
+              const isUnassigned = (cId === unassignedClassId || cId === 'UNASSIGNED' || cId === '' || cName === '미배정');
+
+              if (c.classId === unassignedClassId || c.className === '미배정') return isUnassigned;
+              return m.classId === c.classId;
+            });
+
             let checkedCount = 0;
 
             classMembers.forEach(m => {
               const r = this.rawRecords.find(rec => this.normalizeDateStr(rec.date) === curDate && rec.memberId === m.memberId);
+              totalCount++;
               if (r && (r.status === '출석' || r.status === '지각')) presentCount++;
               if (r && r.status) checkedCount++;
             });
@@ -2651,7 +2677,6 @@ ${className} ${leaderName} 리더입니다.
         const container = document.getElementById('ageStatsCardsContainer');
         if (!wrap || !container) return;
 
-        // 관리자가 아니면 영역 숨김
         if (!this.currentUser || !this.currentUser.isAdmin) {
           wrap.classList.add('hidden');
           return;
@@ -2662,11 +2687,26 @@ ${className} ${leaderName} 리더입니다.
         const currentYear = new Date().getFullYear();
         const curQuarter = document.getElementById('quarterSelect')?.value || '3기';
 
-        // 등록 활동 성도 (전출, 이명, 휴면, 별세 제외)
-        const activeMembers = this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
+        // ✨ [v3 최적화 보강] 이번 분기 기록이 없는 미배정 성도를 제외하는 필터링
+        const activeMembers = this.rawMembers.filter(m => {
+          if (['전출', '이명', '휴면', '별세'].includes(m.status)) return false;
+
+          const cId = String(m.classId || '').toUpperCase().trim();
+          const cName = String(m.className || m.class || '').trim();
+          const isUnassigned = (cId === 'C11' || cId === 'UNASSIGNED' || cId === '' || cName === '미배정');
+
+          if (isUnassigned) {
+            return this.rawRecords.some(r => {
+              const isQMatch = !r.quarter || String(r.quarter).trim() === String(curQuarter).trim();
+              const isValid = ['출석', '지각', '결석'].includes(r.status);
+              return isQMatch && isValid && String(r.memberId).trim() === String(m.memberId).trim();
+            });
+          }
+          return true;
+        });
+
         const totalCount = activeMembers.length;
 
-        // 연령대 그룹 정의 (70대, 80대 이상 분리)
         const groups = [
           { key: 'child_student', label: '어린이·학생', sub: '19세 이하', min: 0, max: 19, color: 'emerald', members: [] },
           { key: 'youth', label: '청년', sub: '20~35세', min: 20, max: 35, color: 'teal', members: [] },
@@ -2705,7 +2745,6 @@ ${className} ${leaderName} 리더입니다.
 
         this.ageDemographicGroups = groups;
 
-        // 현재 분기의 유효 출석 기록 필터링
         const validRecords = this.rawRecords.filter(r => {
           const isQuarterMatch = !r.quarter || r.quarter === curQuarter;
           return isQuarterMatch && (r.status === '출석' || r.status === '지각' || r.status === '결석');
@@ -2715,9 +2754,8 @@ ${className} ${leaderName} 리더입니다.
           if (g.key === 'unknown' && g.members.length === 0) return;
 
           const count = g.members.length;
-          const popRatio = totalCount > 0 ? ((count / totalCount) * 100).toFixed(0) : 0; // 교인 구성비
+          const popRatio = totalCount > 0 ? ((count / totalCount) * 100).toFixed(0) : 0;
 
-          // 해당 연령대의 출석률 계산 (출석 1.0, 지각 0.5)
           const memberIdSet = new Set(g.members.map(m => m.memberId));
           let groupScore = 0;
           let groupCheckedCount = 0;
@@ -2738,7 +2776,6 @@ ${className} ${leaderName} 리더입니다.
           card.onclick = () => this.openAgeGroupMembersModal(idx);
           card.className = `p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-indigo-400 transition cursor-pointer select-none flex flex-col justify-between shadow-2xs`;
 
-          // 출석률 뱃지 색상
           let rateBadgeColor = 'text-slate-500 bg-slate-100';
           if (attRate !== null) {
             const num = parseFloat(attRate);

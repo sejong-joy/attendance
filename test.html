@@ -2520,6 +2520,11 @@ ${className} ${leaderName} 리더입니다.
         const targetDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
         if (!targetDate) return;
 
+        // ✨ [수정 1] 연도, 분기, 성도 정보를 읽어오도록 추가
+        const year = document.getElementById('yearSelect')?.value || '2026';
+        const quarter = document.getElementById('quarterSelect')?.value || '3기';
+        const member = this.rawMembers.find(m => m.memberId === memberId);
+
         const rec = this.rawRecords.find(r => this.normalizeDateStr(r.date) === targetDate && r.memberId === memberId);
         if (rec) rec.reason = reason;
 
@@ -2531,8 +2536,17 @@ ${className} ${leaderName} 리더입니다.
             });
           } catch (e) {
             try {
+              // ✨ [수정 2] 문서가 없을 때 새로 만들면서 필수 필드(날짜, 연도, 분기, 반)를 모두 채워줌
               await setDoc(dateDocRef, {
-                records: { [memberId]: { reason: reason } }
+                date: targetDate,
+                year: String(year),
+                quarter: quarter,
+                records: { 
+                  [memberId]: { 
+                    reason: reason, 
+                    classId: member?.classId || '' 
+                  } 
+                }
               }, { merge: true });
             } catch (err) {}
           }

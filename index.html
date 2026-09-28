@@ -985,8 +985,17 @@
 
       initCurrentYearAndQuarter() {
         const today = new Date();
-        const year = today.getFullYear();
-        const month = today.getMonth() + 1;
+        const day = today.getDay(); // 0(일) ~ 6(토)
+
+        // 💡 [핵심] 일요일(0)~금요일(5)에 접속하면 다가오는 토요일을 기준으로 분기/연도 판정
+        const targetSabbath = new Date(today);
+        if (day !== 6) {
+          const diffToSabbath = (6 - day);
+          targetSabbath.setDate(targetSabbath.getDate() + diffToSabbath);
+        }
+
+        const year = targetSabbath.getFullYear();
+        const month = targetSabbath.getMonth() + 1; // 9월 28일(월) 기준 -> 10월 3일(토)이 되므로 month는 10월!
 
         const yearSelect = document.getElementById('yearSelect');
         if (yearSelect) yearSelect.value = String(year);
@@ -996,7 +1005,7 @@
         if (month >= 1 && month <= 3) quarter = '1기';
         else if (month >= 4 && month <= 6) quarter = '2기';
         else if (month >= 7 && month <= 9) quarter = '3기';
-        else quarter = '4기';
+        else quarter = '4기'; // 10월이므로 자동으로 '4기'가 선택됨!
 
         if (qSelect) qSelect.value = quarter;
 

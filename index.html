@@ -1099,7 +1099,7 @@
         const selectedDate = document.getElementById('sabbathSelect')?.value;
         if (this.currentUser && selectedDate) {
           this.loadAttendanceForSelectedDate(selectedDate);
-          this.;
+          this.renderClassMonitoringBar(); // ✨ 정상 함수명 복구
         }
       }
 

@@ -1917,7 +1917,7 @@ ${className} ${leaderName} 리더입니다.
 
       loadAttendanceForSelectedDate(targetDate) {
         const normDate = this.normalizeDateStr(targetDate);
-        // ✨ [핵심 버그 해결] 조회하는 날짜가 바뀌었을 때만 화면의 이전 캐시를 완벽하게 초기화
+        // ✨ [핵심 버그 해결 1] 조회하는 날짜가 바뀌었을 때 화면 캐시 완벽 초기화
         if (this.lastLoadedDate !== normDate) {
           this.currentAttendance = {};
           this.lastLoadedDate = normDate;
@@ -1926,21 +1926,21 @@ ${className} ${leaderName} 리더입니다.
 
         this.rawMembers.forEach(m => {
           const found = dateRecords.find(r => r.memberId === m.memberId);
-          if (found && (found.status === '출석' || found.status === '지각' || found.status === '결석')) {
+          
+          if (found) {
+            // 💡 서버에 데이터가 존재하는 경우 (출석 체크 상태이거나, 사유만 적혀있는 경우)
             this.currentAttendance[m.memberId] = {
-              status: found.status,
+              status: (found.status === '출석' || found.status === '지각' || found.status === '결석') ? found.status : null,
               reason: found.reason || '',
               worshipAttended: !!found.worshipAttended
             };
           } else {
-            // 💡 서버에 데이터가 아직 도착하지 않았더라도, 내 화면에 방금 체크한 값이 있다면 유지
-            if (!this.currentAttendance[m.memberId]) {
-              this.currentAttendance[m.memberId] = {
-                status: null,
-                reason: '',
-                worshipAttended: false
-              };
-            }
+            // ✨ [핵심 버그 해결 2] 다른 기기에서 '체크 해제(삭제)'를 한 경우, 화면 버튼의 불도 즉시 끄기(회색)
+            this.currentAttendance[m.memberId] = {
+              status: null,
+              reason: '',
+              worshipAttended: false
+            };
           }
         });
 

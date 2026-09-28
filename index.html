@@ -642,6 +642,11 @@
               class="w-full px-3 py-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-sm font-black text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
             <p id="editMemberAgeDetail" class="text-[11px] font-bold text-blue-600 mt-1 min-h-[16px]"></p>
           </div>
+          <!-- 생년월일 필드 아래에 추가 -->
+          <div>
+            <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">주소</label>
+            <input type="text" id="editMemberAddress" placeholder="예: 세종시 다정북로 42" class="w-full px-3 py-2 bg-white border-2 border-slate-300 rounded-xl text-base font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          </div>
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">소속반 *</label>
@@ -4027,6 +4032,8 @@ ${className} ${leaderName} 리더입니다.
         const birthVal = member.birth || member.birthday || member.birthDate || '';
         const birthInput = document.getElementById('editMemberBirth');
         if (birthInput) birthInput.value = birthVal;
+        // 💡 주소 데이터 불러오기 추가
+        document.getElementById('editMemberAddress').value = member.address || '';
 
         const ageDetailEl = document.getElementById('editMemberAgeDetail');
         if (ageDetailEl) {
@@ -4102,6 +4109,7 @@ ${className} ${leaderName} 리더입니다.
         const name = document.getElementById('editMemberName')?.value?.trim();
         const phone = document.getElementById('editMemberPhone')?.value?.trim();
         const birth = document.getElementById('editMemberBirth')?.value.trim() || '';
+        const address = document.getElementById('editMemberAddress')?.value.trim() || ''; // 💡 주소 값 읽기 추가
         const classId = document.getElementById('editMemberClassSelect')?.value;
         const role = document.getElementById('editMemberRole')?.value?.trim() || '성도';
         const status = document.getElementById('editMemberStatus')?.value || '활동';
@@ -4122,6 +4130,7 @@ ${className} ${leaderName} 리더입니다.
             name: name,
             phone: phone,
             birth: birth, // 💡 추가
+            address: address, // 💡 서버 전송 데이터에 주소 추가
             classId: classId,
             role: role,
             status: status,
@@ -4143,6 +4152,7 @@ ${className} ${leaderName} 리더입니다.
               targetMember.name = name;
               targetMember.phone = phone;
               targetMember.birth = birth; // 💡 추가
+              targetMember.address = address; // 💡 로컬 메모리 업데이트 추가
               targetMember.classId = classId;
               targetMember.role = role;
               targetMember.status = status;

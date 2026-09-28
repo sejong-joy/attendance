@@ -1917,6 +1917,11 @@ ${className} ${leaderName} 리더입니다.
 
       loadAttendanceForSelectedDate(targetDate) {
         const normDate = this.normalizeDateStr(targetDate);
+        // ✨ [핵심 버그 해결] 조회하는 날짜가 바뀌었을 때만 화면의 이전 캐시를 완벽하게 초기화
+        if (this.lastLoadedDate !== normDate) {
+          this.currentAttendance = {};
+          this.lastLoadedDate = normDate;
+        }
         const dateRecords = this.rawRecords.filter(r => this.normalizeDateStr(r.date) === normDate);
 
         this.rawMembers.forEach(m => {

@@ -1272,7 +1272,7 @@
               this.rawVisitors = json.visitors || (json.members || []).filter(m => m.status === '방문자');
               this.renderAttendanceList();
               this.renderMemberDirectory();
-              this.;
+              this.renderClassMonitoringBar();
             }
           })
           .catch(() => {});
@@ -1309,7 +1309,7 @@
             } else {
               this.renderAttendanceList();
               this.renderMemberDirectory();
-              this.;
+              this.renderClassMonitoringBar();
               this.updateAbsentBanner();
               this.checkAndAutoOpenUrgentModal();
             }
@@ -1502,7 +1502,7 @@
 
             const curDate = document.getElementById('sabbathSelect')?.value;
             if (curDate) this.loadAttendanceForSelectedDate(curDate);
-            this.;
+            this.renderClassMonitoringBar();
             
             const statsContent = document.getElementById('tabContent-stats');
             if (statsContent && !statsContent.classList.contains('hidden')) {
@@ -1580,7 +1580,7 @@
         const selDate = document.getElementById('sabbathSelect')?.value;
         if (selDate) this.loadAttendanceForSelectedDate(selDate);
         this.renderMemberDirectory();
-        this.;
+        this.renderClassMonitoringBar();
       }
 
      renderClassMonitoringBar() {

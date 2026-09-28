@@ -2429,13 +2429,13 @@ ${className} ${leaderName} 리더입니다.
             if (rec && (rec.status === '출석' || rec.status === '지각')) return;
 
             if (isAttended) {
+              // 1) 체크했을 때 -> '결석' + '예배 참석' 상태 부여
               updateData[`records.${memberId}`] = {
                 status: '결석', score: 0.0, reason: '설교 예배 참석',
                 worshipAttended: true, checkedBy: this.currentUser?.leaderName || '관리자',
                 updatedAt: new Date().toISOString(), classId: member.classId
               };
 
-              // ✨ 로컬 메모리(화면) 즉시 반영
               if (!this.currentAttendance[memberId]) {
                 this.currentAttendance[memberId] = { status: null, reason: '', worshipAttended: false };
               }
@@ -2457,33 +2457,36 @@ ${className} ${leaderName} 리더입니다.
                 });
               }
             } else if (rec && rec.worshipAttended) {
-              updateData[`records.${memberId}.worshipAttended`] = false;
-              updateData[`records.${memberId}.reason`] = '';
-              updateData[`records.${memberId}.updatedAt`] = new Date().toISOString();
+              // 2) ✨ 체크를 해제(취소)했을 때 -> '미기록(null)' 상태로 완전 초기화
+              
+              // DB 업데이트 페이로드에는 해당 성도 데이터 자체를 삭제(초기화)하는 명령 전달
+              updateData[`records.${memberId}`] = deleteField();
 
-              // ✨ 로컬 메모리(화면) 즉시 체크 해제 반영
+              // 화면 메모리 즉시 반영 (버튼 불 꺼지게 만듦)
               if (this.currentAttendance[memberId]) {
+                this.currentAttendance[memberId].status = null;
                 this.currentAttendance[memberId].worshipAttended = false;
                 this.currentAttendance[memberId].reason = '';
               }
-              rec.worshipAttended = false;
-              rec.reason = '';
+              
+              // rawRecords 배열에서도 해당 기록 삭제
+              const idx = this.rawRecords.findIndex(r => r.recordId === `${targetDate}_${memberId}`);
+              if (idx > -1) {
+                this.rawRecords.splice(idx, 1);
+              }
             }
           });
 
-          // ✨ 데이터 변경 즉시 UI 렌더링 함수 강제 실행
           this.calculateConsecutiveAbsentees();
           this.updateAbsentBanner();
           this.updateAttendanceSummary();
           this.renderAttendanceList();
           this.renderClassMonitoringBar();
 
-          // ✨ Firestore V3 저장 로직 (문서가 없을 경우 setDoc으로 생성)
           if (docRef && Object.keys(updateData).length > 3) { 
              try {
                await updateDoc(docRef, updateData);
              } catch (error) {
-               // 문서가 존재하지 않아 updateDoc이 실패하면 setDoc으로 전체 생성
                const setPayload = { date: targetDate, year: String(year), quarter: quarter, records: {} };
                this.rawMembers.forEach(m => {
                  if (this.worshipPendingSet.has(m.memberId)) {

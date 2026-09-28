@@ -2434,21 +2434,74 @@ ${className} ${leaderName} 리더입니다.
                 worshipAttended: true, checkedBy: this.currentUser?.leaderName || '관리자',
                 updatedAt: new Date().toISOString(), classId: member.classId
               };
+
+              // ✨ 로컬 메모리(화면) 즉시 반영
+              if (!this.currentAttendance[memberId]) {
+                this.currentAttendance[memberId] = { status: null, reason: '', worshipAttended: false };
+              }
+              this.currentAttendance[memberId].status = '결석';
+              this.currentAttendance[memberId].reason = '설교 예배 참석';
+              this.currentAttendance[memberId].worshipAttended = true;
+
+              if (rec) {
+                rec.status = '결석';
+                rec.worshipAttended = true;
+                rec.reason = '설교 예배 참석';
+              } else {
+                this.rawRecords.push({
+                  recordId: `${targetDate}_${memberId}`,
+                  date: targetDate, quarter: quarter, memberId: memberId, classId: member.classId,
+                  status: '결석', score: 0.0, reason: '설교 예배 참석',
+                  worshipAttended: true, checkedBy: this.currentUser?.leaderName || '관리자',
+                  updatedAt: new Date().toISOString()
+                });
+              }
             } else if (rec && rec.worshipAttended) {
               updateData[`records.${memberId}.worshipAttended`] = false;
               updateData[`records.${memberId}.reason`] = '';
               updateData[`records.${memberId}.updatedAt`] = new Date().toISOString();
+
+              // ✨ 로컬 메모리(화면) 즉시 체크 해제 반영
+              if (this.currentAttendance[memberId]) {
+                this.currentAttendance[memberId].worshipAttended = false;
+                this.currentAttendance[memberId].reason = '';
+              }
+              rec.worshipAttended = false;
+              rec.reason = '';
             }
           });
 
-          // 💡 V3 일괄 업데이트 마법: 모든 사람의 예배 체크를 '날짜 문서 1개'에 단 한 번의 통신으로 욱여넣습니다.
+          // ✨ 데이터 변경 즉시 UI 렌더링 함수 강제 실행
+          this.calculateConsecutiveAbsentees();
+          this.updateAbsentBanner();
+          this.updateAttendanceSummary();
+          this.renderAttendanceList();
+          this.renderClassMonitoringBar();
+
+          // ✨ Firestore V3 저장 로직 (문서가 없을 경우 setDoc으로 생성)
           if (docRef && Object.keys(updateData).length > 3) { 
-             await setDoc(docRef, updateData, { merge: true });
+             try {
+               await updateDoc(docRef, updateData);
+             } catch (error) {
+               // 문서가 존재하지 않아 updateDoc이 실패하면 setDoc으로 전체 생성
+               const setPayload = { date: targetDate, year: String(year), quarter: quarter, records: {} };
+               this.rawMembers.forEach(m => {
+                 if (this.worshipPendingSet.has(m.memberId)) {
+                   setPayload.records[m.memberId] = {
+                     status: '결석', score: 0.0, reason: '설교 예배 참석',
+                     worshipAttended: true, checkedBy: this.currentUser?.leaderName || '관리자',
+                     updatedAt: new Date().toISOString(), classId: m.classId
+                   };
+                 }
+               });
+               await setDoc(docRef, setPayload, { merge: true });
+             }
           }
 
           this.hideLoading();
+          const checkedCount = this.worshipPendingSet.size;
           this.closeWorshipCheckModal();
-          this.showToast(`✨ 설교 예배 출석(${this.worshipPendingSet.size}명)이 반영되었습니다.`, 'success');
+          this.showToast(`✨ 설교 예배 출석(${checkedCount}명)이 반영되었습니다.`, 'success');
 
         } catch (err) {
           this.hideLoading();

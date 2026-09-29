@@ -1226,7 +1226,6 @@
       }
 
       async handleLogin(savedClassId = null, savedPin = null) {
-        // 💡 [수정] 인자값이 문자열이 아닐 경우(이벤트 객체 등) 무시하고 화면의 엘리먼트에서 직접 확실하게 값을 읽어옵니다.
         const classId = (typeof savedClassId === 'string' && savedClassId) ? savedClassId : document.getElementById('classSelect')?.value?.trim();
         const pinCode = (typeof savedPin === 'string' && savedPin) ? savedPin : document.getElementById('pinInput')?.value?.trim();
 
@@ -1240,6 +1239,7 @@
           }
           return;
         }
+        
         const cacheKey = `church_cache_${classId}`;
         const cachedStr = localStorage.getItem(cacheKey);
         let hasLoadedFromCache = false;
@@ -1264,33 +1264,51 @@
           } catch(e) {}
         }
 
-        // 💡 1. 캐시로 이미 진입한 경우: 백그라운드 갱신만 걸어두고 즉시 종료 (30초 대기 차단)
-      if (hasLoadedFromCache) {
-        const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}&secretKey=SejongJoy!2026`;
-        fetch(url)
-          .then(res => res.json())
-          .then(json => {
-            if (json && json.success) {
-              json.pinCode = pinCode;
-              localStorage.setItem(cacheKey, JSON.stringify(json));
-              this.rawMembers = this.sortMembersList((json.members || []).filter(m => m.status !== '방문자'));
-              this.rawVisitors = json.visitors || (json.members || []).filter(m => m.status === '방문자');
-              this.renderAttendanceList();
-              this.renderMemberDirectory();
-              this.renderClassMonitoringBar();
+        // 캐시로 이미 진입한 경우 백그라운드 갱신만 걸어두고 즉시 리턴
+        if (hasLoadedFromCache) {
+          const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}&secretKey=SejongJoy!2026`;
+          fetch(url)
+            .then(res => res.json())
+            .then(json => {
+              if (json && json.success) {
+                json.pinCode = pinCode;
+                localStorage.setItem(cacheKey, JSON.stringify(json));
+                this.rawMembers = this.sortMembersList((json.members || []).filter(m => m.status !== '방문자'));
+                this.rawVisitors = json.visitors || (json.members || []).filter(m => m.status === '방문자');
+                this.renderAttendanceList();
+                this.renderMemberDirectory();
+                this.renderClassMonitoringBar();
+              }
+            })
+            .catch(() => {});
+          return; 
+        }
+
+        this.showLoading('인증 및 최신 데이터 동기화 중...');
+
+        try {
+          const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}&secretKey=SejongJoy!2026`;
+          
+          // ✨ [핵심 추가] 구글 서버 수면 상태(TimeOut) 방어용 3회 자동 재시도 로직
+          let json = null;
+          let fetchSuccess = false;
+          let attempt = 0;
+          const maxRetries = 3;
+
+          while (attempt < maxRetries && !fetchSuccess) {
+            try {
+              const res = await fetch(url);
+              if (!res.ok) throw new Error('네트워크 응답 오류');
+              json = await res.json();
+              fetchSuccess = true;
+            } catch (e) {
+              attempt++;
+              console.warn(`구글 서버 접속 지연... 재시도 중 (${attempt}/${maxRetries})`);
+              if (attempt >= maxRetries) throw e;
+              // 서버가 깨어날 시간을 주기 위해 1.5초 대기 후 다시 찌름
+              await new Promise(resolve => setTimeout(resolve, 1500)); 
             }
-          })
-          .catch(() => {});
-        return; // 👈 바로 종료하여 await 대기를 건너뜁니다.
-      }
-
-      // 💡 2. 캐시가 없는 최초 로그인일 때만 로딩바 표시 후 대기
-      this.showLoading('인증 및 최신 데이터 동기화 중...');
-
-      try {
-        const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}&secretKey=SejongJoy!2026`;
-        const res = await fetch(url);
-        const json = await res.json();
+          }
 
           this.hideLoading();
 
@@ -1327,7 +1345,6 @@
             }
             this.showToast(json.message || '비밀번호가 일치하지 않습니다.', 'error');
 
-            // 💡 [수정] 반 선택값(classSelect)은 그대로 유지하고, 틀린 비밀번호만 비운 뒤 바로 입력 포커스 이동
             const pinInp = document.getElementById('pinInput');
             if (pinInp) {
               pinInp.value = '';
@@ -1343,7 +1360,6 @@
           }
         }
       }
-
       checkSavedSession() {
         const saved = localStorage.getItem('church_auth');
         if (saved) {
@@ -2498,11 +2514,26 @@ ${className} ${leaderName} 리더입니다.
             try { pinCode = JSON.parse(authData).pinCode; } catch(e){}
           }
 
-          // 수정 전: const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}`;
-          // 수정 후:
           const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}&secretKey=SejongJoy!2026`;
-          const res = await fetch(url);
-          const json = await res.json();
+          
+          // ✨ [핵심 추가] 새로고침 시에도 구글 서버 오류 방어를 위한 3회 재시도 적용
+          let json = null;
+          let fetchSuccess = false;
+          let attempt = 0;
+          const maxRetries = 3;
+
+          while (attempt < maxRetries && !fetchSuccess) {
+            try {
+              const res = await fetch(url);
+              if (!res.ok) throw new Error('네트워크 응답 오류');
+              json = await res.json();
+              fetchSuccess = true;
+            } catch (e) {
+              attempt++;
+              if (attempt >= maxRetries) throw e;
+              await new Promise(resolve => setTimeout(resolve, 1500)); 
+            }
+          }
 
           if (json.success) {
             this.rawMembers = this.sortMembersList((json.members || []).filter(m => m.status !== '방문자'));

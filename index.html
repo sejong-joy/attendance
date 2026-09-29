@@ -140,7 +140,7 @@
         <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-xl shadow-md shadow-emerald-200 flex-shrink-0">⛪</div>
         <div class="min-w-0">
           <h1 class="text-base sm:text-lg font-black text-slate-900 leading-tight truncate">세종 조이 안식일학교</h1>
-          <p class="text-xs text-slate-600 font-bold leading-tight">스마트 출석 시스템</p>
+          <p class="text-xs text-slate-600 font-bold leading-tight">스마트 출석 시스템v3</p>
         </div>
       </div>
       <div id="userBadgeArea" class="hidden flex items-center space-x-1.5 sm:space-x-2.5 flex-shrink-0">
@@ -180,7 +180,7 @@
           <!-- 2. 비밀번호(PIN) 입력 -->
           <div>
             <label class="block text-sm font-black text-slate-800 mb-1.5">접속 비밀번호 (PIN)</label>
-            <!-- 💡 maxlength="4"와 oninput 이벤트를 추가하여 4자리 입력 시 자동 로그인 실행 -->
+            <!-- 💡 [수정됨] handleLogin() 함수명이 빠져있던 오류 완전 해결! -->
             <input type="password" id="pinInput" maxlength="4" oninput="if(this.value.length === 4) { this.blur(); window.appInstance.handleLogin(); }" placeholder="비밀번호 4자리 입력" autocomplete="current-password" class="w-full px-3 py-2.5 bg-slate-50 border-2 border-slate-300 rounded-xl text-2xl tracking-[0.5em] text-center font-black text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">
           </div>
 
@@ -642,7 +642,7 @@
               class="w-full px-3 py-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-sm font-black text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
             <p id="editMemberAgeDetail" class="text-[11px] font-bold text-blue-600 mt-1 min-h-[16px]"></p>
           </div>
-          <!-- 생년월일 필드 아래에 추가 -->
+          <!-- 생년월일 필드 아래에 주소 추가 -->
           <div>
             <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">주소</label>
             <input type="text" id="editMemberAddress" placeholder="예: 세종시 다정북로 42" class="w-full px-3 py-2 bg-white border-2 border-slate-300 rounded-xl text-base font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
@@ -991,16 +991,12 @@
       initCurrentYearAndQuarter() {
         const today = new Date();
         const day = today.getDay(); // 0(일) ~ 6(토)
-
-        // 💡 [핵심] 일요일(0)~금요일(5)에 접속하면 다가오는 토요일을 기준으로 분기/연도 판정
+        const diff = (6 - day + 7) % 7; // 다가오는 토요일까지 남은 일수
         const targetSabbath = new Date(today);
-        if (day !== 6) {
-          const diffToSabbath = (6 - day);
-          targetSabbath.setDate(targetSabbath.getDate() + diffToSabbath);
-        }
+        targetSabbath.setDate(today.getDate() + diff);
 
         const year = targetSabbath.getFullYear();
-        const month = targetSabbath.getMonth() + 1; // 9월 28일(월) 기준 -> 10월 3일(토)이 되므로 month는 10월!
+        const month = targetSabbath.getMonth() + 1;
 
         const yearSelect = document.getElementById('yearSelect');
         if (yearSelect) yearSelect.value = String(year);
@@ -1010,7 +1006,7 @@
         if (month >= 1 && month <= 3) quarter = '1기';
         else if (month >= 4 && month <= 6) quarter = '2기';
         else if (month >= 7 && month <= 9) quarter = '3기';
-        else quarter = '4기'; // 10월이므로 자동으로 '4기'가 선택됨!
+        else quarter = '4기';
 
         if (qSelect) qSelect.value = quarter;
 
@@ -1104,7 +1100,7 @@
         const selectedDate = document.getElementById('sabbathSelect')?.value;
         if (this.currentUser && selectedDate) {
           this.loadAttendanceForSelectedDate(selectedDate);
-          this.renderClassMonitoringBar(); // ✨ 정상 함수명 복구
+          this.renderClassMonitoringBar();
         }
       }
 
@@ -1290,12 +1286,12 @@
           return; 
         }
 
+        // 💡 2. 캐시가 없는 최초 로그인 시
         this.showLoading('인증 및 최신 데이터 동기화 중...');
 
         try {
           const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}&secretKey=SejongJoy!2026`;
           
-          // ✨ [핵심 추가] 구글 서버 수면 상태(TimeOut) 방어용 3회 자동 재시도 로직
           let json = null;
           let fetchSuccess = false;
           let attempt = 0;
@@ -1309,9 +1305,7 @@
               fetchSuccess = true;
             } catch (e) {
               attempt++;
-              console.warn(`구글 서버 접속 지연... 재시도 중 (${attempt}/${maxRetries})`);
               if (attempt >= maxRetries) throw e;
-              // 서버가 깨어날 시간을 주기 위해 1.5초 대기 후 다시 찌름
               await new Promise(resolve => setTimeout(resolve, 1500)); 
             }
           }
@@ -1342,7 +1336,6 @@
               this.updateAbsentBanner();
               this.checkAndAutoOpenUrgentModal();
             }
-            
           } else {
             if (hasLoadedFromCache) {
               this.handleLogout(); 
@@ -1366,6 +1359,7 @@
           }
         }
       }
+
       checkSavedSession() {
         const saved = localStorage.getItem('church_auth');
         if (saved) {
@@ -1405,6 +1399,8 @@
         
         document.documentElement.classList.remove('has-session');
         this.currentUser = null;
+        this.lastLoadedDate = null; // 💡 [추가] 다음 로그인 시 날짜 화면을 강제로 새로고침 하도록 기억 삭제
+
         document.getElementById('appSection')?.classList.add('hidden');
         document.getElementById('userBadgeArea')?.classList.add('hidden');
         document.getElementById('loginSection')?.classList.remove('hidden');
@@ -1413,16 +1409,11 @@
         const classSel = document.getElementById('classSelect');
         if (pinInp) pinInp.value = '';
         if (classSel) classSel.value = '';
-        this.showToast('로그아웃 되었습니다.', 'info');
-      }
 
-      updateAbsentAlertMap(alerts) {
-        this.absentAlertMap = {};
-        if (Array.isArray(alerts)) {
-          alerts.forEach(a => {
-            this.absentAlertMap[a.memberId] = a;
-          });
-        }
+        // 💡 [추가] 로그아웃 버튼을 누르면 콤보박스 날짜를 '현실의 최신 안식일'로 즉시 리셋! (트래픽 발생 0%)
+        this.initCurrentYearAndQuarter();
+
+        this.showToast('로그아웃 되었습니다.', 'info');
       }
 
       calculateConsecutiveAbsentees() {
@@ -1482,60 +1473,51 @@
         if (this.unsubscribeRecords) { this.unsubscribeRecords(); this.unsubscribeRecords = null; }
 
         try {
-          // 💡 [수정] 당해 연도 데이터만 가져오도록 필터(where) 적용
           const currentYear = String(document.getElementById('yearSelect')?.value || new Date().getFullYear());
-          this.lastSubscribedYear = currentYear; // 연도 변경 감지용
+          this.lastSubscribedYear = currentYear;
 
-          // 💡 [최적화 적용] 관리자는 전체 데이터, 일반 리더는 본인 반 데이터만 호출 (읽기 비용 1/10 감소)
-          const recordsCol = collection(db, 'attendance_records_v2');
-          let recordsQuery;
-
-          if (this.currentUser && this.currentUser.isAdmin) {
-            recordsQuery = query(recordsCol, where('year', '==', currentYear));
-          } else {
-            recordsQuery = query(
-              recordsCol, 
-              where('year', '==', currentYear), 
-              where('classId', '==', this.currentUser.classId)
-            );
-          }
+          const recordsCol = collection(db, 'attendance_records_v3');
+          // 💡 분기(quarter) 오차로 인한 문서 누락 방지를 위해 연도 기준으로 구독
+          const recordsQuery = query(
+            recordsCol, 
+            where('year', '==', currentYear)
+          );
 
           this.unsubscribeRecords = onSnapshot(recordsQuery, (snapshot) => {
-            snapshot.docChanges().forEach((change) => {
-              const docData = change.doc.data();
-              const memberId = docData.memberId;
-              const docQuarter = docData.quarter;
-              const docYear = docData.year;
+            let newRawRecords = [];
 
-              // 기존 메모리에 있던 해당 분기 데이터 임시 삭제 (중복 방지)
-              this.rawRecords = this.rawRecords.filter(r => !(r.memberId === memberId && r.quarter === docQuarter && r.date.startsWith(docYear)));
-
-              // 💡 압축된 weeks 데이터를 풀어서 낱장(V1 형태)으로 메모리에 밀어넣기
-              if (change.type !== "removed" && docData.weeks) {
-                for (const [dateStr, weekData] of Object.entries(docData.weeks)) {
-                  this.rawRecords.push({
+            snapshot.forEach((docSnap) => {
+              const docData = docSnap.data();
+              const dateStr = docSnap.id;
+              
+              if (docData.records) {
+                for (const [memberId, rec] of Object.entries(docData.records)) {
+                  newRawRecords.push({
                     recordId: `${dateStr}_${memberId}`, 
                     date: dateStr,
-                    quarter: docQuarter,
+                    quarter: docData.quarter,
                     memberId: memberId,
-                    classId: docData.classId || weekData.classId,
-                    status: weekData.status,
-                    score: weekData.score,
-                    reason: weekData.reason || '',
-                    worshipAttended: !!weekData.worshipAttended,
-                    checkedBy: weekData.checkedBy || '',
-                    updatedAt: weekData.updatedAt || ''
+                    classId: rec.classId,
+                    status: rec.status,
+                    score: rec.score,
+                    reason: rec.reason || '',
+                    worshipAttended: !!rec.worshipAttended,
+                    checkedBy: rec.checkedBy || '',
+                    updatedAt: rec.updatedAt || ''
                   });
                 }
               }
             });
 
-            // 화면 및 현황판 즉시 새로고침
+            this.rawRecords = newRawRecords;
+
             this.calculateConsecutiveAbsentees();
             this.updateAbsentBanner();
 
             const curDate = document.getElementById('sabbathSelect')?.value;
-            if (curDate) this.loadAttendanceForSelectedDate(curDate);
+            if (curDate) {
+              this.loadAttendanceForSelectedDate(curDate);
+            }
             this.renderClassMonitoringBar();
             
             const statsContent = document.getElementById('tabContent-stats');
@@ -1543,7 +1525,7 @@
               this.calculateAndRenderStatistics();
             }
           }, (error) => {
-            console.warn("Firestore 실시간 수신 알림:", error);
+            console.warn("Firestore V3 수신 오류:", error);
           });
         } catch (e) {
           console.warn("Firestore 구독 오류:", e);
@@ -1617,7 +1599,7 @@
         this.renderClassMonitoringBar();
       }
 
-     renderClassMonitoringBar() {
+      renderClassMonitoringBar() {
         if (!this.currentUser || !this.currentUser.isAdmin) return;
         const container = document.getElementById('classChipsContainer');
         if (!container) return;
@@ -1639,18 +1621,19 @@
         let ssPresentCount = 0;
         let worshipOnlyCount = 0;
 
+        // 1. 전체 현황: 미배정 성도는 재적(분모)에서 제외(136명 고정), 출석/예배(분자)에는 카운트
         activeMembersOnly.forEach(m => {
           const r = this.rawRecords.find(rec => this.normalizeDateStr(rec.date) === curDate && rec.memberId === m.memberId);
           const cId = String(m.classId || '').toUpperCase().trim();
           const cName = String(m.className || m.class || '').trim();
           const isUnassigned = (cId === unassignedClassId || cId === 'UNASSIGNED' || cId === '' || cName === '미배정');
 
-          // 미배정은 재적(분모)에서 제외 -> 136명 고정
+          // 정규반만 재적 분모로 카운트
           if (!isUnassigned) {
             totalRegularMembers++;
           }
 
-          // 출석 및 예배(분자)에는 미배정 출석도 포함
+          // 출석 및 예배는 미배정 성도가 체크되어 있어도 분자에 정상 합산
           if (r) {
             if (r.status === '출석' || r.status === '지각') {
               ssPresentCount++;
@@ -1958,18 +1941,25 @@ ${className} ${leaderName} 리더입니다.
 
       loadAttendanceForSelectedDate(targetDate) {
         const normDate = this.normalizeDateStr(targetDate);
-        this.currentAttendance = {};
+        // ✨ [핵심 버그 해결 1] 조회하는 날짜가 바뀌었을 때 화면 캐시 완벽 초기화
+        if (this.lastLoadedDate !== normDate) {
+          this.currentAttendance = {};
+          this.lastLoadedDate = normDate;
+        }
         const dateRecords = this.rawRecords.filter(r => this.normalizeDateStr(r.date) === normDate);
 
         this.rawMembers.forEach(m => {
           const found = dateRecords.find(r => r.memberId === m.memberId);
-          if (found && (found.status === '출석' || found.status === '지각' || found.status === '결석')) {
+          
+          if (found) {
+            // 💡 서버에 데이터가 존재하는 경우 (출석 체크 상태이거나, 사유만 적혀있는 경우)
             this.currentAttendance[m.memberId] = {
-              status: found.status,
+              status: (found.status === '출석' || found.status === '지각' || found.status === '결석') ? found.status : null,
               reason: found.reason || '',
               worshipAttended: !!found.worshipAttended
             };
           } else {
+            // ✨ [핵심 버그 해결 2] 다른 기기에서 '체크 해제(삭제)'를 한 경우, 화면 버튼의 불도 즉시 끄기(회색)
             this.currentAttendance[m.memberId] = {
               status: null,
               reason: '',
@@ -1978,6 +1968,7 @@ ${className} ${leaderName} 리더입니다.
           }
         });
 
+        this.updateAttendanceSummary();
         this.renderAttendanceList();
       }
 
@@ -2171,7 +2162,7 @@ ${className} ${leaderName} 리더입니다.
 
         const currentStatus = this.currentAttendance[memberId].status;
         const targetDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
-        const quarter = document.getElementById('quarterSelect')?.value || '1기';
+        const quarter = document.getElementById('quarterSelect')?.value || '3기';
         const year = document.getElementById('yearSelect')?.value || '2026';
         
         const member = this.rawMembers.find(m => m.memberId === memberId);
@@ -2179,6 +2170,8 @@ ${className} ${leaderName} 리더입니다.
 
         const isCancelling = (currentStatus === status);
         const finalStatus = isCancelling ? null : status;
+        
+        // 1. 화면 상태 즉시 반영 (낙관적 락)
         this.currentAttendance[memberId].status = finalStatus;
 
         if (finalStatus === '출석' || finalStatus === '지각') {
@@ -2188,33 +2181,22 @@ ${className} ${leaderName} 리더입니다.
           }
         }
 
+        // 2. 로컬 rawRecords 메모리 즉시 동기화
         const idx = this.rawRecords.findIndex(r => this.normalizeDateStr(r.date) === targetDate && r.memberId === memberId);
-        if (idx >= 0 && (finalStatus === '출석' || finalStatus === '지각')) { 
-          this.rawRecords[idx].worshipAttended = false; 
-        }
-
-        const quarterDocId = `${year}_${quarter}_${memberId}`;
+        const score = finalStatus === '출석' ? 1.0 : (finalStatus === '지각' ? 0.5 : 0.0);
 
         if (isCancelling) {
           if (idx >= 0) this.rawRecords.splice(idx, 1);
-
-          if (isFirebaseReady && db) {
-            try {
-              const docRef = doc(db, 'attendance_records_v2', quarterDocId);
-              await updateDoc(docRef, {
-                [`weeks.${targetDate}`]: deleteField()
-              });
-            } catch (e) {
-              console.error("Firestore 부분 삭제 오류:", e);
-            }
-          }
         } else {
-          const score = finalStatus === '출석' ? 1.0 : (finalStatus === '지각' ? 0.5 : 0.0);
-          
           const recordDataForMemory = {
             recordId: `${targetDate}_${memberId}`, 
-            date: targetDate, quarter: quarter, memberId: memberId, classId: member.classId,
-            status: finalStatus, score: score, reason: this.currentAttendance[memberId].reason || '',
+            date: targetDate, 
+            quarter: quarter, 
+            memberId: memberId, 
+            classId: member.classId,
+            status: finalStatus, 
+            score: score, 
+            reason: this.currentAttendance[memberId].reason || '',
             worshipAttended: (finalStatus === '출석' || finalStatus === '지각') ? false : !!this.currentAttendance[memberId].worshipAttended,
             checkedBy: this.currentUser?.leaderName || '리더',
             updatedAt: new Date().toISOString()
@@ -2222,7 +2204,30 @@ ${className} ${leaderName} 리더입니다.
 
           if (idx >= 0) this.rawRecords[idx] = recordDataForMemory;
           else this.rawRecords.push(recordDataForMemory);
+        }
 
+        // 3. UI 갱신 (버튼 불 즉시 유지)
+        this.calculateConsecutiveAbsentees();
+        this.updateAbsentBanner();
+        this.updateAttendanceSummary();
+        this.renderAttendanceList();
+        this.renderClassMonitoringBar();
+        this.updateCloudStatusBadge('saved', '서버에 저장됨');
+
+        // 4. Firestore V3 저장
+        const dateDocRef = (isFirebaseReady && db) ? doc(db, 'attendance_records_v3', targetDate) : null;
+
+        if (isCancelling) {
+          if (dateDocRef) {
+            try {
+              await updateDoc(dateDocRef, {
+                [`records.${memberId}`]: deleteField()
+              });
+            } catch (e) {
+              console.error("Firestore V3 삭제 오류:", e);
+            }
+          }
+        } else {
           if (finalStatus === '출석' || finalStatus === '지각') {
             delete this.absentAlertMap[memberId];
             delete this.careNotesMap[memberId];
@@ -2238,33 +2243,45 @@ ${className} ${leaderName} 리더입니다.
             }
           }
 
-          if (isFirebaseReady && db) {
-            try {
-              const docRef = doc(db, 'attendance_records_v2', quarterDocId);
-              const weekDataForDB = {
-                status: recordDataForMemory.status, score: recordDataForMemory.score,
-                reason: recordDataForMemory.reason, worshipAttended: recordDataForMemory.worshipAttended,
-                checkedBy: recordDataForMemory.checkedBy, updatedAt: recordDataForMemory.updatedAt, classId: recordDataForMemory.classId
-              };
+          if (dateDocRef) {
+            const memberRecordForDB = {
+              status: finalStatus,
+              score: score,
+              reason: this.currentAttendance[memberId].reason || '',
+              worshipAttended: !!this.currentAttendance[memberId].worshipAttended,
+              checkedBy: this.currentUser?.leaderName || '리더',
+              updatedAt: new Date().toISOString(),
+              classId: member.classId
+            };
 
-              await setDoc(docRef, {
-                memberId: memberId, classId: member.classId, quarter: quarter, year: String(year),
-                weeks: { [targetDate]: weekDataForDB }
-              }, { merge: true });
-            } catch (e) {
-              console.error("Firestore 압축 저장 오류:", e);
+            try {
+              // 💡 updateDoc으로 해당 성도 필드만 정확히 찔러서 업데이트 (다른 성도 데이터 보존)
+              await updateDoc(dateDocRef, {
+                date: targetDate,
+                year: String(year),
+                quarter: quarter,
+                [`records.${memberId}`]: memberRecordForDB
+              });
+            } catch (err) {
+              // 문서가 아예 없을 때만 최초 1회 setDoc 실행
+              try {
+                await setDoc(dateDocRef, {
+                  date: targetDate,
+                  year: String(year),
+                  quarter: quarter,
+                  records: {
+                    [memberId]: memberRecordForDB
+                  }
+                }, { merge: true });
+              } catch (e) {
+                console.error("Firestore 저장 오류:", e);
+              }
             }
           }
         }
-
-        this.calculateConsecutiveAbsentees();
-        this.updateAbsentBanner();
-        this.updateAttendanceSummary();
-        this.renderAttendanceList();
-        this.renderClassMonitoringBar();
-        this.updateCloudStatusBadge('saved', '서버에 저장됨');
       }
 
+      
       openWorshipCheckModal() {
         if (!this.currentUser || !this.currentUser.isAdmin) return;
         const modal = document.getElementById('worshipCheckModal');
@@ -2425,82 +2442,93 @@ ${className} ${leaderName} 리더입니다.
         this.showLoading('설교 예배 출석 기록 일괄 저장 중...');
 
         try {
-          const batch = (isFirebaseReady && db) ? writeBatch(db) : null;
-          const candidates = this.rawMembers.filter(m => {
-            const rec = this.rawRecords.find(r => this.normalizeDateStr(r.date) === targetDate && r.memberId === m.memberId);
-            return !(rec && (rec.status === '출석' || rec.status === '지각'));
-          });
+          const docRef = (isFirebaseReady && db) ? doc(db, 'attendance_records_v3', targetDate) : null;
+          const updateData = { date: targetDate, year: String(year), quarter: quarter };
 
-          candidates.forEach(member => {
+          this.rawMembers.forEach(member => {
             const memberId = member.memberId;
             const isAttended = this.worshipPendingSet.has(memberId);
             let rec = this.rawRecords.find(r => this.normalizeDateStr(r.date) === targetDate && r.memberId === memberId);
             
-            const quarterDocId = `${year}_${quarter}_${memberId}`;
-            const docRef = (isFirebaseReady && db) ? doc(db, 'attendance_records_v2', quarterDocId) : null;
+            if (rec && (rec.status === '출석' || rec.status === '지각')) return;
 
             if (isAttended) {
-              if (!rec) {
-                rec = {
-                  recordId: `${targetDate}_${memberId}`, date: targetDate, quarter: quarter,
-                  memberId: memberId, classId: member.classId, status: '결석', score: 0.0, reason: '설교 예배 참석',
-                  worshipAttended: true, checkedBy: this.currentUser?.leaderName || '관리자', updatedAt: new Date().toISOString()
-                };
-                this.rawRecords.push(rec);
-              } else {
+              // 1) 체크했을 때 -> '결석' + '예배 참석' 상태 부여
+              updateData[`records.${memberId}`] = {
+                status: '결석', score: 0.0, reason: '설교 예배 참석',
+                worshipAttended: true, checkedBy: this.currentUser?.leaderName || '관리자',
+                updatedAt: new Date().toISOString(), classId: member.classId
+              };
+
+              if (!this.currentAttendance[memberId]) {
+                this.currentAttendance[memberId] = { status: null, reason: '', worshipAttended: false };
+              }
+              this.currentAttendance[memberId].status = '결석';
+              this.currentAttendance[memberId].reason = '설교 예배 참석';
+              this.currentAttendance[memberId].worshipAttended = true;
+
+              if (rec) {
+                rec.status = '결석';
                 rec.worshipAttended = true;
-                if (!rec.reason) rec.reason = '설교 예배 참석';
-                rec.updatedAt = new Date().toISOString();
+                rec.reason = '설교 예배 참석';
+              } else {
+                this.rawRecords.push({
+                  recordId: `${targetDate}_${memberId}`,
+                  date: targetDate, quarter: quarter, memberId: memberId, classId: member.classId,
+                  status: '결석', score: 0.0, reason: '설교 예배 참석',
+                  worshipAttended: true, checkedBy: this.currentUser?.leaderName || '관리자',
+                  updatedAt: new Date().toISOString()
+                });
               }
+            } else if (rec && rec.worshipAttended) {
+              // 2) ✨ 체크를 해제(취소)했을 때 -> '미기록(null)' 상태로 완전 초기화
+              
+              // DB 업데이트 페이로드에는 해당 성도 데이터 자체를 삭제(초기화)하는 명령 전달
+              updateData[`records.${memberId}`] = deleteField();
 
+              // 화면 메모리 즉시 반영 (버튼 불 꺼지게 만듦)
               if (this.currentAttendance[memberId]) {
-                this.currentAttendance[memberId].worshipAttended = true;
-                this.currentAttendance[memberId].status = rec.status;
+                this.currentAttendance[memberId].status = null;
+                this.currentAttendance[memberId].worshipAttended = false;
+                this.currentAttendance[memberId].reason = '';
               }
-
-              if (batch && docRef) {
-                batch.set(docRef, {
-                  memberId: memberId, classId: member.classId, quarter: quarter, year: String(year),
-                  weeks: {
-                    [targetDate]: {
-                      status: rec.status, score: rec.score, reason: rec.reason,
-                      worshipAttended: true, checkedBy: rec.checkedBy, updatedAt: rec.updatedAt, classId: rec.classId
-                    }
-                  }
-                }, { merge: true });
-              }
-            } else {
-              if (rec && rec.worshipAttended) {
-                rec.worshipAttended = false;
-                if (rec.reason === '설교 예배 참석') rec.reason = '';
-                rec.updatedAt = new Date().toISOString();
-
-                if (this.currentAttendance[memberId]) {
-                  this.currentAttendance[memberId].worshipAttended = false;
-                }
-
-                if (batch && docRef) {
-                  batch.update(docRef, {
-                    [`weeks.${targetDate}.worshipAttended`]: false,
-                    [`weeks.${targetDate}.reason`]: rec.reason,
-                    [`weeks.${targetDate}.updatedAt`]: rec.updatedAt
-                  });
-                }
+              
+              // rawRecords 배열에서도 해당 기록 삭제
+              const idx = this.rawRecords.findIndex(r => r.recordId === `${targetDate}_${memberId}`);
+              if (idx > -1) {
+                this.rawRecords.splice(idx, 1);
               }
             }
           });
 
-          if (batch) await batch.commit();
-
           this.calculateConsecutiveAbsentees();
           this.updateAbsentBanner();
+          this.updateAttendanceSummary();
           this.renderAttendanceList();
           this.renderClassMonitoringBar();
+
+          if (docRef && Object.keys(updateData).length > 3) { 
+             try {
+               await updateDoc(docRef, updateData);
+             } catch (error) {
+               const setPayload = { date: targetDate, year: String(year), quarter: quarter, records: {} };
+               this.rawMembers.forEach(m => {
+                 if (this.worshipPendingSet.has(m.memberId)) {
+                   setPayload.records[m.memberId] = {
+                     status: '결석', score: 0.0, reason: '설교 예배 참석',
+                     worshipAttended: true, checkedBy: this.currentUser?.leaderName || '관리자',
+                     updatedAt: new Date().toISOString(), classId: m.classId
+                   };
+                 }
+               });
+               await setDoc(docRef, setPayload, { merge: true });
+             }
+          }
 
           this.hideLoading();
           const checkedCount = this.worshipPendingSet.size;
           this.closeWorshipCheckModal();
-          this.showToast(`✨ 설교 예배 출석(${checkedCount}명)이 성공적으로 반영되었습니다.`, 'success');
+          this.showToast(`✨ 설교 예배 출석(${checkedCount}명)이 반영되었습니다.`, 'success');
 
         } catch (err) {
           this.hideLoading();
@@ -2585,24 +2613,38 @@ ${className} ${leaderName} 리더입니다.
         this.currentAttendance[memberId].reason = reason;
 
         const targetDate = this.normalizeDateStr(document.getElementById('sabbathSelect')?.value);
-        const year = document.getElementById('yearSelect')?.value || '2026';
-        const quarter = document.getElementById('quarterSelect')?.value || '1기';
         if (!targetDate) return;
 
-        const existing = this.rawRecords.find(r => this.normalizeDateStr(r.date) === targetDate && r.memberId === memberId);
-        if (existing) existing.reason = reason;
-
-        const quarterDocId = `${year}_${quarter}_${memberId}`;
+        // ✨ [수정 1] 연도, 분기, 성도 정보를 읽어오도록 추가
+        const year = document.getElementById('yearSelect')?.value || '2026';
+        const quarter = document.getElementById('quarterSelect')?.value || '3기';
         const member = this.rawMembers.find(m => m.memberId === memberId);
-        
-        if (isFirebaseReady && db && member) {
+
+        const rec = this.rawRecords.find(r => this.normalizeDateStr(r.date) === targetDate && r.memberId === memberId);
+        if (rec) rec.reason = reason;
+
+        if (isFirebaseReady && db) {
+          const dateDocRef = doc(db, 'attendance_records_v3', targetDate);
           try {
-            const docRef = doc(db, 'attendance_records_v2', quarterDocId);
-            await setDoc(docRef, {
-              memberId: memberId, classId: member.classId, quarter: quarter, year: String(year),
-              weeks: { [targetDate]: { reason: reason } }
-            }, { merge: true });
-          } catch (e) {}
+            await updateDoc(dateDocRef, {
+              [`records.${memberId}.reason`]: reason
+            });
+          } catch (e) {
+            try {
+              // ✨ [수정 2] 문서가 없을 때 새로 만들면서 필수 필드(날짜, 연도, 분기, 반)를 모두 채워줌
+              await setDoc(dateDocRef, {
+                date: targetDate,
+                year: String(year),
+                quarter: quarter,
+                records: { 
+                  [memberId]: { 
+                    reason: reason, 
+                    classId: member?.classId || '' 
+                  } 
+                }
+              }, { merge: true });
+            } catch (err) {}
+          }
         }
       }
 
@@ -2671,7 +2713,7 @@ ${className} ${leaderName} 리더입니다.
         // 1. 전출/휴면 교인 제외
         targetMembers = targetMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
 
-        // 2. ✨ 미배정반은 분모에서 완전 제외 -> 136명 고정
+        // 2. ✨ 전체 통계 대상(targetMembers)에서 미배정반은 분모에서 완전 제외 -> 136명 고정
         const unassignedClassId = 'C11';
         targetMembers = targetMembers.filter(m => {
           const cId = String(m.classId || '').toUpperCase().trim();
@@ -2685,6 +2727,7 @@ ${className} ${leaderName} 리더입니다.
         if (totMemEl) totMemEl.textContent = `${targetMembers.length}명`;
         if (totLblEl) totLblEl.textContent = isAdmin ? '총 등록 교인' : '반 등록 교인';
 
+        // 3. 유효 출석 기록 (정규반 성도 기록 기준)
         const validRecords = this.rawRecords.filter(r => {
           const isQuarterMatch = !r.quarter || String(r.quarter).trim() === String(curQuarter).trim();
           const isValidStatus = ['출석', '지각', '결석'].includes(r.status);
@@ -2761,7 +2804,6 @@ ${className} ${leaderName} 리더입니다.
         const container = document.getElementById('ageStatsCardsContainer');
         if (!wrap || !container) return;
 
-        // 관리자가 아니면 영역 숨김
         if (!this.currentUser || !this.currentUser.isAdmin) {
           wrap.classList.add('hidden');
           return;
@@ -2772,11 +2814,15 @@ ${className} ${leaderName} 리더입니다.
         const currentYear = new Date().getFullYear();
         const curQuarter = document.getElementById('quarterSelect')?.value || '3기';
 
-        // 등록 활동 성도 (targetMembers가 전달되면 사용, 없으면 기존 rawMembers 기반 필터)
-        const activeMembers = targetMembers || this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
+        // targetMembers(미배정 제외된 136명)를 그대로 사용
+        const activeMembers = targetMembers || this.rawMembers.filter(m => {
+          if (['전출', '이명', '휴면', '별세'].includes(m.status)) return false;
+          const cId = String(m.classId || '').toUpperCase().trim();
+          const cName = String(m.className || m.class || '').trim();
+          return !(cId === 'C11' || cId === 'UNASSIGNED' || cId === '' || cName === '미배정');
+        });
         const totalCount = activeMembers.length;
 
-        // 연령대 그룹 정의 (70대, 80대 이상 분리)
         const groups = [
           { key: 'child_student', label: '어린이·학생', sub: '19세 이하', min: 0, max: 19, color: 'emerald', members: [] },
           { key: 'youth', label: '청년', sub: '20~35세', min: 20, max: 35, color: 'teal', members: [] },
@@ -2815,25 +2861,23 @@ ${className} ${leaderName} 리더입니다.
 
         this.ageDemographicGroups = groups;
 
-        // 현재 분기의 유효 출석 기록 필터링
         const validRecords = this.rawRecords.filter(r => {
-          const isQuarterMatch = !r.quarter || r.quarter === curQuarter;
-          return isQuarterMatch && (r.status === '출석' || r.status === '지각' || r.status === '결석');
+          const isQuarterMatch = !r.quarter || String(r.quarter).trim() === String(curQuarter).trim();
+          return isQuarterMatch && ['출석', '지각', '결석'].includes(r.status);
         });
 
         groups.forEach((g, idx) => {
           if (g.key === 'unknown' && g.members.length === 0) return;
 
           const count = g.members.length;
-          const popRatio = totalCount > 0 ? ((count / totalCount) * 100).toFixed(0) : 0; // 교인 구성비
+          const popRatio = totalCount > 0 ? ((count / totalCount) * 100).toFixed(0) : 0;
 
-          // 해당 연령대의 출석률 계산 (출석 1.0, 지각 0.5)
-          const memberIdSet = new Set(g.members.map(m => m.memberId));
+          const memberIdSet = new Set(g.members.map(m => String(m.memberId).trim()));
           let groupScore = 0;
           let groupCheckedCount = 0;
 
           validRecords.forEach(r => {
-            if (memberIdSet.has(r.memberId)) {
+            if (memberIdSet.has(String(r.memberId).trim())) {
               groupCheckedCount++;
               if (r.status === '출석') groupScore += 1.0;
               else if (r.status === '지각') groupScore += 0.5;
@@ -2848,7 +2892,6 @@ ${className} ${leaderName} 리더입니다.
           card.onclick = () => this.openAgeGroupMembersModal(idx);
           card.className = `p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-indigo-400 transition cursor-pointer select-none flex flex-col justify-between shadow-2xs`;
 
-          // 출석률 뱃지 색상
           let rateBadgeColor = 'text-slate-500 bg-slate-100';
           if (attRate !== null) {
             const num = parseFloat(attRate);
@@ -3650,24 +3693,21 @@ ${className} ${leaderName} 리더입니다.
 
         try {
           if (isFirebaseReady && db && navigator.onLine) {
-            // 💡 [수정] 500개 제한이 있는 batch 대신 Promise.all 병렬 삭제로 안전성 강화
             const deletePromises = [];
             
+            // ✨ v3는 사람이 아닌 날짜 문서 단위로 조회하여 삭제
+            let q;
             if (type === 'quarter') {
-              this.rawMembers.forEach(m => {
-                deletePromises.push(deleteDoc(doc(db, 'attendance_records_v2', `${year}_${curQuarter}_${m.memberId}`)));
-              });
-              this.rawRecords = this.rawRecords.filter(r => r.quarter !== curQuarter);
+              q = query(collection(db, 'attendance_records_v3'), where('year', '==', String(year)), where('quarter', '==', curQuarter));
             } else {
-              this.rawMembers.forEach(m => {
-                ['1기','2기','3기','4기'].forEach(q => {
-                  deletePromises.push(deleteDoc(doc(db, 'attendance_records_v2', `${year}_${q}_${m.memberId}`)));
-                });
-              });
-              this.rawRecords = [];
-              this.rawVisitors = []; 
+              q = query(collection(db, 'attendance_records_v3'));
             }
+            
+            const snap = await getDocs(q);
+            snap.forEach(d => deletePromises.push(deleteDoc(d.ref)));
+            
             await Promise.all(deletePromises);
+            if (type === 'all') { this.rawRecords = []; this.rawVisitors = []; }
           }
 
           try {
@@ -3695,6 +3735,90 @@ ${className} ${leaderName} 리더입니다.
         } catch (err) {
           this.hideLoading();
           this.showToast('초기화 중 오류가 발생했습니다.', 'error');
+        }
+      }
+
+      // 🚀 [1회 실행용] V2 데이터를 V3 구조로 자동 변환 및 이전
+      async migrateV2toV3() {
+        if (!isFirebaseReady || !db) {
+          alert('파이어베이스가 준비되지 않았습니다.');
+          return;
+        }
+
+        if (!confirm('기존 V2 출석 데이터를 V3 날짜별 문서로 일괄 변환하여 이전하시겠습니까?\n(기존 V2 데이터는 삭제되지 않고 그대로 유지됩니다)')) return;
+
+        this.showLoading('V2 데이터 읽어오는 중...');
+
+        try {
+          const v2Col = collection(db, 'attendance_records_v2');
+          const snapshot = await getDocs(v2Col);
+
+          if (snapshot.empty) {
+            this.hideLoading();
+            alert('이전할 V2 데이터가 없습니다.');
+            return;
+          }
+
+          this.showLoading(`V2 데이터 ${snapshot.size}건 변환 중...`);
+
+          // 1. 날짜별로 성도들 데이터를 묶을 임시 장부 생성
+          // 구조: { "2026-09-12": { year, quarter, records: { M0001: {...}, M0002: {...} } } }
+          const groupedByDate = {};
+
+          snapshot.forEach((docSnap) => {
+            const v2Data = docSnap.data();
+            const memberId = v2Data.memberId;
+            const docYear = String(v2Data.year || '2026');
+            const docQuarter = v2Data.quarter || '3기';
+
+            if (v2Data.weeks) {
+              for (const [dateStr, weekData] of Object.entries(v2Data.weeks)) {
+                const normDate = this.normalizeDateStr(dateStr);
+                if (!normDate) continue;
+
+                if (!groupedByDate[normDate]) {
+                  groupedByDate[normDate] = {
+                    date: normDate,
+                    year: docYear,
+                    quarter: docQuarter,
+                    records: {}
+                  };
+                }
+
+                groupedByDate[normDate].records[memberId] = {
+                  status: weekData.status || null,
+                  score: typeof weekData.score === 'number' ? weekData.score : (weekData.status === '출석' ? 1.0 : (weekData.status === '지각' ? 0.5 : 0)),
+                  reason: weekData.reason || '',
+                  worshipAttended: !!weekData.worshipAttended,
+                  checkedBy: weekData.checkedBy || '이전데이터',
+                  updatedAt: weekData.updatedAt || new Date().toISOString(),
+                  classId: v2Data.classId || weekData.classId || ''
+                };
+              }
+            }
+          });
+
+          const totalDates = Object.keys(groupedByDate).length;
+          this.showLoading(`총 ${totalDates}개 날짜 문서를 V3에 저장 중...`);
+
+          // 2. V3 컬렉션(attendance_records_v3)에 날짜별로 setDoc 저장
+          for (const [dateStr, docPayload] of Object.entries(groupedByDate)) {
+            const dateDocRef = doc(db, 'attendance_records_v3', dateStr);
+            await setDoc(dateDocRef, docPayload, { merge: true });
+          }
+
+          this.hideLoading();
+          this.showToast(`🎉 총 ${totalDates}개 일자의 V2 출석 데이터가 V3로 완벽히 이전되었습니다!`, 'success');
+
+          // 화면 새로고침하여 반영
+          const curDate = document.getElementById('sabbathSelect')?.value;
+          if (curDate) this.loadAttendanceForSelectedDate(curDate);
+          this.renderClassMonitoringBar();
+          
+        } catch (error) {
+          this.hideLoading();
+          console.error("V2 -> V3 이전 오류:", error);
+          alert('이전 중 오류가 발생했습니다: ' + error.message);
         }
       }
 
@@ -4076,14 +4200,14 @@ ${className} ${leaderName} 리더입니다.
         const birthVal = member.birth || member.birthday || member.birthDate || '';
         const birthInput = document.getElementById('editMemberBirth');
         if (birthInput) birthInput.value = birthVal;
-        // 💡 주소 데이터 불러오기 추가
-        document.getElementById('editMemberAddress').value = member.address || '';
 
         const ageDetailEl = document.getElementById('editMemberAgeDetail');
         if (ageDetailEl) {
           const ageInfo = this.getMemberAgeInfo(birthVal);
           ageDetailEl.textContent = ageInfo ? `💡 기준 연령: ${ageInfo.summaryText}` : '';
         }
+        // 💡 [추가할 코드] 주소 데이터 불러오기
+        document.getElementById('editMemberAddress').value = member.address || '';
         document.getElementById('editMemberStatus').value = member.status || '활동';
         document.getElementById('editMemberNote').value = member.notes || '';
 
@@ -4153,7 +4277,7 @@ ${className} ${leaderName} 리더입니다.
         const name = document.getElementById('editMemberName')?.value?.trim();
         const phone = document.getElementById('editMemberPhone')?.value?.trim();
         const birth = document.getElementById('editMemberBirth')?.value.trim() || '';
-        const address = document.getElementById('editMemberAddress')?.value.trim() || ''; // 💡 주소 값 읽기 추가
+        const address = document.getElementById('editMemberAddress')?.value.trim() || ''; // 💡 주소 추가
         const classId = document.getElementById('editMemberClassSelect')?.value;
         const role = document.getElementById('editMemberRole')?.value?.trim() || '성도';
         const status = document.getElementById('editMemberStatus')?.value || '활동';
@@ -4174,7 +4298,7 @@ ${className} ${leaderName} 리더입니다.
             name: name,
             phone: phone,
             birth: birth, // 💡 추가
-            address: address, // 💡 서버 전송 데이터에 주소 추가
+            address: address, // 💡 페이로드에 주소 추가
             classId: classId,
             role: role,
             status: status,
@@ -4196,7 +4320,7 @@ ${className} ${leaderName} 리더입니다.
               targetMember.name = name;
               targetMember.phone = phone;
               targetMember.birth = birth; // 💡 추가
-              targetMember.address = address; // 💡 로컬 메모리 업데이트 추가
+              targetMember.address = address; // 💡 로컬 메모리에도 주소 추가
               targetMember.classId = classId;
               targetMember.role = role;
               targetMember.status = status;
@@ -4546,6 +4670,13 @@ ${className} ${leaderName} 리더입니다.
           }
         } else if (type === 2) {
           let targetMembers = this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
+          // ✨ [여기에 추가] 인쇄물 통계에서도 미배정(C11) 성도를 분모에서 완전히 제외
+          targetMembers = targetMembers.filter(m => {
+            const cId = String(m.classId || '').toUpperCase().trim();
+            const cName = String(m.className || m.class || '').trim();
+            return !(cId === 'C11' || cId === 'UNASSIGNED' || cId === '' || cName === '미배정');
+          });
+          
           if (!isYearly) {
             const validRecs = this.rawRecords.filter(r => (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
             const activeDates = new Set();
@@ -4882,6 +5013,12 @@ ${className} ${leaderName} 리더입니다.
           }
         } else if (type === 2) {
           let targetMembers = this.rawMembers.filter(m => !['전출', '이명', '휴면', '별세'].includes(m.status));
+          // ✨ [여기에 추가] 인쇄물 통계에서도 미배정(C11) 성도를 분모에서 완전히 제외
+          targetMembers = targetMembers.filter(m => {
+            const cId = String(m.classId || '').toUpperCase().trim();
+            const cName = String(m.className || m.class || '').trim();
+            return !(cId === 'C11' || cId === 'UNASSIGNED' || cId === '' || cName === '미배정');
+          });
           if (!isYearly) {
             const validRecs = this.rawRecords.filter(r => (!r.quarter || r.quarter === quarter) && (r.status === '출석' || r.status === '지각' || r.status === '결석'));
             const activeDates = new Set();

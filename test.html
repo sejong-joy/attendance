@@ -1399,6 +1399,8 @@
         
         document.documentElement.classList.remove('has-session');
         this.currentUser = null;
+        this.lastLoadedDate = null; // 💡 [추가] 다음 로그인 시 날짜 화면을 강제로 새로고침 하도록 기억 삭제
+
         document.getElementById('appSection')?.classList.add('hidden');
         document.getElementById('userBadgeArea')?.classList.add('hidden');
         document.getElementById('loginSection')?.classList.remove('hidden');
@@ -1407,16 +1409,11 @@
         const classSel = document.getElementById('classSelect');
         if (pinInp) pinInp.value = '';
         if (classSel) classSel.value = '';
-        this.showToast('로그아웃 되었습니다.', 'info');
-      }
 
-      updateAbsentAlertMap(alerts) {
-        this.absentAlertMap = {};
-        if (Array.isArray(alerts)) {
-          alerts.forEach(a => {
-            this.absentAlertMap[a.memberId] = a;
-          });
-        }
+        // 💡 [추가] 로그아웃 버튼을 누르면 콤보박스 날짜를 '현실의 최신 안식일'로 즉시 리셋! (트래픽 발생 0%)
+        this.initCurrentYearAndQuarter();
+
+        this.showToast('로그아웃 되었습니다.', 'info');
       }
 
       calculateConsecutiveAbsentees() {

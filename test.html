@@ -1286,12 +1286,12 @@
           return; 
         }
 
+        // 💡 2. 캐시가 없는 최초 로그인 시
         this.showLoading('인증 및 최신 데이터 동기화 중...');
 
         try {
           const url = `${SHEETS_API_URL}?action=loginAndLoad&classId=${encodeURIComponent(classId)}&pinCode=${encodeURIComponent(pinCode)}&secretKey=SejongJoy!2026`;
           
-          // ✨ [핵심 추가] 구글 서버 수면 상태(TimeOut) 방어용 3회 자동 재시도 로직
           let json = null;
           let fetchSuccess = false;
           let attempt = 0;
@@ -1305,9 +1305,7 @@
               fetchSuccess = true;
             } catch (e) {
               attempt++;
-              console.warn(`구글 서버 접속 지연... 재시도 중 (${attempt}/${maxRetries})`);
               if (attempt >= maxRetries) throw e;
-              // 서버가 깨어날 시간을 주기 위해 1.5초 대기 후 다시 찌름
               await new Promise(resolve => setTimeout(resolve, 1500)); 
             }
           }
@@ -1338,7 +1336,6 @@
               this.updateAbsentBanner();
               this.checkAndAutoOpenUrgentModal();
             }
-            
           } else {
             if (hasLoadedFromCache) {
               this.handleLogout(); 
